@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Polaris Navigator — Sprint 1</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="pre-consent">
+    <header class="topbar">
+      <div class="brand">
+        <div class="logo">P</div>
+        <div>
+          <div class="name">Polaris Navigator</div>
+        </div>
+        <span class="sub">v0.1 · Vite + TypeScript</span>
+      </div>
+      <div class="top-actions">
+        <div class="search-wrap">
+          <input id="search" placeholder="Search ticker… (US-16)" autocomplete="off" />
+        </div>
+        <span class="pill"><span class="dot"></span> yfinance 5m</span>
+        <button class="btn" id="simBtn" title="등락률·시세 갱신 (데모)">↻ Refresh</button>
+        <button class="btn btn-ic" id="resetCam" title="Reset camera">⌂</button>
+      </div>
+    </header>
+
+    <div id="scene-wrap">
+      <canvas id="scene"></canvas>
+    </div>
+
+    <aside class="legend">
+      <h4>GICS 11 Sectors</h4>
+      <div id="legend-list"></div>
+      <hr />
+      <h4>Return</h4>
+      <div class="row"><span class="swatch" style="background: var(--up)"></span>+ Up day</div>
+      <div class="row"><span class="swatch" style="background: var(--down)"></span>− Down day</div>
+      <div class="row"><span class="swatch" style="background: var(--flat)"></span>± Halted</div>
+    </aside>
+
+    <div class="view-controls">
+      <button class="btn active" data-view="3d" type="button"><b>3D</b><span>persp</span></button>
+      <button class="btn" data-view="top" type="button"><b>TOP</b><span>plan</span></button>
+      <button class="btn" data-view="front" type="button"><b>FR</b><span>front</span></button>
+    </div>
+
+    <div class="tooltip" id="tooltip">
+      <div class="t-name" id="tt-name">—</div>
+      <div class="t-ticker" id="tt-ticker">—</div>
+      <div class="t-row" id="tt-chg-row"><span>Change</span><span id="tt-chg">—</span></div>
+      <div class="t-row"><span>Sector</span><span id="tt-sector">—</span></div>
+      <div class="t-row"><span>Market Cap</span><span id="tt-cap">—</span></div>
+    </div>
+
+    <div class="hint" id="hint">
+      <span class="kbd">Drag</span> rotate · <span class="kbd">Scroll</span> zoom · <span class="kbd">Click</span> a block to open panel
+    </div>
+
+    <aside class="panel" id="panel">
+      <div class="panel-head">
+        <div class="ticker-row">
+          <span class="ticker" id="p-ticker">—</span>
+          <span class="market-badge" id="p-market">—</span>
+        </div>
+        <h2 id="p-name">—</h2>
+        <div class="sector-tag"><span class="dot" id="p-sec-dot"></span><span id="p-sec-name">—</span></div>
+        <button class="watch-btn" id="p-watch" type="button" title="US-17 관심종목">☆ Save</button>
+        <button class="panel-close" id="p-close" type="button" aria-label="Close">×</button>
+      </div>
+
+      <div class="price-block">
+        <div class="price" id="p-price">—</div>
+        <div class="chg" id="p-chg">—</div>
+      </div>
+
+      <div class="panel-body">
+        <section class="section">
+          <h3>Key Metrics <span class="ai-label-tag">US-08 · US-10</span></h3>
+          <div class="metrics-grid">
+            <div class="metric"><div class="lbl">MARKET CAP</div><div class="val" id="m-cap">—</div></div>
+            <div class="metric"><div class="lbl">VOLUME</div><div class="val" id="m-vol">—</div></div>
+            <div class="metric"><div class="lbl">PER</div><div class="val" id="m-per">—</div></div>
+            <div class="metric"><div class="lbl">PBR</div><div class="val" id="m-pbr">—</div></div>
+            <div class="metric"><div class="lbl">SECTOR RANK</div><div class="val" id="m-rank">—</div></div>
+            <div class="metric"><div class="lbl">DIV. YIELD</div><div class="val" id="m-div">—</div></div>
+          </div>
+        </section>
+
+        <section class="section">
+          <h3>AI Summary <span class="ai-label-tag">US-11 · Gemini 2.5 Flash</span></h3>
+          <div class="ai-block">
+            <div class="ai-meta"><span class="ai-dot"></span><span id="ai-status">대기 중…</span></div>
+            <div class="ai-content" id="ai-content">
+              <div class="skel skel-line w90"></div>
+              <div class="skel skel-line w70"></div>
+              <div class="skel skel-line w80"></div>
+              <div class="skel skel-line w50"></div>
+            </div>
+            <div class="ai-disclaimer">⚠ AI 생성 요약이며 투자 조언이 아님 (US-23)</div>
+          </div>
+        </section>
+
+        <section class="section">
+          <h3>Related News <span class="tag-soon">Sprint 2</span></h3>
+          <div id="news-list">
+            <div class="news-item">
+              <div class="news-title">— News API 연동 예정 (제목+링크만, 본문 미수집)</div>
+              <div class="news-meta">naver search api · 3 items</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="section">
+          <h3>Disclosures <span class="tag-soon">Sprint 2</span></h3>
+          <div class="news-item">
+            <div class="news-title">— DART Open API (한국) / SEC Filing API (미국, v2)</div>
+            <div class="news-meta">title + date + link</div>
+          </div>
+        </section>
+
+        <section class="section">
+          <h3>Sector Weight Timeline <span class="tag-soon">Sprint 3</span></h3>
+          <div style="font-size: 11px; color: var(--ink-3); font-family: 'JetBrains Mono', monospace; line-height: 1.6">
+            섹터 내 비중 변화 미니차트 (데이터 ≥ 1개월 축적 후 활성화)
+          </div>
+        </section>
+      </div>
+    </aside>
+
+    <footer class="statusbar">
+      <span class="item">⬢ <b id="s-stocks">—</b> stocks</span>
+      <span class="item">◐ <b id="s-sectors">11</b> sectors (GICS)</span>
+      <span class="item">↑ <b id="s-up">—</b> up · <span style="color: var(--up)">●</span></span>
+      <span class="item">↓ <b id="s-down">—</b> down · <span style="color: var(--down)">●</span></span>
+      <span class="item">⊘ <b id="s-halt">0</b> halted</span>
+      <span class="spacer"></span>
+      <span class="item">last sync <b id="s-time">—</b></span>
+      <span class="item">⟦ <b>treemap_data.json</b> · schema v1.0 ⟧</span>
+    </footer>
+
+    <div class="modal-mask show" id="modal">
+      <div class="modal">
+        <div class="badge">▲ DISCLAIMER · US-19</div>
+        <h1>면책 고지 및 동의</h1>
+        <p class="lead">Polaris Navigator는 시장 정보 탐색 도구이며 투자 자문 서비스가 아닙니다. 진입 전 아래 내용에 동의해 주세요.</p>
+        <ul class="points">
+          <li>본 서비스가 제공하는 모든 시각화·요약·지표는 <b>참고용 정보</b>이며 매수/매도 추천이 아닙니다.</li>
+          <li>AI 생성 요약은 항상 <b>"AI 생성, 투자 조언 아님"</b> 라벨과 함께 표시됩니다.</li>
+          <li>모든 투자 결정과 그 결과에 대한 책임은 <b>이용자 본인</b>에게 있습니다.</li>
+          <li>동의 시각 및 최소한의 접속 메타데이터(IP 해시)는 감사 목적으로 보관됩니다.</li>
+        </ul>
+        <div class="inline-warn" id="m-warn">
+          <span
+            >동의 없이는 메인 화면에 진입할 수 없습니다. 위 항목에 동의하시면 "동의하고 시작하기"를 눌러주세요. (US-19 AC-04: 거부 시 진입
+            차단)</span
+          >
+        </div>
+        <div class="actions">
+          <button class="btn" id="m-cancel" type="button">취소</button>
+          <button class="btn primary" id="m-agree" type="button">동의하고 시작하기</button>
+        </div>
+        <div class="meta-fine">
+          자본시장법 / AI 기본법(2026.01 시행) 준수 · UserConsent NDJSON append-only · localStorage key: <code>consent_given</code>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
