@@ -4,7 +4,7 @@ import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 
 export type BuildingTemplateLibrary = {
   variantCount: number;
-  cloneVariant(index: number): THREE.Group;
+  cloneVariant(index: number, options?: { preferFactory?: boolean }): THREE.Group;
 };
 
 type BuildingManifest = {
@@ -88,6 +88,7 @@ export async function loadBuildingTemplates(urls?: string[]): Promise<BuildingTe
   const modelUrls = await resolveModelUrls(urls);
   const loader = new GLTFLoader();
   const bases: THREE.Group[] = [];
+  const factoryIndexes: number[] = [];
 
   for (const url of modelUrls) {
     try {
@@ -97,6 +98,9 @@ export async function loadBuildingTemplates(urls?: string[]): Promise<BuildingTe
       gltf.scene.rotation.set(0, 0, 0);
       wrap.add(gltf.scene);
       pivotSceneBottomCenter(gltf.scene);
+      if (url.includes('industrial-building-')) {
+        factoryIndexes.push(bases.length);
+      }
       bases.push(wrap);
     } catch (e) {
       console.warn(`[Polaris] building model failed: ${url}`, e);
@@ -109,9 +113,13 @@ export async function loadBuildingTemplates(urls?: string[]): Promise<BuildingTe
 
   return {
     variantCount: bases.length,
-    cloneVariant(index: number) {
-      const i = ((index % bases.length) + bases.length) % bases.length;
-      return SkeletonUtils.clone(bases[i]) as THREE.Group;
+    cloneVariant(index: number, options?: { preferFactory?: boolean }) {
+      const normalized = ((index % bases.length) + bases.length) % bases.length;
+      if (options?.preferFactory && factoryIndexes.length > 0) {
+        const factoryIndex = factoryIndexes[normalized % factoryIndexes.length];
+        return SkeletonUtils.clone(bases[factoryIndex]) as THREE.Group;
+      }
+      return SkeletonUtils.clone(bases[normalized]) as THREE.Group;
     },
   };
 }

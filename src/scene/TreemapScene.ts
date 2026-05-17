@@ -3,6 +3,7 @@ import { computeLayout, type StockRect } from '../layout/squarify';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { fitBuildingModelToLot, loadBuildingTemplates, type BuildingTemplateLibrary } from './buildingTemplates';
+import { getSectorVisual, type SectorVisual } from './sectorVisuals';
 
 function colorForReturn(st: StockRow): THREE.Color {
   if (st.halted) return new THREE.Color(0x4a5160);
@@ -33,6 +34,71 @@ function tickerStyleSeed(t: string): number {
   let h = 2166136261;
   for (let i = 0; i < t.length; i++) h = Math.imul(h ^ t.charCodeAt(i), 16777619);
   return Math.abs(h);
+}
+
+const factorySectors = new Set(['Industrials', 'Energy', 'Materials']);
+
+function applySectorMaterial(root: THREE.Object3D, sector?: string) {
+  const visual = getSectorVisual(sector);
+  root.traverse((child) => {
+    if (!(child instanceof THREE.Mesh)) return;
+    const prev = child.material;
+    const next = new THREE.MeshStandardMaterial({
+      color: new THREE.Color(visual.color),
+      roughness: visual.roughness,
+      metalness: visual.metalness ?? 0.1,
+      emissive: visual.emissive ? new THREE.Color(visual.emissive) : new THREE.Color('#000000'),
+      emissiveIntensity: visual.emissive ? 0.15 : 0,
+      transparent: Array.isArray(prev) ? (prev[0]?.transparent ?? false) : prev.transparent ?? false,
+      opacity: Array.isArray(prev) ? (prev[0]?.opacity ?? 1) : prev.opacity ?? 1,
+      side: Array.isArray(prev) ? (prev[0]?.side ?? THREE.FrontSide) : prev.side ?? THREE.FrontSide,
+      map: Array.isArray(prev) ? (prev[0]?.map ?? null) : prev.map ?? null,
+      normalMap: Array.isArray(prev) ? (prev[0]?.normalMap ?? null) : prev.normalMap ?? null,
+    });
+    child.material = next;
+    if (Array.isArray(prev)) {
+      prev.forEach((m) => m.dispose?.());
+    } else {
+      prev?.dispose?.();
+    }
+  });
+}
+
+function addLogoSprite(root: THREE.Object3D, ticker?: string) {
+  if (!ticker) return;
+  const url = `/logos/${ticker}.png`;
+  const textureLoader = new THREE.TextureLoader();
+  const material = new THREE.SpriteMaterial({
+    transparent: true,
+    depthTest: true,
+    depthWrite: false,
+  });
+  const sprite = new THREE.Sprite(material);
+  sprite.visible = false;
+
+  const box = new THREE.Box3().setFromObject(root);
+  const size = new THREE.Vector3();
+  box.getSize(size);
+  const height = size.y || 1;
+  const logoSize = Math.max(0.35, Math.min(0.9, height * 0.25));
+  sprite.scale.set(logoSize, logoSize, 1);
+  sprite.position.set(0, height + 0.25, 0);
+  root.add(sprite);
+
+  textureLoader.load(
+    url,
+    (texture) => {
+      texture.colorSpace = THREE.SRGBColorSpace;
+      material.map = texture;
+      material.needsUpdate = true;
+      sprite.visible = true;
+    },
+    undefined,
+    () => {
+      if (sprite.parent) sprite.parent.remove(sprite);
+      material.dispose();
+    },
+  );
 }
 
 /** Treemap cell inset — thin gap between adjacent lots. */
@@ -179,7 +245,7 @@ export class TreemapScene {
       }
       if (o instanceof THREE.Group) {
         o.traverse((child) => {
-          if (child instanceof THREE.Mesh || child instanceof THREE.LineSegments) {
+          if (child instanceof THREE.Mesh || child instanceof THREE.LineSegments || child instanceof THREE.Sprite) {
             child.geometry?.dispose();
             const mat = child.material;
             if (Array.isArray(mat)) mat.forEach((x) => x.dispose());
@@ -264,27 +330,16 @@ export class TreemapScene {
     slab.position.y = slabT / 2;
     group.add(slab);
 
-    const model = this.buildingLib!.cloneVariant(seed);
+    const model = this.buildingLib!.cloneVariant(seed, { preferFactory: factorySectors.has(sec.name) });
     model.rotation.set(0, 0, 0);
     model.scale.set(1, 1, 1);
     model.position.set(0, 0, 0);
     fitBuildingModelToLot(model, footW, footD, H);
     model.position.y += slabT;
 
-    model.traverse((o) => {
-      if (!(o instanceof THREE.Mesh)) return;
-      const mats = Array.isArray(o.material) ? o.material : [o.material];
-      for (const m of mats) {
-        if (m instanceof THREE.MeshStandardMaterial || m instanceof THREE.MeshPhysicalMaterial) {
-          m.color.lerp(bodyColor, 0.32);
-          m.emissive.copy(bodyColor).multiplyScalar(0.09);
-        } else if (m instanceof THREE.MeshBasicMaterial || m instanceof THREE.MeshLambertMaterial) {
-          m.color.lerp(bodyColor, 0.28);
-        }
-      }
-    });
-
     group.add(model);
+    applySectorMaterial(group, sec.name);
+    addLogoSprite(group, st.t);
 
     group.userData.stock = st;
     group.userData.rect = r;
@@ -396,6 +451,9 @@ export class TreemapScene {
       spire.position.y = yTop + spireH / 2;
       group.add(spire);
     }
+
+    applySectorMaterial(group, sec.name);
+    addLogoSprite(group, st.t);
 
     group.userData.stock = st;
     group.userData.rect = r;
