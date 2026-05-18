@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Polaris Navigator — Sprint 1</title>
+    <title>Polaris Navigator</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -16,22 +16,25 @@
       <div class="brand">
         <button class="btn btn-ic" id="homeBtn" title="홈으로 돌아가기">◂</button>
         <div class="logo">P</div>
-        <div>
+        <div class="brand-text-stack">
           <div class="name">Polaris Navigator</div>
+          <div class="app-copy">
+            <div class="copy-primary">흔들리지 않을 근거</div>
+            <div class="copy-secondary">막연함을 좌표로</div>
+          </div>
         </div>
-        <span class="sub">v0.1</span>
       </div>
-      <div class="camera-toggle" id="cameraToggle" role="group" aria-label="카메라 뷰">
-        <button class="cam-btn active" data-cam="3d" type="button">3D</button>
-        <button class="cam-btn" data-cam="top" type="button">TOP</button>
-        <button class="cam-btn" data-cam="front" type="button">FRONT</button>
+      <div class="navigator-view-toggle hidden" id="navViewToggle" role="group" aria-label="마을 보기 모드">
+        <button type="button" class="nv-btn active" data-view="overview">Overview</button>
+        <button type="button" class="nv-btn" data-view="chg">등락</button>
+        <button type="button" class="nv-btn" data-view="marketCap">시가총액</button>
       </div>
       <div class="top-actions">
         <div class="search-wrap">
-          <input id="search" placeholder="Search ticker… (US-16)" autocomplete="off" />
+          <input id="search" placeholder="티커 또는 기업명 검색" autocomplete="off" />
         </div>
-        <span class="pill"><span class="dot"></span> yfinance 5m</span>
-        <button class="btn" id="simBtn" title="등락률·시세 갱신 (데모)">↻ Refresh</button>
+        <span class="pill pill-muted"><span class="dot"></span> 데모 데이터</span>
+        <button class="btn" id="simBtn" title="데모 화면에서 등락·시세를 다시 계산합니다">데모 갱신</button>
         <button class="btn btn-ic" id="resetCam" title="Reset camera">⌂</button>
       </div>
     </header>
@@ -41,26 +44,26 @@
     </div>
 
     <aside class="legend">
-      <h4>11 Sectors</h4>
+      <h4>시장 구역</h4>
       <div id="legend-list"></div>
       <hr />
-      <h4>색 의미</h4>
-      <div class="row"><span class="swatch" style="background: #4b5563"></span>빌딩 · 중립 톤</div>
-      <div class="row" style="padding-left: 2px; font-size: 11px; color: var(--text-tertiary); line-height: 1.45">
-        바닥 면 = 섹터 색(반투명) · 등락은 패널·툴팁
+      <h4>보기 기준</h4>
+      <div id="legend-static-rows">
+        <div class="row"><span class="swatch" style="background: #4b5563"></span>빌딩 본체 · 중립 톤</div>
       </div>
+      <div class="row legend-note" id="legend-mode-note"></div>
     </aside>
 
     <div class="tooltip" id="tooltip">
       <div class="t-name" id="tt-name">—</div>
       <div class="t-ticker" id="tt-ticker">—</div>
-      <div class="t-row" id="tt-chg-row"><span>Change</span><span id="tt-chg">—</span></div>
-      <div class="t-row"><span>Sector</span><span id="tt-sector">—</span></div>
-      <div class="t-row"><span>Market Cap</span><span id="tt-cap">—</span></div>
+      <div class="t-row" id="tt-chg-row"><span>오늘의 흐름</span><span id="tt-chg">—</span></div>
+      <div class="t-row"><span>구역</span><span id="tt-sector">—</span></div>
+      <div class="t-row"><span>시가총액</span><span id="tt-cap">—</span></div>
     </div>
 
     <div class="hint" id="hint">
-      <span class="kbd">Drag</span> rotate · <span class="kbd">Scroll</span> zoom · <span class="kbd">Click</span> a block to open panel
+      <span class="kbd">드래그</span> 회전 · <span class="kbd">스크롤</span> 확대 · <span class="kbd">클릭</span> 상세 패널
     </div>
 
     <aside class="panel" id="panel">
@@ -71,7 +74,7 @@
         </div>
         <h2 id="p-name">—</h2>
         <div class="sector-tag"><span class="dot" id="p-sec-dot"></span><span id="p-sec-name">—</span></div>
-        <button class="watch-btn" id="p-watch" type="button" title="US-17 관심종목">☆ Save</button>
+        <button class="watch-btn" id="p-watch" type="button" title="관심 종목에 저장">☆ Save</button>
         <button class="panel-close" id="p-close" type="button" aria-label="Close">×</button>
       </div>
 
@@ -79,22 +82,26 @@
         <div class="price" id="p-price">—</div>
         <div class="chg" id="p-chg">—</div>
       </div>
+      <div class="panel-provenance">
+        <div class="prov-row"><span class="prov-k">데이터 기준</span><span id="p-source">—</span></div>
+        <div class="prov-row"><span class="prov-k">기준 시각</span><span id="p-asof">—</span></div>
+      </div>
 
       <div class="panel-body">
         <section class="section">
-          <h3>Key Metrics <span class="ai-label-tag">US-08 · US-10</span></h3>
+          <h3>주요 지표</h3>
           <div class="metrics-grid">
-            <div class="metric"><div class="lbl">MARKET CAP</div><div class="val" id="m-cap">—</div></div>
-            <div class="metric"><div class="lbl">VOLUME</div><div class="val" id="m-vol">—</div></div>
+            <div class="metric"><div class="lbl">시가총액</div><div class="val" id="m-cap">—</div></div>
+            <div class="metric"><div class="lbl">거래량</div><div class="val" id="m-vol">—</div></div>
             <div class="metric"><div class="lbl">PER</div><div class="val" id="m-per">—</div></div>
             <div class="metric"><div class="lbl">PBR</div><div class="val" id="m-pbr">—</div></div>
-            <div class="metric"><div class="lbl">SECTOR RANK</div><div class="val" id="m-rank">—</div></div>
-            <div class="metric"><div class="lbl">DIV. YIELD</div><div class="val" id="m-div">—</div></div>
+            <div class="metric"><div class="lbl">구역 내 순위</div><div class="val" id="m-rank">—</div></div>
+            <div class="metric"><div class="lbl">배당수익률</div><div class="val" id="m-div">—</div></div>
           </div>
         </section>
 
         <section class="section">
-          <h3>AI Summary <span class="ai-label-tag">US-11 · Gemini 2.5 Flash</span></h3>
+          <h3>요약</h3>
           <div class="ai-block">
             <div class="ai-meta"><span class="ai-dot"></span><span id="ai-status">대기 중…</span></div>
             <div class="ai-content" id="ai-content">
@@ -103,46 +110,46 @@
               <div class="skel skel-line w80"></div>
               <div class="skel skel-line w50"></div>
             </div>
-            <div class="ai-disclaimer">⚠ AI 생성 요약이며 투자 조언이 아님 (US-23)</div>
+            <div class="ai-disclaimer">⚠ 규칙 기반 요약이며 투자 조언이 아닙니다.</div>
           </div>
         </section>
 
         <section class="section">
-          <h3>Related News <span class="tag-soon">Sprint 2</span></h3>
+          <h3>관련 뉴스 <span class="tag-soon">준비 중</span></h3>
           <div id="news-list">
             <div class="news-item">
-              <div class="news-title">— News API 연동 예정 (제목+링크만, 본문 미수집)</div>
-              <div class="news-meta">naver search api · 3 items</div>
+              <div class="news-title">— 연결 시 제목과 링크만 표시합니다.</div>
+              <div class="news-meta">외부 검색 연동 예정</div>
             </div>
           </div>
         </section>
 
         <section class="section">
-          <h3>Disclosures <span class="tag-soon">Sprint 2</span></h3>
+          <h3>공시 <span class="tag-soon">준비 중</span></h3>
           <div class="news-item">
-            <div class="news-title">— DART Open API (한국) / SEC Filing API (미국, v2)</div>
-            <div class="news-meta">title + date + link</div>
+            <div class="news-title">— 한국·미국 공시 메타데이터 연동 예정</div>
+            <div class="news-meta">제목 · 일자 · 링크</div>
           </div>
         </section>
 
         <section class="section">
-          <h3>Sector Weight Timeline <span class="tag-soon">Sprint 3</span></h3>
-          <div style="font-size: 11px; color: var(--text-disabled); font-family: 'JetBrains Mono', monospace; line-height: 1.6">
-            섹터 내 비중 변화 미니차트 (데이터 ≥ 1개월 축적 후 활성화)
+          <h3>구역 비중 추이 <span class="tag-soon">준비 중</span></h3>
+          <div style="font-size: 11px; color: var(--text-disabled); line-height: 1.6">
+            구역 내 비중 변화 미니차트 (데이터가 축적되면 활성화)
           </div>
         </section>
       </div>
     </aside>
 
     <footer class="statusbar">
-      <span class="item">⬢ <b id="s-stocks">—</b> stocks</span>
-      <span class="item">◐ <b id="s-sectors">11</b> sectors</span>
-      <span class="item">↑ <b id="s-up">—</b> up · <span style="color: var(--change-up)">●</span></span>
-      <span class="item">↓ <b id="s-down">—</b> down · <span style="color: var(--change-down)">●</span></span>
-      <span class="item">⊘ <b id="s-halt">0</b> halted</span>
+      <span class="item">⬢ <b id="s-stocks">—</b>개 종목</span>
+      <span class="item">◐ <b id="s-sectors">11</b>개 구역</span>
+      <span class="item">상승 <b id="s-up">—</b> · <span style="color: var(--change-up)">●</span></span>
+      <span class="item">하락 <b id="s-down">—</b> · <span style="color: var(--change-down)">●</span></span>
+      <span class="item">정지 <b id="s-halt">0</b></span>
       <span class="spacer"></span>
-      <span class="item">last sync <b id="s-time">—</b></span>
-      <span class="item">⟦ <b>treemap_data.json</b> · schema v1.0 ⟧</span>
+      <span class="item statusbar-source"><span id="s-source-line">데모 스냅샷 기준</span></span>
+      <span class="item">마지막 갱신 <b id="s-time">—</b></span>
     </footer>
 
     <!-- Position View (Card 3: 내 포지션은 어디쯤?) -->
@@ -157,7 +164,7 @@
           <div class="pv-placeholder-card">
             <span class="pv-placeholder-icon">📌</span>
             <p>관심종목에서 저장한 종목이 여기에 표시됩니다.</p>
-            <span class="pv-tag">Card 2 연동</span>
+            <span class="pv-tag">연동 예정</span>
           </div>
           <div class="upload-coming-soon" aria-disabled="true">
             <div class="upload-icon">📄</div>
@@ -178,7 +185,7 @@
           <div class="pv-placeholder-card">
             <span class="pv-placeholder-icon">📊</span>
             <p>공개 보유 종목(13F-HR)을 기준으로 비교합니다.</p>
-            <span class="pv-tag">Sprint 2+</span>
+            <span class="pv-tag">향후</span>
           </div>
           <div class="pv-disclaimer-bar">2026 Q1 13F-HR · 미국 주식 보유분만 · 매크로·통화·옵션 전략 제외</div>
         </div>
@@ -212,33 +219,31 @@
           <span class="card-arrow">→</span>
         </a>
       </div>
-      <footer class="hub-footer">Polaris Navigator v0.1 · Capstone 2026</footer>
+      <footer class="hub-footer">Polaris Navigator · Capstone 2026</footer>
     </div>
 
     <div class="modal-mask show" id="modal">
       <div class="modal">
-        <div class="badge">▲ DISCLAIMER · US-19</div>
+        <div class="badge">▲ 면책 고지</div>
         <h1>면책 고지 및 동의</h1>
-        <p class="lead">Polaris Navigator는 시장 정보 탐색 도구이며 투자 자문 서비스가 아닙니다. 진입 전 아래 내용에 동의해 주세요.</p>
+        <p class="lead">
+          본 서비스는 투자 자문이 아닌 정보 시각화·탐색 도구입니다. 표시되는 일부 데이터는 데모 또는 지연 데이터일 수 있습니다. 진입 전 아래
+          내용에 동의해 주세요.
+        </p>
         <ul class="points">
           <li>본 서비스가 제공하는 모든 시각화·요약·지표는 <b>참고용 정보</b>이며 매수/매도 추천이 아닙니다.</li>
-          <li>AI 생성 요약은 항상 <b>"AI 생성, 투자 조언 아님"</b> 라벨과 함께 표시됩니다.</li>
+          <li>요약·지표는 <b>참고용</b>이며 투자 조언이 아닙니다.</li>
           <li>모든 투자 결정과 그 결과에 대한 책임은 <b>이용자 본인</b>에게 있습니다.</li>
-          <li>동의 시각 및 최소한의 접속 메타데이터(IP 해시)는 감사 목적으로 보관됩니다.</li>
+          <li>동의 시각 등 최소한의 기록은 서비스 운영·감사 목적으로 보관될 수 있습니다.</li>
         </ul>
         <div class="inline-warn" id="m-warn">
-          <span
-            >동의 없이는 메인 화면에 진입할 수 없습니다. 위 항목에 동의하시면 "동의하고 시작하기"를 눌러주세요. (US-19 AC-04: 거부 시 진입
-            차단)</span
-          >
+          <span>동의 없이는 메인 화면에 진입할 수 없습니다. 위 항목에 동의하시면 "동의하고 시작하기"를 눌러주세요.</span>
         </div>
         <div class="actions">
           <button class="btn" id="m-cancel" type="button">취소</button>
           <button class="btn primary" id="m-agree" type="button">동의하고 시작하기</button>
         </div>
-        <div class="meta-fine">
-          자본시장법 / AI 기본법(2026.01 시행) 준수 · UserConsent NDJSON append-only · localStorage key: <code>consent_given</code>
-        </div>
+        <div class="meta-fine">관련 법령을 준수하며, 동의 기록은 안전하게 보관됩니다.</div>
       </div>
     </div>
 
@@ -248,7 +253,7 @@
         <div class="splash-logo">P</div>
         <div class="splash-title">POLARIS NAVIGATOR</div>
         <div class="splash-bar-track"><div class="splash-bar-fill"></div></div>
-        <div class="splash-sub">Initializing 3D Market Treemap…</div>
+        <div class="splash-sub">3D 시장 지도를 불러오는 중…</div>
       </div>
       <div class="splash-quote" id="splash-quote">
         <div class="quote-deco">✦</div>

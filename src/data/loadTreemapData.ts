@@ -53,9 +53,15 @@ export async function loadTreemapData(): Promise<{
   generatedAt: string;
 }> {
   const res = await fetch('/treemap_data.json');
-  if (!res.ok) throw new Error(`Failed to load treemap_data.json (${res.status})`);
+  if (!res.ok) throw new Error(`시장 데이터를 불러오지 못했습니다 (${res.status})`);
   const data = (await res.json()) as TreemapDataFile;
   const stocks: StockRow[] = data.stocks.map((row) => ({ ...row }));
   applyMarketSnapshot(stocks);
-  return { sectors: data.sectors, stocks, generatedAt: data.generated_at };
+  const snap = data.generated_at;
+  for (const st of stocks) {
+    if (st.source == null) st.source = 'mock';
+    if (st.sourceLabel == null) st.sourceLabel = '데모 데이터';
+    if (st.asOf == null) st.asOf = snap;
+  }
+  return { sectors: data.sectors, stocks, generatedAt: snap };
 }

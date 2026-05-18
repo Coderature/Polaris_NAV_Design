@@ -1,5 +1,8 @@
 export type MarketCode = 'US' | 'KR';
 
+/** Sprint 2+ provider wiring; Sprint 1 stays on `mock`. */
+export type DataSourceType = 'live' | 'delayed' | 'cached' | 'mock';
+
 export interface SectorDef {
   id: string;
   name: string;
@@ -24,6 +27,11 @@ export interface StockRow {
   chg?: number;
   /** Runtime: simulated price */
   price?: number;
+  /** Data honesty layer — optional until real feeds land */
+  source?: DataSourceType;
+  sourceLabel?: string;
+  /** ISO snapshot time for this row (defaults to dataset `generated_at`) */
+  asOf?: string;
 }
 
 export interface TreemapDataFile {
@@ -33,4 +41,33 @@ export interface TreemapDataFile {
   sectors: SectorDef[];
   /** Static fields + optional same-day `chg` (%) and `price` loaded on entry. */
   stocks: (Omit<StockRow, 'chg' | 'price'> & Partial<Pick<StockRow, 'chg' | 'price'>>)[];
+}
+
+export function dataSourceDetailLabel(source?: DataSourceType): string {
+  switch (source) {
+    case 'live':
+      return '실시간 데이터';
+    case 'delayed':
+      return '지연 데이터';
+    case 'cached':
+      return '캐시 데이터';
+    case 'mock':
+    default:
+      return '데모 데이터';
+  }
+}
+
+/** Status bar baseline phrase */
+export function dataSnapshotBaselineLabel(source?: DataSourceType): string {
+  switch (source) {
+    case 'live':
+      return '실시간 데이터 기준';
+    case 'delayed':
+      return '지연 데이터 기준';
+    case 'cached':
+      return '캐시 데이터 기준';
+    case 'mock':
+    default:
+      return '데모 스냅샷 기준';
+  }
 }

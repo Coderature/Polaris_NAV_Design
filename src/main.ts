@@ -1,7 +1,13 @@
 import './styles.css';
 import * as THREE from 'three';
 import { loadTreemapData } from './data/loadTreemapData';
-import type { MarketCode, SectorDef, StockRow } from './types';
+import {
+  type MarketCode,
+  type SectorDef,
+  type StockRow,
+  dataSnapshotBaselineLabel,
+  dataSourceDetailLabel,
+} from './types';
 import { TreemapScene } from './scene/TreemapScene';
 
 const GURU_QUOTES: { text: string; author: string }[] = [
@@ -81,6 +87,21 @@ function sectorRankFor(stocks: StockRow[], st: StockRow): string {
   return `${i} / ${same.length}`;
 }
 
+function restingFootprintXZ(g: THREE.Group): number {
+  const xz = g.userData.footprintRestXZ as number | undefined;
+  return xz != null && xz > 0 ? xz : 1;
+}
+
+function setBuildingInteractionScale(mesh: THREE.Group, xzFactor: number) {
+  const xz = restingFootprintXZ(mesh) * xzFactor;
+  mesh.scale.set(xz, 1, xz);
+}
+
+function resetBuildingInteractionScale(mesh: THREE.Group) {
+  const xz = restingFootprintXZ(mesh);
+  mesh.scale.set(xz, 1, xz);
+}
+
 function aiSummary(stocks: StockRow[], sectors: SectorDef[], st: StockRow): string {
   const sec = sectors.find((s) => s.id === st.s)!;
   const dir = st.halted ? '거래정지 상태' : st.chg! >= 0 ? `오늘 +${st.chg!.toFixed(2)}%` : `오늘 ${st.chg!.toFixed(2)}%`;
@@ -137,6 +158,8 @@ async function main() {
   let aiTimer: ReturnType<typeof setTimeout> | null = null;
   let currentStock: StockRow | null = null;
 
+  const appDataSource = stocks[0]?.source ?? 'mock';
+
   function buildingFromIntersect(obj: THREE.Object3D | null): THREE.Group | null {
     let o: THREE.Object3D | null = obj;
     const active = treemap.stockGroup;
@@ -179,17 +202,21 @@ async function main() {
     if (building) {
       const st = building.userData.stock as StockRow;
       showTooltip(st, e.clientX, e.clientY);
+      treemap.setHoveredSector(st.s);
       if (hovered !== building) {
-        if (hovered) hovered.scale.set(1, 1, 1);
+        if (hovered) resetBuildingInteractionScale(hovered);
         hovered = building;
-        hovered.scale.set(1.05, 1.05, 1.05);
+        setBuildingInteractionScale(hovered, 1.05);
         canvas.style.cursor = 'pointer';
       }
     } else {
-      if (hovered) hovered.scale.set(1, 1, 1);
+      if (hovered) resetBuildingInteractionScale(hovered);
       hovered = null;
       canvas.style.cursor = 'grab';
       hideTooltip();
+      treemap.setHoveredSector(
+        panel.classList.contains('open') && currentStock ? currentStock.s : null,
+      );
     }
   }
 
@@ -207,13 +234,14 @@ async function main() {
 
   function openPanel(st: StockRow, mesh: THREE.Group | null) {
     currentStock = st;
+    treemap.setHoveredSector(st.s);
     const sec = secById[st.s];
 
     pTicker.textContent = st.t;
     pMarket.textContent = st.m;
     pName.textContent = st.n;
     pSecDot.style.background = sec.color;
-    pSecName.textContent = `${sec.name} · ${sec.ko}`;
+    pSecName.textContent = sec.ko;
 
     pPrice.textContent = st.halted ? '—' : fmtPrice(st.price ?? 0, st.m);
     pChg.classList.remove('up', 'down');
@@ -232,10 +260,18 @@ async function main() {
     document.getElementById('m-rank')!.textContent = sectorRankFor(stocks, st);
     document.getElementById('m-div')!.textContent = `${st.div.toFixed(2)}%`;
 
-    if (highlighted && highlighted !== mesh) highlighted.scale.set(1, 1, 1);
+    const pSource = document.getElementById('p-source');
+    const pAsof = document.getElementById('p-asof');
+    if (pSource) pSource.textContent = dataSourceDetailLabel(st.source);
+    if (pAsof) pAsof.textContent = formatSyncTime(st.asOf ?? generatedAt);
+
+    if (highlighted && highlighted !== mesh) resetBuildingInteractionScale(highlighted);
     if (mesh) {
-      mesh.scale.set(1.08, 1.18, 1.08);
+      setBuildingInteractionScale(mesh, 1.08);
       highlighted = mesh;
+    } else {
+      if (highlighted) resetBuildingInteractionScale(highlighted);
+      highlighted = null;
     }
 
     panel.classList.add('open');
@@ -244,7 +280,7 @@ async function main() {
     pWatch.classList.toggle('on', isWatched(st.t));
     pWatch.textContent = isWatched(st.t) ? '★ Saved' : '☆ Save';
 
-    aiStatus.textContent = 'Gemini 2.5 Flash 호출 중…';
+    aiStatus.textContent = '데모 요약 생성 중…';
     aiContent.innerHTML = `
     <div class="skel skel-line w90"></div>
     <div class="skel skel-line w70"></div>
@@ -252,20 +288,68 @@ async function main() {
     <div class="skel skel-line w50"></div>`;
     if (aiTimer) clearTimeout(aiTimer);
     aiTimer = setTimeout(() => {
-      aiStatus.textContent = '응답 완료 · 25 banned-words 필터 통과';
+      aiStatus.textContent = '요약 · 규칙 기반';
       aiContent.innerHTML = aiSummary(stocks, sectors, st);
     }, 1600 + Math.random() * 700);
   }
 
   function closePanel() {
     panel.classList.remove('open');
+    treemap.setHoveredSector(null);
     if (highlighted) {
-      highlighted.scale.set(1, 1, 1);
+      resetBuildingInteractionScale(highlighted);
       highlighted = null;
     }
     currentStock = null;
     if (aiTimer) clearTimeout(aiTimer);
   }
+
+  const navViewToggle = document.getElementById('navViewToggle')!;
+  const legendModeNote = document.getElementById('legend-mode-note')!;
+  const legendStaticRows = document.getElementById('legend-static-rows')!;
+
+  let navigatorView: 'overview' | 'chg' | 'marketCap' = 'overview';
+
+  function updateLegendAndHintForView() {
+    hintEl.innerHTML =
+      '<span class="kbd">드래그</span> 회전 · <span class="kbd">스크롤</span> 확대 · <span class="kbd">클릭</span> 상세 패널';
+    if (navigatorView === 'overview') {
+      legendStaticRows.innerHTML =
+        '<div class="row"><span class="swatch" style="background:#4b5563"></span>빌딩 본체 · 중립 톤 · 균일 높이</div>';
+      legendModeNote.textContent =
+        '바닥은 연한 초록 반투명 필드(분위기). 구역 경계는 얇은 라인 · 좌측 범례·호버·패널에서 구역을 확인하세요.';
+    } else if (navigatorView === 'chg') {
+      legendStaticRows.innerHTML = `
+        <div class="row"><span class="swatch" style="background:var(--change-up)"></span>상승 · 높이·색</div>
+        <div class="row"><span class="swatch" style="background:var(--change-down)"></span>하락 · 높이·색</div>
+        <div class="row"><span class="swatch" style="background:#8a8f98"></span>보합·정지</div>`;
+      legendModeNote.textContent =
+        '3D: 직육면체 높이는 등락 강도, 본체 색은 등락 방향입니다. 바닥은 어둡게 두고 구역 라인을 조금 더 진하게. 타일 면적은 시총 비중.';
+    } else if (navigatorView === 'marketCap') {
+      legendStaticRows.innerHTML =
+        '<div class="row"><span class="swatch" style="background:#4b5563"></span>높이 · Overview와 동일 (중립)</div>';
+      legendModeNote.textContent =
+        '3D: 타일 위치·높이는 유지. 밑면 면적만 √시총 비율로 스케일합니다. 바닥·구역선은 등락 모드와 같습니다.';
+    }
+  }
+
+  function setNavigatorView(mode: 'overview' | 'chg' | 'marketCap') {
+    navigatorView = mode;
+    navViewToggle.querySelectorAll('.nv-btn').forEach((b) => {
+      const btn = b as HTMLButtonElement;
+      btn.classList.toggle('active', btn.dataset.view === mode);
+    });
+
+    treemap.setVisualMode(mode);
+    updateLegendAndHintForView();
+    treemap.resize();
+  }
+
+  navViewToggle.addEventListener('click', (e) => {
+    const btn = (e.target as HTMLElement).closest('[data-view]') as HTMLButtonElement | null;
+    if (!btn?.dataset.view) return;
+    setNavigatorView(btn.dataset.view as 'overview' | 'chg' | 'marketCap');
+  });
 
   canvas.addEventListener('pointerdown', (e) => {
     isDown = true;
@@ -283,6 +367,10 @@ async function main() {
   });
   canvas.addEventListener('pointerleave', () => {
     hideTooltip();
+    treemap.setHoveredSector(null);
+    if (hovered) resetBuildingInteractionScale(hovered);
+    hovered = null;
+    canvas.style.cursor = 'grab';
     isDown = false;
   });
 
@@ -324,19 +412,8 @@ async function main() {
     pWatch.textContent = on ? '★ Saved' : '☆ Save';
   });
 
-  const cameraToggle = document.getElementById('cameraToggle')!;
-  cameraToggle.addEventListener('click', (e) => {
-    const btn = (e.target as HTMLElement).closest('.cam-btn') as HTMLButtonElement | null;
-    if (!btn?.dataset.cam) return;
-    const mode = btn.dataset.cam as '3d' | 'top' | 'front';
-    cameraToggle.querySelectorAll('.cam-btn').forEach((b) => b.classList.remove('active'));
-    btn.classList.add('active');
-    treemap.animateCamera(mode);
-  });
-
   document.getElementById('resetCam')!.addEventListener('click', () => {
-    cameraToggle.querySelectorAll('.cam-btn').forEach((b) => b.classList.toggle('active', (b as HTMLButtonElement).dataset.cam === '3d'));
-    treemap.animateCamera('3d');
+    treemap.resetOrbitCamera();
   });
 
   const searchInput = document.getElementById('search') as HTMLInputElement;
@@ -347,12 +424,8 @@ async function main() {
       const found = stocks.find((s) => s.t.toUpperCase() === q || s.n.toUpperCase().includes(q));
       if (found) {
         const mesh = treemap.meshByStock.get(found);
-        if (mesh) {
-          openPanel(found, mesh);
-          treemap.flyToStock(mesh);
-        } else {
-          openPanel(found, null);
-        }
+        openPanel(found, mesh ?? null);
+        if (mesh) treemap.flyToStock(mesh);
       }
     }
   });
@@ -381,9 +454,10 @@ async function main() {
   for (const s of sectors) {
     const div = document.createElement('div');
     div.className = 'row';
-    div.innerHTML = `<span class="swatch" style="background:${s.color}"></span>${s.ko} <span style="color:var(--text-disabled);margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:10px">${s.id}</span>`;
+    div.innerHTML = `<span class="swatch" style="background:${s.color}"></span><span class="legend-ko">${s.ko}</span>`;
     legendList.appendChild(div);
   }
+  updateLegendAndHintForView();
 
   function formatSyncTime(iso: string) {
     const d = new Date(iso);
@@ -401,6 +475,12 @@ async function main() {
     document.getElementById('s-down')!.textContent = String(dn);
     document.getElementById('s-halt')!.textContent = String(ht);
     document.getElementById('s-time')!.textContent = formatSyncTime(syncAt);
+    const srcEl = document.getElementById('s-source-line');
+    if (srcEl) srcEl.textContent = dataSnapshotBaselineLabel(appDataSource);
+    if (currentStock && panel.classList.contains('open')) {
+      const pAsof = document.getElementById('p-asof');
+      if (pAsof) pAsof.textContent = formatSyncTime(syncAt);
+    }
   }
   refreshStatus();
 
@@ -451,8 +531,11 @@ async function main() {
       const route = card.dataset.route;
       if (route === 'treemap') {
         hideHome();
+        navViewToggle.classList.remove('hidden');
+        setNavigatorView('overview');
       } else if (route === 'guru') {
         hideHome();
+        navViewToggle.classList.add('hidden');
         positionView.classList.add('active');
       }
     });
@@ -462,6 +545,8 @@ async function main() {
 
   document.getElementById('homeBtn')!.addEventListener('click', () => {
     showHome();
+    navViewToggle.classList.add('hidden');
+    setNavigatorView('overview');
     closePanel();
   });
 
