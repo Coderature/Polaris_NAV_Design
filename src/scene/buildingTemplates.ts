@@ -88,7 +88,9 @@ export async function loadBuildingTemplates(urls?: string[]): Promise<BuildingTe
   const modelUrls = await resolveModelUrls(urls);
   const loader = new GLTFLoader();
   const bases: THREE.Group[] = [];
-  const factoryIndexes: number[] = [];
+  const factoryBases: THREE.Group[] = [];
+  const companyBases: THREE.Group[] = [];
+  const extraBases: THREE.Group[] = [];
 
   for (const url of modelUrls) {
     try {
@@ -99,7 +101,11 @@ export async function loadBuildingTemplates(urls?: string[]): Promise<BuildingTe
       wrap.add(gltf.scene);
       pivotSceneBottomCenter(gltf.scene);
       if (url.includes('industrial-building-')) {
-        factoryIndexes.push(bases.length);
+        factoryBases.push(wrap);
+      } else if (url.includes('office-block-') || url.includes('commercial-wide-') || url.includes('building-skyscraper-')) {
+        companyBases.push(wrap);
+      } else {
+        extraBases.push(wrap);
       }
       bases.push(wrap);
     } catch (e) {
@@ -109,17 +115,21 @@ export async function loadBuildingTemplates(urls?: string[]): Promise<BuildingTe
 
   if (!bases.length) return null;
 
-  console.info(`[Polaris] ${bases.length} building templates loaded (office / commercial / industrial, CC0)`);
+  const factoryPool = factoryBases.slice(0, 3);
+  const companyPool = companyBases.slice(0, 3);
+  const fallbackPool = companyPool.length ? companyPool : factoryPool.length ? factoryPool : bases.slice(0, 3);
+
+  console.info(`[Polaris] ${bases.length} building templates loaded (company / factory pools selected, CC0)`);
 
   return {
     variantCount: bases.length,
     cloneVariant(index: number, options?: { preferFactory?: boolean }) {
-      const normalized = ((index % bases.length) + bases.length) % bases.length;
-      if (options?.preferFactory && factoryIndexes.length > 0) {
-        const factoryIndex = factoryIndexes[normalized % factoryIndexes.length];
-        return SkeletonUtils.clone(bases[factoryIndex]) as THREE.Group;
+      const normalized = ((index % fallbackPool.length) + fallbackPool.length) % fallbackPool.length;
+      if (options?.preferFactory && factoryPool.length > 0) {
+        const factoryIndex = normalized % factoryPool.length;
+        return SkeletonUtils.clone(factoryPool[factoryIndex]) as THREE.Group;
       }
-      return SkeletonUtils.clone(bases[normalized]) as THREE.Group;
+      return SkeletonUtils.clone(fallbackPool[normalized]) as THREE.Group;
     },
   };
 }

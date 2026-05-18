@@ -64,41 +64,246 @@ function applySectorMaterial(root: THREE.Object3D, sector?: string) {
   });
 }
 
-function addLogoSprite(root: THREE.Object3D, ticker?: string) {
+const LOGO_URL_BY_TICKER: Record<string, string> = {
+  AAPL: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/apple.svg',
+  MSFT: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/microsoft.svg',
+  GOOGL: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/google.svg',
+  GOOG: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/google.svg',
+  AMZN: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/amazon.svg',
+  TSLA: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/tesla.svg',
+  NFLX: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/netflix.svg',
+  META: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/facebook.svg',
+  NVDA: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/nvidia.svg',
+  INTC: 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/intel.svg',
+};
+
+function getLogoUrl(ticker: string, name?: string) {
+  const upperTicker = ticker.toUpperCase();
+  if (LOGO_URL_BY_TICKER[upperTicker]) {
+    return LOGO_URL_BY_TICKER[upperTicker];
+  }
+
+  const lowerName = name?.toLowerCase() ?? '';
+  if (lowerName.includes('apple')) return 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/apple.svg';
+  if (lowerName.includes('microsoft')) return 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/microsoft.svg';
+  if (lowerName.includes('google')) return 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/google.svg';
+  if (lowerName.includes('amazon')) return 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/amazon.svg';
+  if (lowerName.includes('tesla')) return 'https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/tesla.svg';
+
+  return `/logos/${ticker}.png`;
+}
+
+function createTickerFallbackTexture(ticker: string) {
+  const size = 256;
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d');
+  if (ctx) {
+    ctx.fillStyle = '#111827';
+    ctx.fillRect(0, 0, size, size);
+    ctx.fillStyle = '#f8fafc';
+    ctx.fillRect(0, 0, size, size * 0.3);
+    ctx.fillStyle = '#f8fafc';
+    ctx.font = 'bold 120px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(ticker.slice(0, 3).toUpperCase(), size / 2, size / 2 + 12);
+  }
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
+}
+
+function loadImageElement(url: string): Promise<HTMLImageElement> {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.crossOrigin = 'anonymous';
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error(`Failed to load image ${url}`));
+    image.src = url;
+  });
+}
+
+function createCanvasTextureFromImage(image: HTMLImageElement): THREE.Texture {
+  const width = Math.max(128, image.width || 128);
+  const height = Math.max(128, image.height || 128);
+  const canvas = document.createElement('canvas');
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+  if (ctx) {
+    ctx.clearRect(0, 0, width, height);
+    ctx.drawImage(image, 0, 0, width, height);
+  }
+  const texture = new THREE.CanvasTexture(canvas);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.minFilter = THREE.LinearFilter;
+  texture.magFilter = THREE.LinearFilter;
+  texture.generateMipmaps = false;
+  texture.needsUpdate = true;
+  return texture;
+}
+
+async function createImageTexture(url: string): Promise<THREE.Texture> {
+  const isSvg = url.toLowerCase().endsWith('.svg');
+  if (isSvg) {
+    const response = await fetch(url, { mode: 'cors' });
+    if (!response.ok) throw new Error(`Failed to fetch SVG ${url}`);
+    const svgText = await response.text();
+    const blob = new Blob([svgText], { type: 'image/svg+xml;charset=utf-8' });
+    const blobUrl = URL.createObjectURL(blob);
+    try {
+      const image = await loadImageElement(blobUrl);
+      return createCanvasTextureFromImage(image);
+    } finally {
+      URL.revokeObjectURL(blobUrl);
+    }
+  }
+  const image = await loadImageElement(url);
+  return createCanvasTextureFromImage(image);
+}
+
+function addLogoSprite(root: THREE.Object3D, ticker?: string, name?: string) {
   if (!ticker) return;
-  const url = `/logos/${ticker}.png`;
-  const textureLoader = new THREE.TextureLoader();
   const material = new THREE.SpriteMaterial({
     transparent: true,
     depthTest: true,
     depthWrite: false,
+    map: createTickerFallbackTexture(ticker),
   });
   const sprite = new THREE.Sprite(material);
-  sprite.visible = false;
 
   const box = new THREE.Box3().setFromObject(root);
   const size = new THREE.Vector3();
   box.getSize(size);
   const height = size.y || 1;
-  const logoSize = Math.max(0.35, Math.min(0.9, height * 0.25));
+  const logoSize = Math.max(0.45, Math.min(1.15, height * 0.35));
   sprite.scale.set(logoSize, logoSize, 1);
   sprite.position.set(0, height + 0.25, 0);
+  sprite.visible = true;
   root.add(sprite);
 
-  textureLoader.load(
-    url,
-    (texture) => {
-      texture.colorSpace = THREE.SRGBColorSpace;
+  const url = getLogoUrl(ticker, name);
+  createImageTexture(url)
+    .catch(() => createImageTexture(`/logos/${ticker}.png`))
+    .then((texture) => {
+      material.map?.dispose?.();
       material.map = texture;
       material.needsUpdate = true;
-      sprite.visible = true;
-    },
-    undefined,
-    () => {
-      if (sprite.parent) sprite.parent.remove(sprite);
-      material.dispose();
-    },
-  );
+    })
+    .catch(() => {
+      // Keep the generated fallback if both remote and local fail.
+    });
+}
+
+const oilTickerSet = new Set(['XOM', 'CVX', 'OXY']);
+
+function isWindMotionStock(st: StockRow): boolean {
+  return /wind/i.test(st.n) || /WIND/.test(st.t);
+}
+
+function isOilMotionStock(st: StockRow, sec: SectorDef): boolean {
+  return oilTickerSet.has(st.t) || sec.id === 'ENERGY' || /oil|exxon|petro/i.test(st.n.toLowerCase());
+}
+
+function createWindTurbineMarker(height: number): THREE.Group {
+  const mat = new THREE.MeshStandardMaterial({
+    color: 0xf8fafc,
+    roughness: 0.35,
+    metalness: 0.4,
+    emissive: 0x0b2040,
+    emissiveIntensity: 0.03,
+  });
+  const tower = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.08, height * 0.45, 8), mat);
+  tower.position.y = height * 0.225;
+
+  const rotor = new THREE.Group();
+  const hub = new THREE.Mesh(new THREE.SphereGeometry(0.06, 8, 8), mat);
+  rotor.add(hub);
+  const bladeMat = new THREE.MeshStandardMaterial({
+    color: 0xe5f3ff,
+    roughness: 0.3,
+    metalness: 0.35,
+  });
+  for (let i = 0; i < 3; i++) {
+    const blade = new THREE.Mesh(new THREE.BoxGeometry(0.02, 0.5, 0.08), bladeMat);
+    blade.position.y = 0.25;
+    blade.rotation.z = (Math.PI * 2 * i) / 3;
+    blade.rotation.y = Math.PI / 2;
+    rotor.add(blade);
+  }
+  rotor.position.y = height * 0.45;
+  rotor.userData = { rotationRate: 1.35 };
+
+  const group = new THREE.Group();
+  group.add(tower, rotor);
+  group.userData = { rotor };
+  return group;
+}
+
+function createPumpjackMarker(height: number): THREE.Group {
+  const mat = new THREE.MeshStandardMaterial({
+    color: 0xd4b475,
+    roughness: 0.35,
+    metalness: 0.45,
+    emissive: 0x1f1308,
+    emissiveIntensity: 0.04,
+  });
+  const base = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.06, 0.18), mat);
+  base.position.y = 0.03;
+  const mast = new THREE.Mesh(new THREE.BoxGeometry(0.06, height * 0.22, 0.06), mat);
+  mast.position.y = height * 0.11 + 0.03;
+
+  const armPivot = new THREE.Group();
+  armPivot.position.y = height * 0.24 + 0.03;
+  const arm = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.05, 0.05), mat);
+  arm.position.x = 0.21;
+  const horsehead = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.06, 0.06), mat);
+  horsehead.position.set(0.42, 0, 0);
+  armPivot.add(arm, horsehead);
+
+  const group = new THREE.Group();
+  group.add(base, mast, armPivot);
+  group.userData = { armPivot, phase: 0 };
+  return group;
+}
+
+function attachSectorMotion(root: THREE.Group, st: StockRow, sec: SectorDef) {
+  const box = new THREE.Box3().setFromObject(root);
+  const size = new THREE.Vector3();
+  box.getSize(size);
+  const height = size.y || 1;
+  if (isWindMotionStock(st)) {
+    const turbine = createWindTurbineMarker(Math.max(0.8, height * 0.18));
+    turbine.position.y = height + 0.15;
+    root.add(turbine);
+    root.userData.motion = {
+      tick(dt: number) {
+        const rotor = turbine.userData.rotor as THREE.Group | undefined;
+        if (rotor) rotor.rotation.y += dt * 1.6;
+      },
+    };
+    return;
+  }
+
+  if (isOilMotionStock(st, sec)) {
+    const pump = createPumpjackMarker(Math.max(0.7, height * 0.16));
+    pump.position.y = height + 0.15;
+    root.add(pump);
+    root.userData.motion = {
+      phase: 0,
+      tick(dt: number) {
+        const pivot = (pump.userData as any).armPivot as THREE.Object3D | undefined;
+        if (!pivot) return;
+        this.phase += dt * 2.4;
+        pivot.rotation.z = Math.sin(this.phase) * 0.35;
+      },
+    };
+    return;
+  }
+
+  delete root.userData.motion;
 }
 
 /** Treemap cell inset — thin gap between adjacent lots. */
@@ -122,6 +327,7 @@ export class TreemapScene {
   private readonly disposables: THREE.Object3D[] = [];
   private readonly secById: Record<string, SectorDef>;
   private camAnim = 0;
+  private lastFrameTime = performance.now();
   private ro: ResizeObserver;
 
   /** Loads /models/buildings/*.glb then builds the scene (falls back to procedural meshes if none load). */
@@ -339,7 +545,8 @@ export class TreemapScene {
 
     group.add(model);
     applySectorMaterial(group, sec.name);
-    addLogoSprite(group, st.t);
+    addLogoSprite(group, st.t, st.n);
+    attachSectorMotion(group, st, sec);
 
     group.userData.stock = st;
     group.userData.rect = r;
@@ -453,7 +660,8 @@ export class TreemapScene {
     }
 
     applySectorMaterial(group, sec.name);
-    addLogoSprite(group, st.t);
+    addLogoSprite(group, st.t, st.n);
+    attachSectorMotion(group, st, sec);
 
     group.userData.stock = st;
     group.userData.rect = r;
@@ -479,6 +687,13 @@ export class TreemapScene {
     }
   }
 
+  private updateAnimations(dt: number) {
+    for (const [, group] of this.meshByStock) {
+      const motion = group.userData.motion as { tick?: (dt: number) => void } | undefined;
+      motion?.tick(dt);
+    }
+  }
+
   resize() {
     const w = this.canvas.clientWidth;
     const h = this.canvas.clientHeight;
@@ -490,7 +705,12 @@ export class TreemapScene {
   }
 
   tick() {
+    const now = performance.now();
+    const dt = Math.min(0.05, (now - this.lastFrameTime) / 1000);
+    this.lastFrameTime = now;
+
     this.controls.update();
+    this.updateAnimations(dt);
     this.resize();
     this.renderer.render(this.scene, this.camera);
   }
