@@ -5,18 +5,26 @@ import type { MarketCode, SectorDef, StockRow } from './types';
 import { TreemapScene } from './scene/TreemapScene';
 
 const GURU_QUOTES: { text: string; author: string }[] = [
-  { text: '누군가 그늘에 앉아 쉬고 있다면, 그것은 오래전에 누군가가 나무를 심었기 때문이다.', author: 'Warren Buffett' },
-  { text: '꽃이 피는 과정을 보려고 씨앗을 파헤치지 마라. 인내심을 갖고 기다려라.', author: 'Warren Buffett' },
+  
   { text: '다른 사람이 탐욕스러울 때 두려워하고, 다른 사람이 두려워할 때 탐욕스러워라.', author: 'Warren Buffett' },
   { text: '가격은 당신이 지불하는 것이고, 가치는 당신이 얻는 것이다.', author: 'Warren Buffett' },
   { text: '큰 돈은 사는 것도, 파는 것도 아닌 — 기다리는 데서 번다.', author: 'Charlie Munger' },
-  { text: '복리는 세계 8번째 불가사의이다. 이해하는 자는 벌고, 이해하지 못하는 자는 지불한다.', author: 'Albert Einstein' },
+  
   { text: '시장은 인내심 없는 자의 돈을 인내심 있는 자에게 옮기는 장치이다.', author: 'Warren Buffett' },
   { text: '주식 시장은 적극적인 자에게서 인내하는 자에게로 돈을 이전하는 도구다.', author: 'Benjamin Graham' },
   { text: '자신이 이해하지 못하는 사업에는 절대 투자하지 마라.', author: 'Warren Buffett' },
   { text: '위험은 자신이 무엇을 하는지 모르는 데서 온다.', author: 'Warren Buffett' },
   { text: '10년간 보유할 주식이 아니라면, 10분도 보유하지 마라.', author: 'Warren Buffett' },
   { text: '좋은 기업을 적정한 가격에 사는 것이 적정한 기업을 좋은 가격에 사는 것보다 훨씬 낫다.', author: 'Warren Buffett' },
+  { text: '손실 종목을 팔고 승자 종목을 보유하는 대신, 승자를 팔고 패자를 붙드는 것은 — 꽃을 꺾고 잡초에 물을 주는 것과 같다.', author: 'Peter Lynch' },
+  { text: '당신이 어디로 가는지 모른다면, 결국 다른 곳에 도착하게 된다.', author: 'Peter Lynch' },
+  { text: '주식 투자에서 위장(stomach)이 두뇌보다 더 중요한 기관이다.', author: 'Peter Lynch' },
+  { text: '져도 감당할 수 있는 만큼만 걸어라. 그래야 다음 판이 들어왔을 때 잡을 수 있다.', author: 'Paul Tudor Jones' },
+  { text: '훌륭한 트레이더의 가장 중요한 규칙: 공격이 아니라 방어가 먼저다.', author: 'Paul Tudor Jones' },
+  { text: '시장에서 영웅이 되려 하지 마라. 자존심을 버려라. 틀렸다고 생각되면 인정하고 빠져나와라.', author: 'Paul Tudor Jones' },
+  { text: '맞고 틀리고가 중요한 것이 아니다. 맞았을 때 얼마를 벌고, 틀렸을 때 얼마를 잃느냐가 중요하다.', author: 'George Soros' },
+  { text: '시장은 항상 틀린다. 시장의 편향이 곧 기회다.', author: 'George Soros' },
+  { text: '내가 부자가 된 것은 내가 틀렸다는 사실을 인정할 줄 알았기 때문이다.', author: 'George Soros' },
 ];
 
 function pickRandomQuote() {
@@ -78,9 +86,9 @@ function aiSummary(stocks: StockRow[], sectors: SectorDef[], st: StockRow): stri
   const dir = st.halted ? '거래정지 상태' : st.chg! >= 0 ? `오늘 +${st.chg!.toFixed(2)}%` : `오늘 ${st.chg!.toFixed(2)}%`;
   const cap = fmtBn(st.cap);
   return `
-    <p style="margin:0 0 8px"><b style="color:var(--ink-0)">${st.n}</b>은 ${sec.ko} 섹터에 속하며 시가총액 약 <b>$${cap}</b> 규모로 ${sectorRankFor(stocks, st)} 위치입니다.</p>
+    <p style="margin:0 0 8px"><b style="color:var(--text-primary)">${st.n}</b>은 ${sec.ko} 섹터에 속하며 시가총액 약 <b>$${cap}</b> 규모로 ${sectorRankFor(stocks, st)} 위치입니다.</p>
     <p style="margin:0 0 8px">${dir}의 등락률을 기록하고 있고, PER ${st.per ?? '—'} / PBR ${st.pbr ?? '—'} 수준의 밸류에이션 지표를 보입니다.</p>
-    <p style="margin:0;color:var(--ink-2);font-size:12px">※ 본 요약은 제공된 수치 데이터를 기반으로 생성된 정보 정리이며, 향후 가격에 대한 어떠한 단정도 포함하지 않습니다.</p>
+    <p style="margin:0;color:var(--text-tertiary);font-size:12px">※ 본 요약은 제공된 수치 데이터를 기반으로 생성된 정보 정리이며, 향후 가격에 대한 어떠한 단정도 포함하지 않습니다.</p>
   `;
 }
 
@@ -131,8 +139,9 @@ async function main() {
 
   function buildingFromIntersect(obj: THREE.Object3D | null): THREE.Group | null {
     let o: THREE.Object3D | null = obj;
-    while (o && o.parent !== treemap.stockGroup) o = o.parent;
-    return o && o.parent === treemap.stockGroup && o.userData?.stock ? (o as THREE.Group) : null;
+    const active = treemap.stockGroup;
+    while (o && o.parent !== active) o = o.parent;
+    return o && o.parent === active && o.userData?.stock ? (o as THREE.Group) : null;
   }
 
   function showTooltip(st: StockRow, x: number, y: number) {
@@ -315,16 +324,20 @@ async function main() {
     pWatch.textContent = on ? '★ Saved' : '☆ Save';
   });
 
-  document.querySelectorAll('.view-controls .btn').forEach((b) => {
-    b.addEventListener('click', () => {
-      document.querySelectorAll('.view-controls .btn').forEach((x) => x.classList.remove('active'));
-      b.classList.add('active');
-      const mode = (b as HTMLButtonElement).dataset.view as '3d' | 'top' | 'front';
-      treemap.animateCamera(mode);
-    });
+  const cameraToggle = document.getElementById('cameraToggle')!;
+  cameraToggle.addEventListener('click', (e) => {
+    const btn = (e.target as HTMLElement).closest('.cam-btn') as HTMLButtonElement | null;
+    if (!btn?.dataset.cam) return;
+    const mode = btn.dataset.cam as '3d' | 'top' | 'front';
+    cameraToggle.querySelectorAll('.cam-btn').forEach((b) => b.classList.remove('active'));
+    btn.classList.add('active');
+    treemap.animateCamera(mode);
   });
 
-  document.getElementById('resetCam')!.addEventListener('click', () => treemap.animateCamera('3d'));
+  document.getElementById('resetCam')!.addEventListener('click', () => {
+    cameraToggle.querySelectorAll('.cam-btn').forEach((b) => b.classList.toggle('active', (b as HTMLButtonElement).dataset.cam === '3d'));
+    treemap.animateCamera('3d');
+  });
 
   const searchInput = document.getElementById('search') as HTMLInputElement;
   searchInput.addEventListener('keydown', (e) => {
@@ -368,7 +381,7 @@ async function main() {
   for (const s of sectors) {
     const div = document.createElement('div');
     div.className = 'row';
-    div.innerHTML = `<span class="swatch" style="background:${s.color}"></span>${s.ko} <span style="color:var(--ink-3);margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:10px">${s.id}</span>`;
+    div.innerHTML = `<span class="swatch" style="background:${s.color}"></span>${s.ko} <span style="color:var(--text-disabled);margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:10px">${s.id}</span>`;
     legendList.appendChild(div);
   }
 
@@ -459,10 +472,10 @@ async function main() {
   treemap.resize();
   requestAnimationFrame(tick);
 
-  console.log('%cPolaris Navigator — Vite build', 'color:#facc15;font-weight:700;font-size:13px');
+  console.log('Polaris Navigator — ready');
 }
 
 main().catch((err) => {
   console.error(err);
-  document.body.innerHTML = `<pre style="padding:24px;color:#fca5a5;background:#0a0b10;height:100vh">${String(err)}</pre>`;
+  document.body.innerHTML = `<pre style="padding:24px;color:var(--accent-warn);background:var(--bg-base);height:100vh">${String(err)}</pre>`;
 });

@@ -3,17 +3,22 @@ import { computeLayout, type StockRect } from '../layout/squarify';
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { fitBuildingModelToLot, loadBuildingTemplates, type BuildingTemplateLibrary } from './buildingTemplates';
-import { getSectorVisual, type SectorVisual } from './sectorVisuals';
+import { CUSTOM_DETAILS } from './customDetails';
 
-function colorForReturn(st: StockRow): THREE.Color {
-  if (st.halted) return new THREE.Color(0x4a5160);
-  const c = st.chg ?? 0;
-  if (c >= 0) {
-    const t = Math.min(1, c / 4);
-    return new THREE.Color().setHSL(0.34, 0.65, 0.55 - t * 0.2);
-  }
-  const t = Math.min(1, -c / 4);
-  return new THREE.Color().setHSL(0, 0.7, 0.55 - t * 0.2);
+export const CAMERA_PRESETS = {
+  '3d': { pos: [20, 25, 25] as const, look: [0, 0, 0] as const },
+  top: { pos: [0, 50, 0.01] as const, look: [0, 0, 0] as const },
+  front: { pos: [0, 8, 35] as const, look: [0, 0, 0] as const },
+} as const;
+
+export type CameraPresetKey = keyof typeof CAMERA_PRESETS;
+
+/** Neutral tower façade (no 등락 red/blue); subtle lightness varies per ticker. */
+export function getBuildingColor(stock: StockRow): THREE.Color {
+  if (stock.halted) return new THREE.Color(0x555f70);
+  const seed = tickerStyleSeed(stock.t);
+  const l = 0.34 + ((seed % 13) / 13) * 0.12;
+  return new THREE.Color().setHSL(0, 0, l);
 }
 
 /** Tower height above ground — up days scrape the sky, down days stay stubby (tycoon skyline). */
@@ -38,29 +43,32 @@ function tickerStyleSeed(t: string): number {
 
 const factorySectors = new Set(['Industrials', 'Energy', 'Materials']);
 
-function applySectorMaterial(root: THREE.Object3D, sector?: string) {
-  const visual = getSectorVisual(sector);
+function tintSubtreeMeshesNeutral(root: THREE.Object3D, stock: StockRow) {
+  const bodyColor = getBuildingColor(stock);
   root.traverse((child) => {
     if (!(child instanceof THREE.Mesh)) return;
     const prev = child.material;
-    const next = new THREE.MeshStandardMaterial({
-      color: new THREE.Color(visual.color),
-      roughness: visual.roughness,
-      metalness: visual.metalness ?? 0.1,
-      emissive: visual.emissive ? new THREE.Color(visual.emissive) : new THREE.Color('#000000'),
-      emissiveIntensity: visual.emissive ? 0.15 : 0,
-      transparent: Array.isArray(prev) ? (prev[0]?.transparent ?? false) : prev.transparent ?? false,
-      opacity: Array.isArray(prev) ? (prev[0]?.opacity ?? 1) : prev.opacity ?? 1,
-      side: Array.isArray(prev) ? (prev[0]?.side ?? THREE.FrontSide) : prev.side ?? THREE.FrontSide,
-      map: Array.isArray(prev) ? (prev[0]?.map ?? null) : prev.map ?? null,
-      normalMap: Array.isArray(prev) ? (prev[0]?.normalMap ?? null) : prev.normalMap ?? null,
-    });
-    child.material = next;
+    let map: THREE.Texture | null = null;
+    let normalMap: THREE.Texture | null = null;
     if (Array.isArray(prev)) {
+      const pm = prev[0] as THREE.MeshStandardMaterial;
+      map = pm?.map ?? null;
+      normalMap = pm?.normalMap ?? null;
       prev.forEach((m) => m.dispose?.());
     } else {
-      prev?.dispose?.();
+      const pm = prev as THREE.MeshStandardMaterial;
+      map = pm?.map ?? null;
+      normalMap = pm?.normalMap ?? null;
+      prev.dispose?.();
     }
+    child.material = new THREE.MeshStandardMaterial({
+      color: bodyColor.clone(),
+      roughness: 0.52,
+      metalness: 0.08,
+      emissive: bodyColor.clone().multiplyScalar(0.06),
+      map,
+      normalMap,
+    });
   });
 }
 
@@ -115,6 +123,30 @@ function createTickerFallbackTexture(ticker: string) {
   return texture;
 }
 
+/** Roof strip: ticker text (left side of sprite quad). */
+function createRoofTickerTexture(ticker: string): THREE.CanvasTexture {
+  const cw = 384;
+  const ch = 112;
+  const canvas = document.createElement('canvas');
+  canvas.width = cw;
+  canvas.height = ch;
+  const ctx = canvas.getContext('2d')!;
+  ctx.clearRect(0, 0, cw, ch);
+  ctx.fillStyle = '#e8eef7';
+  ctx.font = 'bold 56px "JetBrains Mono", "IBM Plex Mono", monospace';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  const t = ticker.length > 8 ? ticker.slice(0, 7) + '…' : ticker;
+  ctx.fillText(t.toUpperCase(), 18, ch / 2);
+  const tex = new THREE.CanvasTexture(canvas);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.minFilter = THREE.LinearFilter;
+  tex.magFilter = THREE.LinearFilter;
+  tex.generateMipmaps = false;
+  tex.needsUpdate = true;
+  return tex;
+}
+
 function loadImageElement(url: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const image = new Image();
@@ -164,33 +196,74 @@ async function createImageTexture(url: string): Promise<THREE.Texture> {
   return createCanvasTextureFromImage(image);
 }
 
-function addLogoSprite(root: THREE.Object3D, ticker?: string, name?: string) {
-  if (!ticker) return;
-  const material = new THREE.SpriteMaterial({
-    transparent: true,
-    depthTest: true,
-    depthWrite: false,
-    map: createTickerFallbackTexture(ticker),
+/** Opaque ground pad covering the stock cell so sector hologram does not show through. */
+function addOpaqueLotPad(group: THREE.Group, r: StockRect) {
+  const w = Math.max(0.15, r.w - 0.015);
+  const h = Math.max(0.15, r.h - 0.015);
+  const padGeo = new THREE.PlaneGeometry(w, h);
+  const padMat = new THREE.MeshBasicMaterial({
+    color: 0x030508,
+    polygonOffset: true,
+    polygonOffsetFactor: 1,
+    polygonOffsetUnits: 1,
   });
-  const sprite = new THREE.Sprite(material);
+  const pad = new THREE.Mesh(padGeo, padMat);
+  pad.rotation.x = -Math.PI / 2;
+  pad.position.y = 0.028;
+  pad.renderOrder = -2;
+  group.add(pad);
+}
+
+/** Ticker (left) + brand logo (right), logo keeps texture colors (no tone mapping tint). */
+function addTickerAndLogoSprites(root: THREE.Object3D, ticker?: string, name?: string) {
+  if (!ticker) return;
 
   const box = new THREE.Box3().setFromObject(root);
   const size = new THREE.Vector3();
   box.getSize(size);
   const height = size.y || 1;
   const logoSize = Math.max(0.45, Math.min(1.15, height * 0.35));
-  sprite.scale.set(logoSize, logoSize, 1);
-  sprite.position.set(0, height + 0.25, 0);
-  sprite.visible = true;
-  root.add(sprite);
+  const spacing = 0.07;
+  const tickerTex = createRoofTickerTexture(ticker);
+  const tickerMat = new THREE.SpriteMaterial({
+    map: tickerTex,
+    transparent: true,
+    depthTest: true,
+    depthWrite: false,
+    toneMapped: false,
+    color: 0xffffff,
+  });
+  const tickerSprite = new THREE.Sprite(tickerMat);
+  const tw = logoSize * 1.25;
+  const th = logoSize * 0.38;
+  tickerSprite.scale.set(tw, th, 1);
+
+  const logoMat = new THREE.SpriteMaterial({
+    transparent: true,
+    depthTest: true,
+    depthWrite: false,
+    toneMapped: false,
+    color: 0xffffff,
+    map: createTickerFallbackTexture(ticker),
+  });
+  const logoSprite = new THREE.Sprite(logoMat);
+  logoSprite.scale.set(logoSize, logoSize, 1);
+
+  const yRoof = height + 0.28;
+  tickerSprite.position.set(-(logoSize / 2 + spacing + tw / 2), yRoof, 0);
+  logoSprite.position.set(tw / 2 + spacing + logoSize / 2, yRoof, 0);
+  tickerSprite.visible = true;
+  logoSprite.visible = true;
+  root.add(tickerSprite);
+  root.add(logoSprite);
 
   const url = getLogoUrl(ticker, name);
   createImageTexture(url)
     .catch(() => createImageTexture(`/logos/${ticker}.png`))
     .then((texture) => {
-      material.map?.dispose?.();
-      material.map = texture;
-      material.needsUpdate = true;
+      logoMat.map?.dispose?.();
+      logoMat.map = texture;
+      logoMat.needsUpdate = true;
     })
     .catch(() => {
       // Keep the generated fallback if both remote and local fail.
@@ -354,11 +427,12 @@ export class TreemapScene {
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
 
-    this.scene.background = null;
-    this.scene.fog = new THREE.Fog(0x0a0b10, 60, 220);
+    this.scene.background = new THREE.Color(0x000000);
+    this.scene.fog = new THREE.Fog(0x000000, 60, 220);
 
     this.camera = new THREE.PerspectiveCamera(45, 1, 0.1, 500);
-    this.camera.position.set(0, 50, 70);
+    const p0 = CAMERA_PRESETS['3d'].pos;
+    this.camera.position.set(p0[0], p0[1], p0[2]);
 
     this.controls = new OrbitControls(this.camera, canvas);
     this.controls.enableDamping = true;
@@ -377,15 +451,15 @@ export class TreemapScene {
     fillLight.position.set(-50, 40, -20);
     this.scene.add(fillLight);
 
-    const grid = new THREE.GridHelper(120, 30, 0x2a2f3e, 0x1a1d28);
+    const grid = new THREE.GridHelper(120, 30, 0x0a3a1a, 0x061a0c);
     grid.position.y = -0.01;
     const gMat = grid.material as THREE.Material;
     gMat.transparent = true;
-    gMat.opacity = 0.5;
+    gMat.opacity = 0.35;
     this.scene.add(grid);
 
-    const TREE_W = 80;
-    const TREE_H = 50;
+    const TREE_W = 90;
+    const TREE_H = 70;
     const { sectorRects, stockRects } = computeLayout(stocks, TREE_W, TREE_H);
 
     const sectorGroup = new THREE.Group();
@@ -394,11 +468,13 @@ export class TreemapScene {
     for (const r of sectorRects) {
       const sec = this.secById[r.ref];
       const geo = new THREE.PlaneGeometry(r.w, r.h);
+      const secCol = new THREE.Color(sec.color);
       const mat = new THREE.MeshBasicMaterial({
-        color: sec.color,
+        color: secCol,
         transparent: true,
-        opacity: 0.08,
+        opacity: 0.4,
         side: THREE.DoubleSide,
+        depthWrite: false,
       });
       const mesh = new THREE.Mesh(geo, mat);
       mesh.rotation.x = -Math.PI / 2;
@@ -407,7 +483,11 @@ export class TreemapScene {
       this.track(mesh);
 
       const edgeGeo = new THREE.EdgesGeometry(geo);
-      const edgeMat = new THREE.LineBasicMaterial({ color: sec.color, transparent: true, opacity: 0.55 });
+      const edgeMat = new THREE.LineBasicMaterial({
+        color: secCol,
+        transparent: true,
+        opacity: 0.55,
+      });
       const edge = new THREE.LineSegments(edgeGeo, edgeMat);
       edge.rotation.x = -Math.PI / 2;
       edge.position.set(r.x + r.w / 2, 0.02, r.y + r.h / 2);
@@ -415,10 +495,10 @@ export class TreemapScene {
       this.track(edge);
 
       if (Math.min(r.w, r.h) > 6) {
-        const label = this.makeLabel(sec.name, '#e5e7eb');
+        const label = this.makeLabel(sec.name, sec.color);
         label.position.set(r.x + r.w / 2, 0.1, r.y + r.h / 2);
         label.scale.set(Math.min(r.w * 0.5, 10), Math.min(r.w * 0.5, 10) * 0.18, 1);
-        (label.material as THREE.SpriteMaterial).opacity = 0.18;
+        (label.material as THREE.SpriteMaterial).opacity = 0.35;
         sectorGroup.add(label);
         this.track(label);
       }
@@ -517,17 +597,17 @@ export class TreemapScene {
     this.buildProceduralStockBuildingContent(group, r, st);
   }
 
-  /** glTF variant scaled to the treemap cell; tinted by return color. */
+  /** glTF variant scaled to the treemap cell; tinted by daily change color. */
   private buildGltfStockBuildingContent(group: THREE.Group, r: StockRect, st: StockRow) {
     this.clearBuildingGroup(group);
     const sec = this.secById[st.s];
     const { footW, footD } = lotFootprint(r);
     const H = computeTowerHeight(st);
     const seed = tickerStyleSeed(st.t);
-    const bodyColor = colorForReturn(st);
+    const bodyColor = getBuildingColor(st);
 
     const podiumMat = new THREE.MeshStandardMaterial({
-      color: 0x2a3142,
+      color: bodyColor.clone(),
       roughness: 0.88,
       metalness: 0.04,
     });
@@ -544,129 +624,86 @@ export class TreemapScene {
     model.position.y += slabT;
 
     group.add(model);
-    applySectorMaterial(group, sec.name);
-    addLogoSprite(group, st.t, st.n);
+    tintSubtreeMeshesNeutral(model, st);
+    addOpaqueLotPad(group, r);
+    addTickerAndLogoSprites(group, st.t, st.n);
     attachSectorMotion(group, st, sec);
+
+    const customBuilder = CUSTOM_DETAILS[st.t];
+    if (customBuilder) {
+      const fp = Math.min(footW, footD);
+      customBuilder(group, H + slabT, fp);
+    }
 
     group.userData.stock = st;
     group.userData.rect = r;
     group.userData.baseColor = bodyColor;
-    group.userData.sectorColor = sec.color;
   }
 
-  /** Stacked “tycoon” building: slab, podium, shaft, setback crown, roof, optional spire. */
+  /** Stacked building: neutral slab/cap; main body = daily change color. */
   private buildProceduralStockBuildingContent(group: THREE.Group, r: StockRect, st: StockRow) {
     this.clearBuildingGroup(group);
+    addOpaqueLotPad(group, r);
     const sec = this.secById[st.s];
     const { footW, footD } = lotFootprint(r);
     const H = computeTowerHeight(st);
-    const seed = tickerStyleSeed(st.t);
-    const bodyColor = colorForReturn(st);
-    const secCol = new THREE.Color(sec.color);
-
-    const podiumMat = new THREE.MeshStandardMaterial({
-      color: 0x2a3142,
-      roughness: 0.88,
-      metalness: 0.04,
-    });
-    const bodyMat = new THREE.MeshStandardMaterial({
-      color: bodyColor,
-      roughness: 0.48,
-      metalness: 0.06,
-      emissive: bodyColor.clone().multiplyScalar(0.07),
-    });
+    const bodyColor = getBuildingColor(st);
+    const capNeutral = new THREE.Color(0x252b38);
 
     let yTop = 0;
 
-    const slabT = 0.1;
-    const slab = new THREE.Mesh(new THREE.BoxGeometry(footW, slabT, footD), podiumMat);
+    const slabT = 0.08;
+    const slabMat = new THREE.MeshStandardMaterial({ color: 0x232a36, roughness: 0.9, metalness: 0.02 });
+    const slab = new THREE.Mesh(new THREE.BoxGeometry(footW, slabT, footD), slabMat);
     slab.position.y = yTop + slabT / 2;
     group.add(slab);
     yTop += slabT;
 
-    const podH = Math.min(H * 0.22, Math.max(0.2, H * 0.18));
-    const podScale = 0.94 - (seed % 7) * 0.008;
-    const podium = new THREE.Mesh(new THREE.BoxGeometry(footW * podScale, podH, footD * podScale), podiumMat);
-    podium.position.y = yTop + podH / 2;
-    group.add(podium);
-    yTop += podH;
-
-    const shaftFrac = 0.58 + (seed % 5) * 0.04;
-    const shaftH = Math.max(0.25, H * shaftFrac);
-    const inset = 0.72 + (seed % 11) * 0.01;
-    const shaftW = footW * inset;
-    const shaftD = footD * inset;
-    const shaftGeo = new THREE.BoxGeometry(shaftW, shaftH, shaftD);
-    const shaft = new THREE.Mesh(shaftGeo, bodyMat);
-    shaft.position.y = yTop + shaftH / 2;
-    group.add(shaft);
-
-    const edgeGeo = new THREE.EdgesGeometry(shaftGeo);
-    const edgeMat = new THREE.LineBasicMaterial({
-      color: 0xe2e8f0,
-      transparent: true,
-      opacity: 0.14,
+    const bodyInset = 0.7;
+    const bodyW = footW * bodyInset;
+    const bodyD = footD * bodyInset;
+    const bodyH = Math.max(0.25, H * 0.75);
+    const bodyMat = new THREE.MeshStandardMaterial({
+      color: bodyColor,
+      roughness: 0.52,
+      metalness: 0.08,
+      emissive: bodyColor.clone().multiplyScalar(0.06),
     });
+    const bodyGeo = new THREE.BoxGeometry(bodyW, bodyH, bodyD);
+    const body = new THREE.Mesh(bodyGeo, bodyMat);
+    body.position.y = yTop + bodyH / 2;
+    group.add(body);
+
+    const edgeGeo = new THREE.EdgesGeometry(bodyGeo);
+    const edgeMat = new THREE.LineBasicMaterial({ color: 0xe2e8f0, transparent: true, opacity: 0.12 });
     const edges = new THREE.LineSegments(edgeGeo, edgeMat);
-    edges.position.copy(shaft.position);
+    edges.position.copy(body.position);
     group.add(edges);
-    yTop += shaftH;
+    yTop += bodyH;
 
-    const crownH = Math.min(H * 0.22, 1.25);
-    const useSetback = H > 1.4 && seed % 3 !== 0;
-    if (useSetback && crownH > 0.15) {
-      const crownInset = inset * 0.82;
-      const crown = new THREE.Mesh(
-        new THREE.BoxGeometry(footW * crownInset, crownH, footD * crownInset),
-        bodyMat,
-      );
-      crown.position.y = yTop + crownH / 2;
-      group.add(crown);
-      yTop += crownH;
-    }
-
-    const roofR = Math.min(footW, footD) * 0.22;
-    const roofH = Math.min(0.55, roofR * 1.2);
-    const coneH = roofH * 1.35;
-    const pyrH = roofH * 1.15;
-    const roofGeo =
-      seed % 2 === 0 ? new THREE.ConeGeometry(roofR, coneH, 4) : new THREE.CylinderGeometry(0, roofR * 0.95, pyrH, 4);
-    const roofActualH = seed % 2 === 0 ? coneH : pyrH;
-    const roofMat = new THREE.MeshStandardMaterial({
-      color: secCol,
+    const capH = Math.max(0.06, H * 0.04);
+    const capMat = new THREE.MeshStandardMaterial({
+      color: capNeutral,
       roughness: 0.35,
-      metalness: 0.25,
-      emissive: secCol.clone().multiplyScalar(0.12),
+      metalness: 0.2,
+      emissive: capNeutral.clone().multiplyScalar(0.05),
     });
-    const roof = new THREE.Mesh(roofGeo, roofMat);
-    roof.position.y = yTop + roofActualH / 2;
-    roof.rotation.y = 0;
-    group.add(roof);
-    yTop += roofActualH;
+    const cap = new THREE.Mesh(new THREE.BoxGeometry(bodyW + 0.06, capH, bodyD + 0.06), capMat);
+    cap.position.y = yTop + capH / 2;
+    group.add(cap);
 
-    if (H > 4.2 && seed % 4 !== 1) {
-      const spireH = Math.min(1.8, H * 0.12);
-      const spire = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.04, 0.09, spireH, 6),
-        new THREE.MeshStandardMaterial({
-          color: 0xf8fafc,
-          roughness: 0.25,
-          metalness: 0.5,
-          emissive: new THREE.Color(0x94a3b8).multiplyScalar(0.15),
-        }),
-      );
-      spire.position.y = yTop + spireH / 2;
-      group.add(spire);
-    }
-
-    applySectorMaterial(group, sec.name);
-    addLogoSprite(group, st.t, st.n);
+    addTickerAndLogoSprites(group, st.t, st.n);
     attachSectorMotion(group, st, sec);
+
+    const customBuilder = CUSTOM_DETAILS[st.t];
+    if (customBuilder) {
+      const fp = Math.min(footW, footD);
+      customBuilder(group, yTop, fp);
+    }
 
     group.userData.stock = st;
     group.userData.rect = r;
     group.userData.baseColor = bodyColor;
-    group.userData.sectorColor = sec.color;
   }
 
   private addStockBuilding(r: StockRect) {
@@ -716,14 +753,12 @@ export class TreemapScene {
   }
 
   animateCamera(mode: '3d' | 'top' | 'front') {
-    const target =
-      mode === '3d'
-        ? { x: 0, y: 50, z: 70 }
-        : mode === 'top'
-          ? { x: 0, y: 85, z: 0.001 }
-          : { x: 0, y: 14, z: 70 };
+    const preset = CAMERA_PRESETS[mode];
+    const target = { x: preset.pos[0], y: preset.pos[1], z: preset.pos[2] };
+    const look = { x: preset.look[0], y: preset.look[1], z: preset.look[2] };
     if (this.camAnim) cancelAnimationFrame(this.camAnim);
     const start = { x: this.camera.position.x, y: this.camera.position.y, z: this.camera.position.z };
+    const startLook = this.controls.target.clone();
     const t0 = performance.now();
     const dur = 700;
     const step = (t: number) => {
@@ -734,7 +769,11 @@ export class TreemapScene {
         start.y + (target.y - start.y) * e,
         start.z + (target.z - start.z) * e,
       );
-      this.controls.target.set(0, 0, 0);
+      this.controls.target.set(
+        startLook.x + (look.x - startLook.x) * e,
+        startLook.y + (look.y - startLook.y) * e,
+        startLook.z + (look.z - startLook.z) * e,
+      );
       if (k < 1) this.camAnim = requestAnimationFrame(step);
     };
     this.camAnim = requestAnimationFrame(step);
@@ -757,13 +796,19 @@ export class TreemapScene {
   }
 
   private intro() {
+    const end = CAMERA_PRESETS['3d'].pos;
     const t0 = performance.now();
-    const startY = 130;
-    const endY = 50;
+    const start = { x: end[0], y: 130, z: end[2] + 45 };
+    this.camera.position.set(start.x, start.y, start.z);
+    this.controls.target.set(CAMERA_PRESETS['3d'].look[0], CAMERA_PRESETS['3d'].look[1], CAMERA_PRESETS['3d'].look[2]);
     const step = (t: number) => {
       const k = Math.min(1, (t - t0) / 1200);
       const e = 1 - Math.pow(1 - k, 3);
-      this.camera.position.y = startY + (endY - startY) * e;
+      this.camera.position.set(
+        start.x + (end[0] - start.x) * e,
+        start.y + (end[1] - start.y) * e,
+        start.z + (end[2] - start.z) * e,
+      );
       if (k < 1) requestAnimationFrame(step);
     };
     requestAnimationFrame(step);

@@ -104,7 +104,7 @@ export function computeLayout(stocks: StockRow[], W: number, H: number): { secto
 
   const stockRects: StockRect[] = [];
   for (const r of secRects) {
-    const pad = 0.6;
+    const pad = 0.8;
     const innerX = r.x + pad;
     const innerY = r.y + pad;
     const innerW = Math.max(0.1, r.w - pad * 2);

@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap"
       rel="stylesheet"
     />
   </head>
@@ -19,7 +19,12 @@
         <div>
           <div class="name">Polaris Navigator</div>
         </div>
-        <span class="sub">v0.1 · Vite + TypeScript</span>
+        <span class="sub">v0.1</span>
+      </div>
+      <div class="camera-toggle" id="cameraToggle" role="group" aria-label="카메라 뷰">
+        <button class="cam-btn active" data-cam="3d" type="button">3D</button>
+        <button class="cam-btn" data-cam="top" type="button">TOP</button>
+        <button class="cam-btn" data-cam="front" type="button">FRONT</button>
       </div>
       <div class="top-actions">
         <div class="search-wrap">
@@ -36,20 +41,15 @@
     </div>
 
     <aside class="legend">
-      <h4>GICS 11 Sectors</h4>
+      <h4>11 Sectors</h4>
       <div id="legend-list"></div>
       <hr />
-      <h4>Return</h4>
-      <div class="row"><span class="swatch" style="background: var(--up)"></span>+ Up day</div>
-      <div class="row"><span class="swatch" style="background: var(--down)"></span>− Down day</div>
-      <div class="row"><span class="swatch" style="background: var(--flat)"></span>± Halted</div>
+      <h4>색 의미</h4>
+      <div class="row"><span class="swatch" style="background: #4b5563"></span>빌딩 · 중립 톤</div>
+      <div class="row" style="padding-left: 2px; font-size: 11px; color: var(--text-tertiary); line-height: 1.45">
+        바닥 면 = 섹터 색(반투명) · 등락은 패널·툴팁
+      </div>
     </aside>
-
-    <div class="view-controls">
-      <button class="btn active" data-view="3d" type="button"><b>3D</b><span>persp</span></button>
-      <button class="btn" data-view="top" type="button"><b>TOP</b><span>plan</span></button>
-      <button class="btn" data-view="front" type="button"><b>FR</b><span>front</span></button>
-    </div>
 
     <div class="tooltip" id="tooltip">
       <div class="t-name" id="tt-name">—</div>
@@ -127,7 +127,7 @@
 
         <section class="section">
           <h3>Sector Weight Timeline <span class="tag-soon">Sprint 3</span></h3>
-          <div style="font-size: 11px; color: var(--ink-3); font-family: 'JetBrains Mono', monospace; line-height: 1.6">
+          <div style="font-size: 11px; color: var(--text-disabled); font-family: 'JetBrains Mono', monospace; line-height: 1.6">
             섹터 내 비중 변화 미니차트 (데이터 ≥ 1개월 축적 후 활성화)
           </div>
         </section>
@@ -136,9 +136,9 @@
 
     <footer class="statusbar">
       <span class="item">⬢ <b id="s-stocks">—</b> stocks</span>
-      <span class="item">◐ <b id="s-sectors">11</b> sectors (GICS)</span>
-      <span class="item">↑ <b id="s-up">—</b> up · <span style="color: var(--up)">●</span></span>
-      <span class="item">↓ <b id="s-down">—</b> down · <span style="color: var(--down)">●</span></span>
+      <span class="item">◐ <b id="s-sectors">11</b> sectors</span>
+      <span class="item">↑ <b id="s-up">—</b> up · <span style="color: var(--change-up)">●</span></span>
+      <span class="item">↓ <b id="s-down">—</b> down · <span style="color: var(--change-down)">●</span></span>
       <span class="item">⊘ <b id="s-halt">0</b> halted</span>
       <span class="spacer"></span>
       <span class="item">last sync <b id="s-time">—</b></span>
@@ -149,7 +149,7 @@
     <div id="position-view">
       <div class="pv-header">
         <button class="pv-back" id="position-back">← 홈으로</button>
-        <span class="pv-title">내 포지션은 어디쯤?</span>
+        <span class="pv-title card-title">내 포지션은 어디쯤?</span>
       </div>
       <div class="pv-body">
         <div class="pv-col">
@@ -189,8 +189,8 @@
     <div class="home-hub" id="home-hub">
       <header class="hub-header">
         <div class="hub-logo">P</div>
-        <h1 class="hub-title">흔들리지 않을 근거</h1>
-        <p class="hub-sub">막연함을 좌표로</p>
+        <h1 class="hub-title hero-headline">흔들리지 않을 근거</h1>
+        <p class="hub-sub caption">막연함을 좌표로</p>
       </header>
       <div class="hub-cards">
         <a class="nav-card" data-route="treemap" href="#">
