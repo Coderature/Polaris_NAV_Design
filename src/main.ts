@@ -8,68 +8,7 @@ import {
   dataSnapshotBaselineLabel,
   dataSourceDetailLabel,
 } from './types';
-import { TreemapScene } from './scene/TreemapScene';
-
-const GURU_QUOTES: { text: string; author: string }[] = [
-  
-  { text: '다른 사람이 탐욕스러울 때 두려워하고, 다른 사람이 두려워할 때 탐욕스러워라.', author: 'Warren Buffett' },
-  { text: '가격은 당신이 지불하는 것이고, 가치는 당신이 얻는 것이다.', author: 'Warren Buffett' },
-  { text: '큰 돈은 사는 것도, 파는 것도 아닌 — 기다리는 데서 번다.', author: 'Charlie Munger' },
-  
-  { text: '시장은 인내심 없는 자의 돈을 인내심 있는 자에게 옮기는 장치이다.', author: 'Warren Buffett' },
-  { text: '주식 시장은 적극적인 자에게서 인내하는 자에게로 돈을 이전하는 도구다.', author: 'Benjamin Graham' },
-  { text: '자신이 이해하지 못하는 사업에는 절대 투자하지 마라.', author: 'Warren Buffett' },
-  { text: '위험은 자신이 무엇을 하는지 모르는 데서 온다.', author: 'Warren Buffett' },
-  { text: '10년간 보유할 주식이 아니라면, 10분도 보유하지 마라.', author: 'Warren Buffett' },
-  { text: '좋은 기업을 적정한 가격에 사는 것이 적정한 기업을 좋은 가격에 사는 것보다 훨씬 낫다.', author: 'Warren Buffett' },
-  { text: '손실 종목을 팔고 승자 종목을 보유하는 대신, 승자를 팔고 패자를 붙드는 것은 — 꽃을 꺾고 잡초에 물을 주는 것과 같다.', author: 'Peter Lynch' },
-  { text: '당신이 어디로 가는지 모른다면, 결국 다른 곳에 도착하게 된다.', author: 'Peter Lynch' },
-  { text: '주식 투자에서 위장(stomach)이 두뇌보다 더 중요한 기관이다.', author: 'Peter Lynch' },
-  { text: '져도 감당할 수 있는 만큼만 걸어라. 그래야 다음 판이 들어왔을 때 잡을 수 있다.', author: 'Paul Tudor Jones' },
-  { text: '훌륭한 트레이더의 가장 중요한 규칙: 공격이 아니라 방어가 먼저다.', author: 'Paul Tudor Jones' },
-  { text: '시장에서 영웅이 되려 하지 마라. 자존심을 버려라. 틀렸다고 생각되면 인정하고 빠져나와라.', author: 'Paul Tudor Jones' },
-  { text: '맞고 틀리고가 중요한 것이 아니다. 맞았을 때 얼마를 벌고, 틀렸을 때 얼마를 잃느냐가 중요하다.', author: 'George Soros' },
-  { text: '시장은 항상 틀린다. 시장의 편향이 곧 기회다.', author: 'George Soros' },
-  { text: '내가 부자가 된 것은 내가 틀렸다는 사실을 인정할 줄 알았기 때문이다.', author: 'George Soros' },
-];
-
-function pickRandomQuote() {
-  return GURU_QUOTES[Math.floor(Math.random() * GURU_QUOTES.length)];
-}
-
-function runSplashSequence(): Promise<void> {
-  return new Promise((resolve) => {
-    const splash = document.getElementById('splash')!;
-    const loading = document.getElementById('splash-loading')!;
-    const quoteWrap = document.getElementById('splash-quote')!;
-    const quoteText = document.getElementById('quote-text')!;
-    const quoteAuthor = document.getElementById('quote-author')!;
-
-    const q = pickRandomQuote();
-    quoteText.textContent = q.text;
-    quoteAuthor.textContent = q.author;
-
-    setTimeout(() => {
-      loading.classList.add('fade-out');
-
-      setTimeout(() => {
-        quoteWrap.classList.add('show');
-
-        setTimeout(() => {
-          quoteWrap.classList.add('fade-out');
-
-          setTimeout(() => {
-            splash.classList.add('fade-out');
-            setTimeout(() => {
-              splash.style.display = 'none';
-              resolve();
-            }, 800);
-          }, 1200);
-        }, 3500);
-      }, 600);
-    }, 3000);
-  });
-}
+import { DesignScene } from './scene/DesignScene';
 
 function fmtBn(cap: number): string {
   if (cap >= 1000) return `${(cap / 1000).toFixed(2)}T`;
@@ -113,15 +52,13 @@ function aiSummary(stocks: StockRow[], sectors: SectorDef[], st: StockRow): stri
   `;
 }
 
-async function main() {
-  await runSplashSequence();
-
-  const { sectors, stocks, generatedAt } = await loadTreemapData();
+function main() {
+  const { sectors, stocks, generatedAt } = loadTreemapData();
   const secById = Object.fromEntries(sectors.map((s) => [s.id, s])) as Record<string, SectorDef>;
 
   const canvas = document.getElementById('scene') as HTMLCanvasElement;
   const wrap = document.getElementById('scene-wrap') as HTMLElement;
-  const treemap = await TreemapScene.create(canvas, stocks, sectors, wrap);
+  const design = DesignScene.create(canvas, stocks, sectors, wrap);
 
   const ray = new THREE.Raycaster();
   const ndc = new THREE.Vector2();
@@ -146,9 +83,6 @@ async function main() {
   const aiContent = document.getElementById('ai-content')!;
   const hintEl = document.getElementById('hint')!;
 
-  const modal = document.getElementById('modal')!;
-  const inlineWarn = document.getElementById('m-warn')!;
-
   let hovered: THREE.Group | null = null;
   let highlighted: THREE.Group | null = null;
   let downX = 0;
@@ -162,7 +96,7 @@ async function main() {
 
   function buildingFromIntersect(obj: THREE.Object3D | null): THREE.Group | null {
     let o: THREE.Object3D | null = obj;
-    const active = treemap.stockGroup;
+    const active = design.stockGroup;
     while (o && o.parent !== active) o = o.parent;
     return o && o.parent === active && o.userData?.stock ? (o as THREE.Group) : null;
   }
@@ -196,13 +130,13 @@ async function main() {
     const rect = canvas.getBoundingClientRect();
     ndc.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
     ndc.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
-    ray.setFromCamera(ndc, treemap.camera);
-    const hits = ray.intersectObjects(treemap.stockGroup.children, true);
+    ray.setFromCamera(ndc, design.camera);
+    const hits = ray.intersectObjects(design.stockGroup.children, true);
     const building = hits.length ? buildingFromIntersect(hits[0].object) : null;
     if (building) {
       const st = building.userData.stock as StockRow;
       showTooltip(st, e.clientX, e.clientY);
-      treemap.setHoveredSector(st.s);
+      design.setHoveredSector(st.s);
       if (hovered !== building) {
         if (hovered) resetBuildingInteractionScale(hovered);
         hovered = building;
@@ -214,7 +148,7 @@ async function main() {
       hovered = null;
       canvas.style.cursor = 'grab';
       hideTooltip();
-      treemap.setHoveredSector(
+      design.setHoveredSector(
         panel.classList.contains('open') && currentStock ? currentStock.s : null,
       );
     }
@@ -222,8 +156,8 @@ async function main() {
 
   function handleClick(e: PointerEvent) {
     updatePointer(e);
-    ray.setFromCamera(ndc, treemap.camera);
-    const hits = ray.intersectObjects(treemap.stockGroup.children, true);
+    ray.setFromCamera(ndc, design.camera);
+    const hits = ray.intersectObjects(design.stockGroup.children, true);
     const building = hits.length ? buildingFromIntersect(hits[0].object) : null;
     if (building) {
       openPanel(building.userData.stock as StockRow, building);
@@ -234,7 +168,7 @@ async function main() {
 
   function openPanel(st: StockRow, mesh: THREE.Group | null) {
     currentStock = st;
-    treemap.setHoveredSector(st.s);
+    design.setHoveredSector(st.s);
     const sec = secById[st.s];
 
     pTicker.textContent = st.t;
@@ -277,9 +211,6 @@ async function main() {
     panel.classList.add('open');
     hintEl.classList.add('hide');
 
-    pWatch.classList.toggle('on', isWatched(st.t));
-    pWatch.textContent = isWatched(st.t) ? '★ Saved' : '☆ Save';
-
     aiStatus.textContent = '데모 요약 생성 중…';
     aiContent.innerHTML = `
     <div class="skel skel-line w90"></div>
@@ -295,7 +226,7 @@ async function main() {
 
   function closePanel() {
     panel.classList.remove('open');
-    treemap.setHoveredSector(null);
+    design.setHoveredSector(null);
     if (highlighted) {
       resetBuildingInteractionScale(highlighted);
       highlighted = null;
@@ -339,17 +270,9 @@ async function main() {
       const btn = b as HTMLButtonElement;
       btn.classList.toggle('active', btn.dataset.view === mode);
     });
-
-    treemap.setVisualMode(mode);
     updateLegendAndHintForView();
-    treemap.resize();
+    design.resize();
   }
-
-  navViewToggle.addEventListener('click', (e) => {
-    const btn = (e.target as HTMLElement).closest('[data-view]') as HTMLButtonElement | null;
-    if (!btn?.dataset.view) return;
-    setNavigatorView(btn.dataset.view as 'overview' | 'chg' | 'marketCap');
-  });
 
   canvas.addEventListener('pointerdown', (e) => {
     isDown = true;
@@ -367,7 +290,7 @@ async function main() {
   });
   canvas.addEventListener('pointerleave', () => {
     hideTooltip();
-    treemap.setHoveredSector(null);
+    design.setHoveredSector(null);
     if (hovered) resetBuildingInteractionScale(hovered);
     hovered = null;
     canvas.style.cursor = 'grab';
@@ -383,71 +306,10 @@ async function main() {
   panel.addEventListener('pointermove', (e) => e.stopPropagation());
   panel.addEventListener('wheel', (e) => e.stopPropagation(), { passive: false });
 
-  function watchKey() {
-    return 'polaris_watchlist';
-  }
-  function getWatchlist(): string[] {
-    try {
-      return JSON.parse(localStorage.getItem(watchKey()) || '[]') as string[];
-    } catch {
-      return [];
-    }
-  }
-  function isWatched(t: string) {
-    return getWatchlist().includes(t);
-  }
-  function toggleWatch(t: string) {
-    const wl = getWatchlist();
-    const i = wl.indexOf(t);
-    if (i >= 0) wl.splice(i, 1);
-    else wl.push(t);
-    localStorage.setItem(watchKey(), JSON.stringify(wl));
-  }
-
-  pWatch.addEventListener('click', () => {
-    if (!currentStock) return;
-    toggleWatch(currentStock.t);
-    const on = isWatched(currentStock.t);
-    pWatch.classList.toggle('on', on);
-    pWatch.textContent = on ? '★ Saved' : '☆ Save';
-  });
+  pWatch.style.display = 'none';
 
   document.getElementById('resetCam')!.addEventListener('click', () => {
-    treemap.resetOrbitCamera();
-  });
-
-  const searchInput = document.getElementById('search') as HTMLInputElement;
-  searchInput.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      const q = searchInput.value.trim().toUpperCase();
-      if (!q) return;
-      const found = stocks.find((s) => s.t.toUpperCase() === q || s.n.toUpperCase().includes(q));
-      if (found) {
-        const mesh = treemap.meshByStock.get(found);
-        openPanel(found, mesh ?? null);
-        if (mesh) treemap.flyToStock(mesh);
-      }
-    }
-  });
-
-  document.getElementById('simBtn')!.addEventListener('click', () => {
-    for (const st of stocks) {
-      if (st.halted) continue;
-      const delta = (Math.random() - 0.5) * 1.2;
-      st.chg = +((st.chg ?? 0) + delta).toFixed(2);
-      if (st.chg > 6) st.chg = 6;
-      if (st.chg < -6) st.chg = -6;
-      st.price = +Math.max(1, (st.price ?? 1) * (1 + delta / 100)).toFixed(2);
-    }
-    treemap.updateAllVisuals();
-    refreshStatus(new Date().toISOString());
-    if (currentStock) {
-      const sign = (currentStock.chg ?? 0) >= 0 ? '+' : '';
-      pChg.textContent = `${sign}${(currentStock.chg ?? 0).toFixed(2)}%`;
-      pChg.classList.remove('up', 'down');
-      pChg.classList.add((currentStock.chg ?? 0) >= 0 ? 'up' : 'down');
-      pPrice.textContent = fmtPrice(currentStock.price ?? 0, currentStock.m);
-    }
+    design.resetOrbitCamera();
   });
 
   const legendList = document.getElementById('legend-list')!;
@@ -471,6 +333,8 @@ async function main() {
     const dn = stocks.filter((s) => !s.halted && (s.chg ?? 0) < 0).length;
     const ht = stocks.filter((s) => s.halted).length;
     document.getElementById('s-stocks')!.textContent = String(stocks.length);
+    const secCount = document.getElementById('s-sectors');
+    if (secCount) secCount.textContent = String(sectors.length);
     document.getElementById('s-up')!.textContent = String(up);
     document.getElementById('s-down')!.textContent = String(dn);
     document.getElementById('s-halt')!.textContent = String(ht);
@@ -484,36 +348,6 @@ async function main() {
   }
   refreshStatus();
 
-  function lockUI() {
-    document.body.classList.add('pre-consent');
-    modal.classList.add('show');
-  }
-  function unlockUI() {
-    document.body.classList.remove('pre-consent');
-    modal.classList.remove('show');
-    inlineWarn.classList.remove('show');
-  }
-
-  function checkConsent() {
-    try {
-      const c = JSON.parse(localStorage.getItem('consent_given') || 'null') as { consent?: boolean } | null;
-      if (c?.consent === true) unlockUI();
-      else lockUI();
-    } catch {
-      lockUI();
-    }
-  }
-  checkConsent();
-
-  document.getElementById('m-agree')!.addEventListener('click', () => {
-    localStorage.setItem('consent_given', JSON.stringify({ consent: true, timestamp: new Date().toISOString() }));
-    unlockUI();
-  });
-
-  document.getElementById('m-cancel')!.addEventListener('click', () => {
-    inlineWarn.classList.add('show');
-  });
-
   const homeHub = document.getElementById('home-hub')!;
   const positionView = document.getElementById('position-view')!;
 
@@ -525,14 +359,19 @@ async function main() {
     homeHub.classList.add('hidden');
   }
 
+  function enterTreemapVillage() {
+    hideHome();
+    positionView.classList.remove('active');
+    navViewToggle.classList.remove('hidden');
+    setNavigatorView('overview');
+  }
+
   document.querySelectorAll<HTMLAnchorElement>('.nav-card').forEach((card) => {
     card.addEventListener('click', (e) => {
       e.preventDefault();
       const route = card.dataset.route;
       if (route === 'treemap') {
-        hideHome();
-        navViewToggle.classList.remove('hidden');
-        setNavigatorView('overview');
+        enterTreemapVillage();
       } else if (route === 'guru') {
         hideHome();
         navViewToggle.classList.add('hidden');
@@ -546,18 +385,19 @@ async function main() {
   document.getElementById('homeBtn')!.addEventListener('click', () => {
     showHome();
     navViewToggle.classList.add('hidden');
-    setNavigatorView('overview');
     closePanel();
   });
 
+  enterTreemapVillage();
+
   function tick() {
-    treemap.tick();
+    design.tick();
     requestAnimationFrame(tick);
   }
-  treemap.resize();
+  design.resize();
   requestAnimationFrame(tick);
 
-  console.log('Polaris Navigator — ready');
+  console.log('Polaris designshowcase — ready');
 }
 
 main().catch((err) => {
