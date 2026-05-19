@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx tsc *)",
+      "Bash(npx vite *)",
+      "Bash(git restore *)",
+      "Bash(Remove-Item src/scene/modelLoader.ts)"
+    ]
+  }
+}
