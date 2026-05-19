@@ -108,6 +108,8 @@ export class DesignScene {
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
+    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
     this.scene.background = new THREE.Color(0x030508);
     this.scene.fog = new THREE.Fog(0x030508, 95, 300);
@@ -127,6 +129,15 @@ export class DesignScene {
     this.scene.add(amb);
     const dir = new THREE.DirectionalLight(0xffffff, 1.08);
     dir.position.set(12, 22, 14);
+    dir.castShadow = true;
+    dir.shadow.mapSize.set(2048, 2048);
+    dir.shadow.camera.near = 0.5;
+    dir.shadow.camera.far = 150;
+    const sr = GRID_SPACING * 4;
+    dir.shadow.camera.left = -sr;
+    dir.shadow.camera.right = sr;
+    dir.shadow.camera.top = sr;
+    dir.shadow.camera.bottom = -sr;
     this.scene.add(dir);
 
     const floorW = GRID_SPACING * cols + 10;
