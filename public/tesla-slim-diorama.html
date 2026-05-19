@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tesla Slim Cell Diorama · Factory + Supercharger Edition</title>
+  <style>
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: radial-gradient(circle at 50% 18%, #1a1820 0%, #0a0a10 58%, #050508 100%);
+      font-family: "Malgun Gothic", "Apple SD Gothic Neo", Arial, sans-serif;
+    }
+    #hud {
+      position: fixed;
+      left: 20px;
+      top: 18px;
+      z-index: 10;
+      color: #f3f7ff;
+      background: rgba(8, 8, 12, 0.78);
+      border: 1px solid rgba(232, 33, 39, 0.6);
+      border-radius: 16px;
+      padding: 13px 15px;
+      line-height: 1.45;
+      box-shadow: 0 18px 40px rgba(0,0,0,.35);
+      pointer-events: none;
+    }
+    #hud b { color: #e82127; font-size: 18px; }
+    #hud span { color: #c7d9ff; font-size: 13px; }
+    #tip {
+      position: fixed;
+      right: 20px;
+      bottom: 18px;
+      z-index: 10;
+      color: #e82127;
+      background: rgba(245, 245, 248, .92);
+      border-radius: 999px;
+      padding: 9px 14px;
+      font-size: 13px;
+      box-shadow: 0 14px 30px rgba(0,0,0,.3);
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="hud">
+    <b>테슬라 1셀 슬림 디오라마</b><br />
+    <span>Factory · Robots · Supercharger · Solar · Megapack · R&D</span>
+  </div>
+  <div id="tip">드래그 회전 · 휠 확대 · 우클릭 이동</div>
+
+  <script type="module">
+    import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
+    import { OrbitControls } from 'https://unpkg.com/three@0.160.0/examples/jsm/controls/OrbitControls.js';
+
+    const GROUND_XZ = 1.25;
+    const gx = (n) => n * GROUND_XZ;
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color('#08080c');
+    scene.fog = new THREE.Fog('#08080c', 11, 26);
+
+    const camera = new THREE.PerspectiveCamera(38, innerWidth / innerHeight, 0.1, 100);
+    camera.position.set(6.0, 5.0, 6.7);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.setSize(innerWidth, innerHeight);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    document.body.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.target.set(0.2, 1.2, 0);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.06;
+    controls.minDistance = 4;
+    controls.maxDistance = 13;
+    controls.maxPolarAngle = Math.PI * 0.49;
+
+    const C = {
+      teslaRed: '#e82127',
+      teslaRedDark: '#a01418',
+      black: '#0a0a0e',
+      darkGray: '#1a1a1f',
+      midGray: '#3a3a42',
+      grayLight: '#8a8a92',
+      silver: '#cfd4dc',
+      metal: '#999999',
+      darkMetal: '#444444',
+      glass: '#a0c8f0',
+      glassDark: '#15252e',
+      glassFactory: '#7eb5e0',
+      warm: '#fff2c8',
+      base: '#08080c',
+      platform: '#252830',
+      road: '#1a1a20',
+      treeGreen: '#2f7d42',
+      grass: '#4a8c52',
+      asphalt: '#1e1e24',
+      solarPanel: '#1e3a8a',
+      whiteCar: '#f4f4f4',
+      redCar: '#e82127',
+      megapackBlack: '#1a1a1f',
+      robotRed: '#e82127'
+    };
+
+    const mat = (color, o = {}) => new THREE.MeshStandardMaterial({
+      color,
+      roughness: o.roughness ?? 0.6,
+      metalness: o.metalness ?? 0.05,
+      transparent: o.transparent ?? false,
+      opacity: o.opacity ?? 1,
+      emissive: o.emissive ?? '#000000',
+      emissiveIntensity: o.emissiveIntensity ?? 0
+    });
+
+    const M = {
+      teslaRed: mat(C.teslaRed, { roughness: .3, metalness: .1, emissive: '#c01418', emissiveIntensity: .25 }),
+      teslaRedGlow: mat(C.teslaRed, { roughness: .2, emissive: C.teslaRed, emissiveIntensity: 1.5 }),
+      teslaRedSign: mat(C.teslaRed, { roughness: .25, emissive: C.teslaRed, emissiveIntensity: 0.8 }),
+      black: mat(C.black, { roughness: .35, metalness: .35 }),
+      darkGray: mat(C.darkGray, { roughness: .5, metalness: .25 }),
+      midGray: mat(C.midGray, { roughness: .55, metalness: .35 }),
+      grayLight: mat(C.grayLight, { roughness: .65, metalness: .15 }),
+      silver: mat(C.silver, { roughness: .42, metalness: .55 }),
+      whiteAccent: mat(C.whiteCar, { roughness: .85 }),
+      metal: mat(C.metal, { roughness: .4, metalness: .65 }),
+      darkMetal: mat(C.darkMetal, { roughness: .3, metalness: .8 }),
+      glass: mat(C.glass, { roughness: .12, metalness: .15, transparent: true, opacity: .55, emissive: '#3a78a0', emissiveIntensity: .15 }),
+      glassDark: mat(C.glassDark, { roughness: .2, metalness: .5 }),
+      glassFactory: mat(C.glassFactory, { roughness: .1, metalness: .15, transparent: true, opacity: .45, emissive: '#5a98c0', emissiveIntensity: .2 }),
+      warmWindow: mat(C.warm, { roughness: .35, emissive: '#ffb93d', emissiveIntensity: .65 }),
+      base: mat(C.base, { roughness: .55 }),
+      platform: mat(C.platform, { roughness: .82 }),
+      road: mat(C.road, { roughness: .9 }),
+      grass: mat(C.grass, { roughness: .9 }),
+      solarPanel: mat(C.solarPanel, { roughness: .25, metalness: .55, emissive: '#0a1a4a', emissiveIntensity: .35 }),
+      whiteCar: mat(C.whiteCar, { roughness: .35, metalness: .35 }),
+      redCar: mat(C.redCar, { roughness: .35, metalness: .35 }),
+      blackCar: mat('#1a1a1f', { roughness: .35, metalness: .45 }),
+      megapack: mat(C.megapackBlack, { roughness: .45, metalness: .3 }),
+      robotArm: mat(C.robotRed, { roughness: .3, metalness: .4, emissive: '#a01418', emissiveIntensity: .15 }),
+      chargerLed: new THREE.MeshBasicMaterial({ color: '#3affae' }),
+      chargingLed: new THREE.MeshBasicMaterial({ color: '#ff3344' }),
+      skyBeamRed: new THREE.MeshBasicMaterial({ color: '#ff2233', transparent: true, opacity: .35 }),
+      headlight: new THREE.MeshBasicMaterial({ color: '#fff8c0' })
+    };
+
+    function box(g, name, x, y, z, sx, sy, sz, material) {
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), material);
+      mesh.name = name;
+      mesh.position.set(x, y, z);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      g.add(mesh);
+      return mesh;
+    }
+
+    function cyl(g, name, x, y, z, r, h, material, radial = 24) {
+      const mesh = new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, radial), material);
+      mesh.name = name;
+      mesh.position.set(x, y, z);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      g.add(mesh);
+      return mesh;
+    }
+
+    function sphere(g, name, x, y, z, r, material) {
+      const mesh = new THREE.Mesh(new THREE.SphereGeometry(r, 16, 12), material);
+      mesh.name = name;
+      mesh.position.set(x, y, z);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      g.add(mesh);
+      return mesh;
+    }
+
+    function roundRect(ctx, x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+    }
+
+    // TESLA 로고 텍스처 (빨강 위 흰색 T 로고 + TESLA 텍스트)
+    function makeTeslaLogoTexture(bgColor = '#ffffff', useRed = true) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1024;
+      canvas.height = 256;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = bgColor;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // TESLA 텍스트 (간격 넓은 스타일)
+      ctx.fillStyle = useRed ? '#e82127' : '#ffffff';
+      ctx.font = 'bold 130px Arial, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      // 글자 간격
+      const text = 'TESLA';
+      const letterSpacing = 30;
+      const totalWidth = ctx.measureText(text).width + (text.length - 1) * letterSpacing;
+      let x = canvas.width / 2 - totalWidth / 2;
+      for (let i = 0; i < text.length; i++) {
+        ctx.textAlign = 'left';
+        ctx.fillText(text[i], x, canvas.height / 2);
+        x += ctx.measureText(text[i]).width + letterSpacing;
+      }
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      return texture;
+    }
+
+    // Tesla T 로고 (빨강 배경 + 흰 T)
+    function makeTeslaTLogoTexture() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 256;
+      canvas.height = 256;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#e82127';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // 간단한 T 모양 (위 가로 + 가운데 세로)
+      ctx.fillStyle = '#ffffff';
+      // 상단 가로 바
+      ctx.fillRect(40, 50, 176, 40);
+      // 가운데 세로 바
+      ctx.fillRect(108, 50, 40, 160);
+      // 세로 바 끝 둥글게 (단순화: 아래 작은 반원)
+      ctx.beginPath();
+      ctx.arc(128, 210, 20, 0, Math.PI, false);
+      ctx.fill();
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      return texture;
+    }
+
+    // Supercharger 로고
+    function makeSuperchargerSign() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 512;
+      canvas.height = 256;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#e82127';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // 번개 아이콘 (단순화)
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.moveTo(180, 50);
+      ctx.lineTo(230, 110);
+      ctx.lineTo(200, 110);
+      ctx.lineTo(240, 200);
+      ctx.lineTo(180, 130);
+      ctx.lineTo(210, 130);
+      ctx.lineTo(180, 50);
+      ctx.closePath();
+      ctx.fill();
+
+      // SUPERCHARGER 텍스트
+      ctx.font = 'bold 38px Arial';
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('SUPER', 260, 110);
+      ctx.fillText('CHARGER', 260, 156);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      return texture;
+    }
+
+    // R&D 사인
+    function makeRDSign() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1024;
+      canvas.height = 256;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#1a1a1f';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 90px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('TESLA R&D CENTER', canvas.width / 2, canvas.height / 2);
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      return texture;
+    }
+
+    // 주가 보드 텍스처
+    function makeStockBoardTexture() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 256;
+      canvas.height = 384;
+      const ctx = canvas.getContext('2d');
+      // 빨강 헤더
+      ctx.fillStyle = '#e82127';
+      ctx.fillRect(0, 0, canvas.width, 100);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 56px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('TESLA', canvas.width / 2, 50);
+      // 검은 본문
+      ctx.fillStyle = '#0a0a0e';
+      ctx.fillRect(0, 100, canvas.width, canvas.height - 100);
+      // 주가 데이터
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 22px Arial';
+      ctx.textAlign = 'left';
+      const data = [
+        ['TSLA', '248.48'],
+        ['PER', '62.31'],
+        ['시가총액', '789.1B'],
+        ['매출', '96.8B'],
+        ['영업이익', '8.9B'],
+        ['EPS', '2.42']
+      ];
+      data.forEach(([k, v], i) => {
+        ctx.textAlign = 'left';
+        ctx.fillText(k, 20, 145 + i * 38);
+        ctx.textAlign = 'right';
+        ctx.fillStyle = i === 0 ? '#3affae' : '#ffffff';
+        ctx.fillText(v, canvas.width - 20, 145 + i * 38);
+        ctx.fillStyle = '#ffffff';
+      });
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      return texture;
+    }
+
+    function planeWith(texture, x, y, z, w, h, emissiveStrength = 0.3) {
+      const material = new THREE.MeshStandardMaterial({
+        map: texture, side: THREE.DoubleSide,
+        roughness: 0.4, emissive: '#ffffff',
+        emissiveMap: texture, emissiveIntensity: emissiveStrength
+      });
+      const mesh = new THREE.Mesh(new THREE.PlaneGeometry(w, h), material);
+      mesh.position.set(x, y, z);
+      mesh.castShadow = true;
+      return mesh;
+    }
+
+    // ===== Tesla 차량 빌더 (간단 sedan) =====
+    function createTeslaCar(g, x, y, z, color = M.whiteCar, scale = 1, withLights = false) {
+      const carGroup = new THREE.Group();
+      carGroup.position.set(x, y, z);
+      carGroup.scale.setScalar(scale);
+      g.add(carGroup);
+
+      // 차체 (낮고 길게)
+      box(carGroup, 'car body', 0, 0, 0, 0.32, 0.09, 0.16, color);
+      // 윗부분 (지붕, 살짝 좁고 낮음)
+      box(carGroup, 'car roof', 0, 0.075, 0, 0.24, 0.05, 0.14, color);
+      // 앞유리 (약간 비스듬한 박스)
+      box(carGroup, 'car windshield', 0.08, 0.075, 0, 0.04, 0.045, 0.13, M.glassDark);
+      // 뒷유리
+      box(carGroup, 'car rear glass', -0.08, 0.075, 0, 0.04, 0.045, 0.13, M.glassDark);
+      // 사이드 유리 (양옆)
+      box(carGroup, 'car left glass', 0, 0.08, 0.071, 0.18, 0.04, 0.005, M.glassDark);
+      box(carGroup, 'car right glass', 0, 0.08, -0.071, 0.18, 0.04, 0.005, M.glassDark);
+
+      // 헤드라이트 (전면 2개)
+      if (withLights) {
+        [[0.16, 0.05], [0.16, -0.05]].forEach(([hx, hz]) => {
+          const hl = new THREE.Mesh(new THREE.SphereGeometry(0.012, 8, 6), M.headlight);
+          hl.position.set(hx, 0, hz);
+          carGroup.add(hl);
+        });
+        // 후미등 (빨강)
+        [[-0.16, 0.05], [-0.16, -0.05]].forEach(([tx, tz]) => {
+          const tl = new THREE.Mesh(new THREE.SphereGeometry(0.01, 8, 6), new THREE.MeshBasicMaterial({ color: '#ff2233' }));
+          tl.position.set(tx, 0.005, tz);
+          carGroup.add(tl);
+        });
+      }
+
+      // 바퀴 4개
+      [[-0.1, 0.075], [0.1, 0.075], [-0.1, -0.075], [0.1, -0.075]].forEach(([wx, wz], i) => {
+        const wheel = cyl(carGroup, `car wheel ${i}`, wx, -0.045, wz, 0.025, 0.025, mat('#1a1a1a'), 10);
+        wheel.rotation.x = Math.PI / 2;
+      });
+
+      return carGroup;
+    }
+
+    // ===== 로봇 팔 빌더 (공장 자동화 시그니처) =====
+    function createRobotArm(g, x, y, z, scale = 1) {
+      const armGroup = new THREE.Group();
+      armGroup.position.set(x, y, z);
+      armGroup.scale.setScalar(scale);
+      g.add(armGroup);
+
+      // 베이스 (땅)
+      cyl(armGroup, 'robot base', 0, 0, 0, 0.06, 0.04, M.darkMetal, 12);
+
+      // 회전 축 (수직)
+      cyl(armGroup, 'robot pivot', 0, 0.06, 0, 0.04, 0.04, 0.08, 12, M.robotArm);
+
+      // 상단 axis
+      const armPivot = new THREE.Group();
+      armPivot.position.set(0, 0.12, 0);
+      armGroup.add(armPivot);
+
+      // 첫번째 암 (수직 위로)
+      box(armPivot, 'arm segment 1', 0, 0.12, 0, 0.04, 0.24, 0.04, M.robotArm);
+      // 첫번째 관절
+      sphere(armPivot, 'joint 1', 0, 0.24, 0, 0.045, M.darkMetal);
+
+      // 두번째 암 (앞으로 휘어짐)
+      const upperArm = new THREE.Group();
+      upperArm.position.set(0, 0.24, 0);
+      upperArm.rotation.z = -Math.PI / 3;
+      armPivot.add(upperArm);
+      box(upperArm, 'arm segment 2', 0.1, 0, 0, 0.2, 0.035, 0.035, M.robotArm);
+
+      // 두번째 관절 + 그리퍼
+      const gripper = new THREE.Group();
+      gripper.position.set(0.2, 0, 0);
+      upperArm.add(gripper);
+      sphere(gripper, 'joint 2', 0, 0, 0, 0.035, M.darkMetal);
+      box(gripper, 'gripper', 0.04, 0, 0, 0.06, 0.025, 0.025, M.darkMetal);
+      // 그리퍼 끝 빨간 LED
+      const gripperLed = new THREE.Mesh(
+        new THREE.SphereGeometry(0.015, 10, 8),
+        new THREE.MeshBasicMaterial({ color: '#ff2233' })
+      );
+      gripperLed.position.set(0.08, 0, 0);
+      gripper.add(gripperLed);
+
+      return { group: armGroup, pivot: armPivot, upperArm, gripperLed };
+    }
+
+    // ===== Supercharger 빌더 =====
+    function createSupercharger(g, x, y, z) {
+      const sc = new THREE.Group();
+      sc.position.set(x, y, z);
+      g.add(sc);
+
+      // 본체 (높은 직사각 박스)
+      box(sc, 'sc body', 0, 0.18, 0, 0.1, 0.36, 0.08, M.whiteAccent);
+      // 빨간 액센트 (정면 위)
+      box(sc, 'sc red top', 0, 0.32, 0.041, 0.08, 0.06, 0.005, M.teslaRedSign);
+      // 화면 (작은 디스플레이)
+      box(sc, 'sc screen', 0, 0.22, 0.041, 0.06, 0.04, 0.005, mat('#0a1a3a', { emissive: '#1e4dcc', emissiveIntensity: 0.8 }));
+      // LED 인디케이터 (충전 상태)
+      const led = new THREE.Mesh(
+        new THREE.SphereGeometry(0.01, 8, 6),
+        M.chargerLed.clone()
+      );
+      led.position.set(0, 0.27, 0.045);
+      sc.add(led);
+      // 호스 (얇은 cylinder)
+      const hose = cyl(sc, 'sc hose', 0.045, 0.15, 0.02, 0.008, 0.008, 0.1, 6, mat('#1a1a1a'));
+      hose.rotation.z = Math.PI / 4;
+
+      return { group: sc, led };
+    }
+
+    function createTeslaDiorama() {
+      const g = new THREE.Group();
+
+      // ===== Base =====
+      box(g, 'dark cell plinth', 0, -0.13, 0, gx(4.8), 0.26, gx(4.3), M.base);
+      box(g, 'cell platform', 0, 0.02, 0, gx(4.35), 0.12, gx(3.85), M.platform);
+      // 정면 도로
+      box(g, 'front road', 0, 0.105, 1.5, gx(4.0), 0.04, gx(0.55), M.road);
+      // 차선
+      for (let i = 0; i < 8; i++) {
+        box(g, `road line ${i}`, -1.6 + i * 0.45, 0.135, 1.5, 0.2, 0.005, 0.025, mat('#fffae0'));
+      }
+
+      // ===== 메인 공장/쇼룸 (셀 중앙, 큰 박스) =====
+      // 본체 (다크 그레이 + 유리 정면)
+      box(g, 'Tesla factory body', 0.0, 0.95, -0.5, 2.4, 1.9, 1.4, M.darkGray);
+      // 옥상 띠 (검정 액센트)
+      box(g, 'factory roof accent', 0.0, 1.94, -0.5, 2.45, 0.1, 1.45, M.black);
+      // 옥상 HVAC 2개
+      box(g, 'factory HVAC 1', -0.8, 2.04, -0.5, 0.25, 0.1, 0.35, M.midGray);
+      box(g, 'factory HVAC 2', 0.8, 2.04, -0.5, 0.25, 0.1, 0.35, M.midGray);
+
+      // 정면 큰 유리 (공장 내부 보이게)
+      box(g, 'factory front glass', 0.0, 0.7, 0.21, 2.2, 1.1, 0.03, M.glassFactory);
+      // 정면 상단 빨강 띠 (TESLA 글자 위치)
+      box(g, 'factory front red band', 0.0, 1.5, 0.215, 2.3, 0.25, 0.015, M.darkGray);
+      // 큰 빨강 발광 "TESLA" 텍스트 광고판 (정면 상단)
+      const teslaSignTex = makeTeslaLogoTexture('#1a1a1f', true);
+      const teslaSign = planeWith(teslaSignTex, 0.0, 1.5, 0.225, 2.0, 0.22, 0.7);
+      g.add(teslaSign);
+
+      // 정면 우측 큰 빨강 띠 + T 로고 (수직)
+      box(g, 'factory right red band', 1.15, 1.0, 0.21, 0.2, 1.9, 0.015, M.teslaRed);
+      const tLogoTex = makeTeslaTLogoTexture();
+      const tLogo = planeWith(tLogoTex, 1.15, 1.4, 0.22, 0.16, 0.16, 0.5);
+      g.add(tLogo);
+
+      // ===== 옥상 큰 TESLA 광고판 (정면 위) =====
+      const roofTeslaSignTex = makeTeslaLogoTexture('#ffffff', true);
+      const roofSign = planeWith(roofTeslaSignTex, 0.0, 2.4, 0.15, 1.6, 0.38, 0.4);
+      roofSign.rotation.x = -Math.PI / 10;
+      g.add(roofSign);
+      // 광고판 지지대
+      box(g, 'roof sign post L', -0.5, 2.15, 0.1, 0.05, 0.4, 0.05, M.darkMetal);
+      box(g, 'roof sign post R', 0.5, 2.15, 0.1, 0.05, 0.4, 0.05, M.darkMetal);
+
+      // ===== 공장 내부: 차량 5대 + 로봇팔 6개 =====
+      // 차량 5대 (조립 라인, 일렬)
+      const factoryCars = [];
+      const carPositions = [
+        [-0.85, 0.4, -0.5, M.whiteCar],
+        [-0.4, 0.4, -0.5, M.blackCar],
+        [0.05, 0.4, -0.5, M.whiteCar],
+        [0.5, 0.4, -0.5, M.redCar],
+        [0.95, 0.4, -0.5, M.blackCar]
+      ];
+      carPositions.forEach(([cx, cy, cz, color]) => {
+        const car = createTeslaCar(g, cx, cy, cz, color, 1.0);
+        factoryCars.push(car);
+      });
+
+      // 로봇팔 6개 (차량 사이사이, 양쪽)
+      const robotArms = [];
+      const robotPositions = [
+        [-1.05, 0.32, -0.3],  // 차량 1 옆
+        [-1.05, 0.32, -0.7],  // 뒷줄
+        [-0.6, 0.32, -0.3],
+        [-0.15, 0.32, -0.3],
+        [0.3, 0.32, -0.3],
+        [0.75, 0.32, -0.3]
+      ];
+      robotPositions.forEach(([rx, ry, rz], i) => {
+        const arm = createRobotArm(g, rx, ry, rz, 1.0);
+        arm.basePhase = i * 0.4;
+        robotArms.push(arm);
+      });
+
+      // 공장 내부 작업등 (천장)
+      const workLights = [];
+      [-0.7, 0, 0.7].forEach(wx => {
+        const wl = new THREE.Mesh(new THREE.SphereGeometry(0.04, 12, 8), new THREE.MeshBasicMaterial({ color: '#fff8c0' }));
+        wl.position.set(wx, 1.55, -0.5);
+        g.add(wl);
+        workLights.push(wl);
+        const pl = new THREE.PointLight('#fff8c0', 0.6, 1.5);
+        pl.position.set(wx, 1.4, -0.5);
+        g.add(pl);
+      });
+
+      // ===== Supercharger 캐노피 (셀 우측) =====
+      // 캐노피 베이스 (콘크리트 패드)
+      box(g, 'sc pad', 1.85, 0.13, 0.45, 1.0, 0.02, 0.95, mat('#1e1e24'));
+      // 캐노피 지붕 (솔라 패널 표시)
+      box(g, 'sc canopy roof', 1.85, 0.5, 0.45, 1.05, 0.04, 1.0, M.solarPanel);
+      // 솔라 패널 격자 (지붕 위에 작은 박스들)
+      const canopyPanels = [];
+      for (let row = 0; row < 3; row++) {
+        for (let col = 0; col < 4; col++) {
+          const px = 1.55 + col * 0.2;
+          const pz = 0.13 + row * 0.22;
+          const sp = box(g, `sc canopy solar ${row}-${col}`, px, 0.525, pz, 0.16, 0.005, 0.18, M.solarPanel.clone());
+          canopyPanels.push({ mesh: sp, phase: (row * 4 + col) * 0.15 });
+        }
+      }
+      // 캐노피 기둥 4개
+      const colPositions = [[1.4, 0.05], [2.3, 0.05], [1.4, 0.85], [2.3, 0.85]];
+      colPositions.forEach(([cx, cz], i) => {
+        cyl(g, `sc col ${i}`, cx, 0.32, cz, 0.025, 0.4, M.darkMetal, 12);
+      });
+
+      // 슈퍼차저 6대 (캐노피 아래, 2줄)
+      const superchargers = [];
+      const scPositions = [
+        [1.6, 0.05, 0.25], [1.85, 0.05, 0.25], [2.1, 0.05, 0.25],
+        [1.6, 0.05, 0.65], [1.85, 0.05, 0.65], [2.1, 0.05, 0.65]
+      ];
+      scPositions.forEach(([sx, sy, sz]) => {
+        const sc = createSupercharger(g, sx, sy, sz);
+        superchargers.push(sc);
+      });
+
+      // 슈퍼차저에 충전 중인 차량 4대
+      const chargingCars = [];
+      [
+        [1.6, 0.18, 0.4, M.whiteCar],
+        [1.85, 0.18, 0.4, M.redCar],
+        [1.6, 0.18, 0.8, M.blackCar],
+        [2.1, 0.18, 0.8, M.whiteCar]
+      ].forEach(([cx, cy, cz, color]) => {
+        const car = createTeslaCar(g, cx, cy, cz, color, 0.9, true);
+        chargingCars.push(car);
+      });
+
+      // 슈퍼차저 큰 사인 (캐노피 옆)
+      const scSignTex = makeSuperchargerSign();
+      const scSign = planeWith(scSignTex, 1.2, 0.42, 0.45, 0.25, 0.5, 0.5);
+      scSign.rotation.y = Math.PI / 2;
+      g.add(scSign);
+      // 슈퍼차저 사인 지지 박스 (빨강)
+      box(g, 'sc sign block', 1.2, 0.3, 0.45, 0.08, 0.6, 0.18, M.teslaRedSign);
+
+      // ===== 솔라 패널 + 파워월 (셀 좌측 뒤) =====
+      // 솔라 패널 큰 어레이 (지붕 위 또는 별도 지붕)
+      const solarArrayBase = box(g, 'solar array base', -1.85, 0.17, -1.6, 0.7, 0.04, 0.5, M.darkGray);
+      // 작은 솔라 셀들
+      const solarCells = [];
+      for (let row = 0; row < 3; row++) {
+        for (let col = 0; col < 4; col++) {
+          const sx = -2.1 + col * 0.18;
+          const sz = -1.75 + row * 0.15;
+          const sp = box(g, `solar cell ${row}-${col}`, sx, 0.195, sz, 0.16, 0.005, 0.12, M.solarPanel.clone());
+          solarCells.push({ mesh: sp, phase: (row * 4 + col) * 0.18 });
+        }
+      }
+      // 솔라 패널 지지대
+      box(g, 'solar support 1', -2.1, 0.08, -1.6, 0.04, 0.18, 0.04, M.darkMetal);
+      box(g, 'solar support 2', -1.55, 0.08, -1.6, 0.04, 0.18, 0.04, M.darkMetal);
+
+      // 파워월 (작은 흰 박스 3개, 벽에 부착된 듯)
+      const powerwalls = [
+        [-1.7, 0.25, -1.1],
+        [-1.5, 0.25, -1.1],
+        [-1.3, 0.25, -1.1]
+      ];
+      powerwalls.forEach(([px, py, pz], i) => {
+        const pw = box(g, `powerwall ${i}`, px, py, pz, 0.16, 0.3, 0.06, M.whiteCar);
+        // 파워월 T 로고
+        const pwLogo = box(g, `powerwall logo ${i}`, px, 0.32, pz + 0.035, 0.03, 0.04, 0.005, M.teslaRedSign);
+      });
+
+      // ===== Megapack (셀 우측 뒤, 큰 배터리) =====
+      const megapacks = [
+        [1.7, 0.3, -1.5],
+        [1.95, 0.3, -1.5],
+        [2.2, 0.3, -1.5]
+      ];
+      megapacks.forEach(([mx, my, mz], i) => {
+        box(g, `megapack ${i}`, mx, my, mz, 0.22, 0.55, 0.35, M.megapack);
+        // 메가팩 옥상 흰 라벨
+        box(g, `megapack label ${i}`, mx, my + 0.32, mz, 0.18, 0.02, 0.04, M.whiteCar);
+        // 메가팩 옆 T 로고
+        const mpLogoTex = makeTeslaTLogoTexture();
+        const mpLogo = planeWith(mpLogoTex, mx, my, mz + 0.18, 0.06, 0.06, 0.4);
+        g.add(mpLogo);
+      });
+
+      // ===== R&D Center (셀 좌측 앞) =====
+      box(g, 'rd center body', -1.85, 0.42, 0.0, 0.55, 0.85, 0.7, M.midGray);
+      // 옥상
+      box(g, 'rd center roof', -1.85, 0.86, 0.0, 0.6, 0.04, 0.75, M.darkGray);
+      // 정면 유리
+      box(g, 'rd center front glass', -1.85, 0.45, 0.35, 0.5, 0.6, 0.025, M.glass);
+      // R&D 창문 발광 (4개)
+      const rdWindows = [];
+      for (let i = 0; i < 4; i++) {
+        const ry = 0.2 + (i % 2) * 0.3;
+        const rx = -2.05 + Math.floor(i / 2) * 0.4;
+        const win = box(g, `rd window ${i}`, rx, ry, 0.36, 0.16, 0.18, 0.01, M.warmWindow.clone());
+        rdWindows.push({ mesh: win, phase: i * 0.3 });
+      }
+
+      // R&D 사인
+      const rdSignTex = makeRDSign();
+      const rdSign = planeWith(rdSignTex, -1.85, 0.78, 0.36, 0.5, 0.1, 0.4);
+      g.add(rdSign);
+
+      // ===== 주가 보드 (셀 좌측 끝, 빨강 큰 보드) =====
+      box(g, 'stock board frame', -2.2, 0.45, 0.7, 0.05, 0.85, 0.35, M.darkMetal);
+      const stockBoardTex = makeStockBoardTexture();
+      const stockBoardMat = new THREE.MeshStandardMaterial({
+        map: stockBoardTex, side: THREE.DoubleSide,
+        emissive: '#ffffff', emissiveMap: stockBoardTex, emissiveIntensity: 0.5
+      });
+      const stockBoard = new THREE.Mesh(new THREE.PlaneGeometry(0.28, 0.72), stockBoardMat);
+      stockBoard.position.set(-2.17, 0.45, 0.7);
+      stockBoard.rotation.y = Math.PI / 2;
+      g.add(stockBoard);
+
+      // ===== 정면 디스플레이 쇼룸 (작은 매장, 정면 우측) =====
+      box(g, 'showroom body', 0.5, 0.32, 0.95, 0.6, 0.5, 0.4, M.darkGray);
+      box(g, 'showroom roof', 0.5, 0.58, 0.95, 0.65, 0.04, 0.45, M.black);
+      box(g, 'showroom glass', 0.5, 0.3, 1.15, 0.55, 0.45, 0.025, M.glass);
+      // 쇼룸 안 차량 디스플레이
+      createTeslaCar(g, 0.5, 0.18, 0.95, M.whiteCar, 0.8);
+      // 쇼룸 옥상 작은 TESLA 로고
+      const srLogoTex = makeTeslaLogoTexture('#1a1a1f', true);
+      const srLogo = planeWith(srLogoTex, 0.5, 0.45, 1.165, 0.4, 0.08, 0.4);
+      g.add(srLogo);
+
+      // ===== Accelerate the World's Transition 광고판 (셀 우측 끝, 흰 광고판) =====
+      box(g, 'mission sign frame', 2.25, 0.4, 1.4, 0.05, 0.5, 0.4, M.midGray);
+      // 텍스트
+      const missionTex = (() => {
+        const canvas = document.createElement('canvas');
+        canvas.width = 512; canvas.height = 384;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        // TESLA 로고
+        ctx.fillStyle = '#e82127';
+        ctx.font = 'bold 56px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('TESLA', canvas.width / 2, 60);
+        // 미션
+        ctx.fillStyle = '#1a1a1f';
+        ctx.font = 'bold 30px Arial';
+        const lines = ["Accelerate the", "World's Transition", "to Sustainable", "Energy"];
+        lines.forEach((line, i) => {
+          ctx.fillText(line, canvas.width / 2, 150 + i * 50);
+        });
+        const tex = new THREE.CanvasTexture(canvas);
+        tex.colorSpace = THREE.SRGBColorSpace;
+        return tex;
+      })();
+      const missionSign = planeWith(missionTex, 2.22, 0.4, 1.4, 0.32, 0.42, 0.3);
+      g.add(missionSign);
+
+      // ===== 정면 도로 위 주행 중 차량 (Model 3) =====
+      const drivingCar = createTeslaCar(g, -0.5, 0.18, 1.5, M.whiteCar, 1.0, true);
+
+      // ===== TESLA Sky Beam (빨강 시그니처) =====
+      const teslaBeam = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.05, 0.13, 3.5, 12, 1, true),
+        M.skyBeamRed
+      );
+      teslaBeam.position.set(0.0, 4.3, 0.0);
+      teslaBeam.castShadow = false;
+      g.add(teslaBeam);
+
+      // ===== 가로수 + 나무 =====
+      tree(g, -2.1, 1.2, .48);
+      tree(g, -2.1, -1.95, .42);
+      tree(g, 0.0, -1.95, .42);
+
+      // ===== 조명 =====
+      // 메인 팩토리 글로우
+      const heroGlow = new THREE.PointLight('#fff2c8', 0.5, 3);
+      heroGlow.position.set(0.0, 1.0, -0.5);
+      g.add(heroGlow);
+      // Tesla 빨강 림 라이트
+      const redRim = new THREE.PointLight('#e82127', 0.9, 3.5);
+      redRim.position.set(0.0, 1.7, 0.4);
+      g.add(redRim);
+      // Supercharger 빨강 글로우
+      const scGlow = new THREE.PointLight('#ff2233', 0.6, 2.5);
+      scGlow.position.set(1.85, 0.4, 0.45);
+      g.add(scGlow);
+      // R&D 글로우
+      const rdGlow = new THREE.PointLight('#fff2c8', 0.4, 2);
+      rdGlow.position.set(-1.85, 0.5, 0);
+      g.add(rdGlow);
+
+      g.userData = {
+        factoryCars, robotArms, workLights, superchargers,
+        canopyPanels, solarCells, rdWindows,
+        teslaBeam, teslaSign, redRim, drivingCar, chargingCars
+      };
+      return g;
+    }
+
+    function tree(g, x, z, s = .5) {
+      cyl(g, 'tree trunk', x, .23 * s / .5, z, .035, .38 * s / .5, mat('#7a4b2a', { roughness: .8 }), 10);
+      const crown = new THREE.Mesh(new THREE.SphereGeometry(.18 * s / .5, 18, 12), M.grass);
+      crown.position.set(x, .52 * s / .5, z);
+      crown.castShadow = true;
+      crown.receiveShadow = true;
+      g.add(crown);
+    }
+
+    // Lighting
+    scene.add(new THREE.HemisphereLight('#dceaff', '#1b2430', 1.0));
+    const key = new THREE.DirectionalLight('#ffffff', 1.8);
+    key.position.set(4.5, 7, 5.5);
+    key.castShadow = true;
+    key.shadow.mapSize.set(2048, 2048);
+    key.shadow.camera.left = -7;
+    key.shadow.camera.right = 7;
+    key.shadow.camera.top = 7;
+    key.shadow.camera.bottom = -7;
+    scene.add(key);
+    const rim = new THREE.DirectionalLight('#ff3344', 0.5);
+    rim.position.set(-4, 4, -5);
+    scene.add(rim);
+
+    const tesla = createTeslaDiorama();
+    tesla.scale.setScalar(1.58);
+    scene.add(tesla);
+
+    const clock = new THREE.Clock();
+    const SPEED = 0.4;
+
+    function animate() {
+      const t = clock.getElapsedTime() * SPEED;
+      const tRaw = clock.getElapsedTime();
+      const u = tesla.userData;
+
+      // R&D 창문 wave
+      u.rdWindows.forEach(rw => {
+        const wave = 0.5 + 0.5 * Math.max(0, Math.sin(t * 1.2 + rw.phase * 2));
+        rw.mesh.material.emissiveIntensity = wave;
+      });
+
+      // 로봇팔 움직임 (회전 + 흔들림)
+      u.robotArms.forEach(arm => {
+        arm.pivot.rotation.y = Math.sin(t * 1.2 + arm.basePhase) * 0.4;
+        arm.upperArm.rotation.z = -Math.PI / 3 + Math.sin(t * 1.5 + arm.basePhase) * 0.15;
+        // 그리퍼 LED 깜빡
+        arm.gripperLed.material.color.setRGB(1, 0.15 + 0.1 * Math.sin(t * 6 + arm.basePhase * 3), 0.2);
+      });
+
+      // 슈퍼차저 LED 시퀀스 (충전 진행)
+      u.superchargers.forEach((sc, i) => {
+        const phase = (t * 1.5 + i * 0.4) % 1;
+        // 녹색(차징완료) → 빨강(차징중) 번갈아
+        if (phase < 0.7) {
+          sc.led.material.color.setRGB(0.2, 1, 0.55);  // 녹색
+        } else {
+          sc.led.material.color.setRGB(1, 0.2, 0.3);  // 빨강
+        }
+      });
+
+      // 솔라 패널 박동
+      u.canopyPanels.forEach(p => {
+        p.mesh.material.emissiveIntensity = 0.25 + 0.3 * Math.max(0, Math.sin(t * 1.5 + p.phase));
+      });
+      u.solarCells.forEach(p => {
+        p.mesh.material.emissiveIntensity = 0.3 + 0.35 * Math.max(0, Math.sin(t * 1.5 + p.phase));
+      });
+
+      // 옥상 작업등 박동
+      u.workLights.forEach((wl, i) => {
+        wl.material.color.setRGB(1, 0.95 + 0.05 * Math.sin(t * 3 + i), 0.75);
+      });
+
+      // Tesla 광고판 빨강 박동 (시그니처)
+      u.teslaSign.material.emissiveIntensity = 0.6 + 0.4 * Math.sin(t * 1.5);
+      u.redRim.intensity = 0.7 + 0.4 * Math.sin(t * 1.5);
+
+      // Sky beam
+      u.teslaBeam.material.opacity = 0.3 + 0.15 * Math.sin(t * 1.5);
+      u.teslaBeam.scale.x = u.teslaBeam.scale.z = 1 + 0.13 * Math.sin(t * 2);
+
+      // 정면 주행 차량 좌→우 왕복
+      u.drivingCar.position.x = -1.5 + (Math.sin(t * 0.4) + 1) * 1.5;
+      // 진행 방향에 따라 회전
+      const dir = Math.cos(t * 0.4);
+      u.drivingCar.rotation.y = dir < 0 ? Math.PI : 0;
+
+      tesla.rotation.y = Math.sin(t * .25) * .012;
+
+      controls.update();
+      renderer.render(scene, camera);
+      requestAnimationFrame(animate);
+    }
+    animate();
+
+    addEventListener('resize', () => {
+      camera.aspect = innerWidth / innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(innerWidth, innerHeight);
+    });
+  </script>
+</body>
+</html>
+</user_query>

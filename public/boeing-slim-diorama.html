@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Boeing Slim Cell Diorama v2 · Commercial + Defense Edition</title>
+  <style>
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: radial-gradient(circle at 50% 18%, #1a2433 0%, #0a1018 58%, #050810 100%);
+      font-family: Arial, Helvetica, sans-serif;
+    }
+    #hud {
+      position: fixed;
+      left: 20px;
+      top: 18px;
+      z-index: 10;
+      color: #f3f7ff;
+      background: rgba(4, 10, 20, 0.78);
+      border: 1px solid rgba(40, 100, 200, 0.5);
+      border-radius: 16px;
+      padding: 13px 15px;
+      line-height: 1.45;
+      box-shadow: 0 18px 40px rgba(0,0,0,.35);
+      pointer-events: none;
+    }
+    #hud b { color: #5fa3ff; font-size: 18px; }
+    #hud span { color: #c7d9ff; font-size: 13px; }
+    #tip {
+      position: fixed;
+      right: 20px;
+      bottom: 18px;
+      z-index: 10;
+      color: #0033a0;
+      background: rgba(245, 248, 255, .92);
+      border-radius: 999px;
+      padding: 9px 14px;
+      font-size: 13px;
+      box-shadow: 0 14px 30px rgba(0,0,0,.3);
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="hud">
+    <b>Boeing 1셀 슬림 디오라마 v2</b><br />
+    <span>Commercial(50%) · Defense(50%) · Hangar · Wing Conveyor · HQ</span>
+  </div>
+  <div id="tip">드래그 회전 · 휠 확대 · 우클릭 이동</div>
+
+  <script type="module">
+    import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
+    import { OrbitControls } from 'https://unpkg.com/three@0.160.0/examples/jsm/controls/OrbitControls.js';
+
+    const GROUND_XZ = 1.25;
+    const gx = (n) => n * GROUND_XZ;
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color('#0a1018');
+    scene.fog = new THREE.Fog('#0a1018', 11, 26);
+
+    const camera = new THREE.PerspectiveCamera(38, innerWidth / innerHeight, 0.1, 100);
+    camera.position.set(6.0, 5.0, 6.7);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.setSize(innerWidth, innerHeight);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    document.body.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.target.set(0.2, 1.2, 0);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.06;
+    controls.minDistance = 4;
+    controls.maxDistance = 13;
+    controls.maxPolarAngle = Math.PI * 0.49;
+
+    const C = {
+      boeingBlue: '#0033a0',
+      boeingBlueLight: '#3a6dd0',
+      defenseGray: '#3a4048',
+      defenseAccent: '#5fa3ff',
+      defenseDark: '#1e242c',
+      white: '#f4f4f4',
+      whiteAccent: '#ffffff',
+      grayLight: '#cfd4dc',
+      grayMid: '#888c95',
+      grayDark: '#3a3e45',
+      metal: '#999999',
+      darkMetal: '#555555',
+      glass: '#9ec5f0',
+      glassDark: '#1a2a3a',
+      warm: '#fff2c8',
+      runwayYellow: '#ffd84a',
+      runwayAsphalt: '#1e2226',
+      runwayLine: '#fffae0',
+      base: '#0a121c',
+      platform: '#5a6068',
+      grass: '#4a8c52',
+      treeGreen: '#2f7d42',
+      flagRed: '#bf0a30',
+      flagBlue: '#002868',
+      militaryGreen: '#2a3a25',
+      conveyorBase: '#3a3a45',
+      conveyorBelt: '#1a1a22'
+    };
+
+    const mat = (color, o = {}) => new THREE.MeshStandardMaterial({
+      color,
+      roughness: o.roughness ?? 0.6,
+      metalness: o.metalness ?? 0.05,
+      transparent: o.transparent ?? false,
+      opacity: o.opacity ?? 1,
+      emissive: o.emissive ?? '#000000',
+      emissiveIntensity: o.emissiveIntensity ?? 0
+    });
+
+    const M = {
+      boeingBlue: mat(C.boeingBlue, { roughness: .4, metalness: .15, emissive: '#0a1f6a', emissiveIntensity: .1 }),
+      boeingBlueLight: mat(C.boeingBlueLight, { roughness: .4, metalness: .1 }),
+      defenseGray: mat(C.defenseGray, { roughness: .55, metalness: .35 }),
+      defenseAccent: mat(C.defenseAccent, { roughness: .35, metalness: .25, emissive: '#3a78d0', emissiveIntensity: .3 }),
+      defenseDark: mat(C.defenseDark, { roughness: .65, metalness: .25 }),
+      white: mat(C.white, { roughness: .8 }),
+      whiteAccent: mat(C.whiteAccent, { roughness: .55 }),
+      grayLight: mat(C.grayLight, { roughness: .65, metalness: .25 }),
+      grayMid: mat(C.grayMid, { roughness: .55, metalness: .35 }),
+      grayDark: mat(C.grayDark, { roughness: .5, metalness: .4 }),
+      metal: mat(C.metal, { roughness: .55, metalness: .35 }),
+      darkMetal: mat(C.darkMetal, { roughness: .3, metalness: .8 }),
+      glass: mat(C.glass, { roughness: .12, metalness: .1, transparent: true, opacity: .55, emissive: '#3a78d0', emissiveIntensity: .15 }),
+      glassDark: mat(C.glassDark, { roughness: .2, metalness: .5 }),
+      warmWindow: mat(C.warm, { roughness: .35, emissive: '#ffb93d', emissiveIntensity: .7 }),
+      runwayAsphalt: mat(C.runwayAsphalt, { roughness: .92 }),
+      runwayLine: mat(C.runwayLine, { roughness: .65 }),
+      runwayLight: mat(C.runwayYellow, { roughness: .25, emissive: C.runwayYellow, emissiveIntensity: 2.0 }),
+      base: mat(C.base, { roughness: .55 }),
+      platform: mat(C.platform, { roughness: .85 }),
+      grass: mat(C.grass, { roughness: .9 }),
+      aircraftBody: mat('#f8f8fa', { roughness: .35, metalness: .55 }),
+      aircraftAccent: mat(C.boeingBlue, { roughness: .35, metalness: .35 }),
+      aircraftPrimer: mat('#a8a850', { roughness: .65, metalness: .2 }),
+      militaryBody: mat(C.militaryGreen, { roughness: .55, metalness: .3 }),
+      militaryDark: mat('#1a2418', { roughness: .55, metalness: .35 }),
+      workLight: new THREE.MeshBasicMaterial({ color: '#fff8c0' }),
+      towerLight: new THREE.MeshBasicMaterial({ color: '#ff6600', transparent: true, opacity: 0.85 }),
+      flagRed: mat(C.flagRed, { roughness: .8 }),
+      flagBlue: mat(C.flagBlue, { roughness: .8 }),
+      conveyorBase: mat(C.conveyorBase, { roughness: .6, metalness: .4 }),
+      conveyorBelt: mat(C.conveyorBelt, { roughness: .9 })
+    };
+
+    function box(g, name, x, y, z, sx, sy, sz, material) {
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), material);
+      mesh.name = name;
+      mesh.position.set(x, y, z);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      g.add(mesh);
+      return mesh;
+    }
+
+    function cyl(g, name, x, y, z, r, h, material, radial = 24) {
+      const mesh = new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, radial), material);
+      mesh.name = name;
+      mesh.position.set(x, y, z);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      g.add(mesh);
+      return mesh;
+    }
+
+    function sphere(g, name, x, y, z, r, material) {
+      const mesh = new THREE.Mesh(new THREE.SphereGeometry(r, 16, 12), material);
+      mesh.name = name;
+      mesh.position.set(x, y, z);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      g.add(mesh);
+      return mesh;
+    }
+
+    function roundRect(ctx, x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+    }
+
+    function makeBoeingLogoTexture() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1024;
+      canvas.height = 256;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = C.boeingBlue;
+      ctx.font = 'bold 140px Arial, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('BOEING', canvas.width / 2, canvas.height / 2);
+      // 부메랑 심볼
+      ctx.strokeStyle = C.boeingBlue;
+      ctx.lineWidth = 18;
+      ctx.lineCap = 'round';
+      const sx = 165;
+      const sy = canvas.height / 2;
+      ctx.beginPath();
+      ctx.arc(sx, sy, 50, Math.PI * 0.7, Math.PI * 1.3, false);
+      ctx.stroke();
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      return texture;
+    }
+
+    // BDS (Boeing Defense, Space & Security) 로고
+    function makeBoeingDefenseLogoTexture() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1024;
+      canvas.height = 256;
+      const ctx = canvas.getContext('2d');
+      // 어두운 배경
+      ctx.fillStyle = '#1e242c';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      // BOEING DEFENSE 텍스트 (흰색)
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 88px Arial, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('BOEING DEFENSE', canvas.width / 2, 90);
+      ctx.font = 'bold 60px Arial, sans-serif';
+      ctx.fillStyle = '#5fa3ff';
+      ctx.fillText('SPACE & SECURITY', canvas.width / 2, 175);
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      return texture;
+    }
+
+    // 매출 비중 보드 (Commercial 50% · Defense 50%)
+    function makeRevenueBoardTexture() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 512;
+      canvas.height = 384;
+      const ctx = canvas.getContext('2d');
+      // 흰 배경 + 라운드
+      ctx.fillStyle = '#ffffff';
+      roundRect(ctx, 10, 10, canvas.width - 20, canvas.height - 20, 20);
+      ctx.fill();
+      ctx.strokeStyle = C.boeingBlue;
+      ctx.lineWidth = 5;
+      roundRect(ctx, 10, 10, canvas.width - 20, canvas.height - 20, 20);
+      ctx.stroke();
+
+      // 제목
+      ctx.fillStyle = C.boeingBlue;
+      ctx.font = 'bold 38px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('BOEING REVENUE', canvas.width / 2, 50);
+
+      // 도넛 차트 절반 (좌측 50% 파랑 = Commercial, 우측 50% 어두운 회색 = Defense)
+      const cx = canvas.width / 2;
+      const cy = 200;
+      const radius = 80;
+      // 좌측 (Commercial, 파랑)
+      ctx.fillStyle = C.boeingBlue;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.arc(cx, cy, radius, Math.PI / 2, Math.PI * 1.5, false);
+      ctx.closePath();
+      ctx.fill();
+      // 우측 (Defense, 어두운 회색)
+      ctx.fillStyle = '#3a4048';
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.arc(cx, cy, radius, Math.PI * 1.5, Math.PI / 2, false);
+      ctx.closePath();
+      ctx.fill();
+      // 도넛 가운데 흰 구멍
+      ctx.fillStyle = '#ffffff';
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius * 0.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      // 라벨
+      ctx.fillStyle = C.boeingBlue;
+      ctx.font = 'bold 28px Arial';
+      ctx.textAlign = 'left';
+      ctx.fillText('Commercial 50%', 50, 320);
+      ctx.fillStyle = '#3a4048';
+      ctx.textAlign = 'right';
+      ctx.fillText('Defense 50%', canvas.width - 50, 320);
+
+      // 50% 텍스트 (도넛 양쪽 위)
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 24px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('50%', cx - 40, cy);
+      ctx.fillText('50%', cx + 40, cy);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      return texture;
+    }
+
+    function makeFlagTexture() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 320;
+      canvas.height = 200;
+      const ctx = canvas.getContext('2d');
+      const stripeH = canvas.height / 13;
+      for (let i = 0; i < 13; i++) {
+        ctx.fillStyle = i % 2 === 0 ? '#bf0a30' : '#ffffff';
+        ctx.fillRect(0, i * stripeH, canvas.width, stripeH);
+      }
+      ctx.fillStyle = '#002868';
+      ctx.fillRect(0, 0, canvas.width * 0.4, stripeH * 7);
+      ctx.fillStyle = '#ffffff';
+      for (let r = 0; r < 5; r++) {
+        for (let c = 0; c < 6; c++) {
+          ctx.beginPath();
+          ctx.arc(15 + c * 20, 12 + r * 16, 3, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      return texture;
+    }
+
+    function makeSimpleSign(text, bg, color) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1024;
+      canvas.height = 256;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = bg;
+      roundRect(ctx, 12, 12, canvas.width - 24, canvas.height - 24, 24);
+      ctx.fill();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 6;
+      roundRect(ctx, 12, 12, canvas.width - 24, canvas.height - 24, 24);
+      ctx.stroke();
+      ctx.fillStyle = color;
+      ctx.font = 'bold 110px Arial, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      return texture;
+    }
+
+    function planeWith(texture, x, y, z, w, h, emissiveStrength = 0.25) {
+      const material = new THREE.MeshStandardMaterial({
+        map: texture, side: THREE.DoubleSide,
+        roughness: 0.45, emissive: '#ffffff',
+        emissiveMap: texture, emissiveIntensity: emissiveStrength
+      });
+      const mesh = new THREE.Mesh(new THREE.PlaneGeometry(w, h), material);
+      mesh.position.set(x, y, z);
+      mesh.castShadow = true;
+      return mesh;
+    }
+
+    // ===== 상업 여객기 (Commercial) =====
+    function createAircraft(g, x, y, z, type = 'complete', scale = 1) {
+      const ac = new THREE.Group();
+      ac.position.set(x, y, z);
+      ac.scale.setScalar(scale);
+      g.add(ac);
+
+      const bodyMat = type === 'complete' ? M.aircraftBody : M.aircraftPrimer;
+
+      const fuselage = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.14, 0.14, 1.6, 16),
+        bodyMat
+      );
+      fuselage.rotation.z = Math.PI / 2;
+      fuselage.castShadow = true;
+      ac.add(fuselage);
+
+      const nose = new THREE.Mesh(
+        new THREE.SphereGeometry(0.14, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2),
+        bodyMat
+      );
+      nose.position.set(0.8, 0, 0);
+      nose.rotation.z = -Math.PI / 2;
+      ac.add(nose);
+
+      const tail = new THREE.Mesh(
+        new THREE.ConeGeometry(0.14, 0.3, 16),
+        bodyMat
+      );
+      tail.position.set(-0.95, 0, 0);
+      tail.rotation.z = -Math.PI / 2;
+      ac.add(tail);
+
+      // 날개 — 조립 중에는 없음
+      if (type === 'complete') {
+        const wing = new THREE.Mesh(
+          new THREE.BoxGeometry(0.55, 0.025, 1.4),
+          bodyMat
+        );
+        wing.position.set(0.05, -0.05, 0);
+        wing.castShadow = true;
+        ac.add(wing);
+      }
+
+      const hStab = new THREE.Mesh(
+        new THREE.BoxGeometry(0.25, 0.02, 0.55),
+        bodyMat
+      );
+      hStab.position.set(-0.85, 0.02, 0);
+      ac.add(hStab);
+
+      const vStab = new THREE.Mesh(
+        new THREE.BoxGeometry(0.18, 0.32, 0.025),
+        bodyMat
+      );
+      vStab.position.set(-0.85, 0.18, 0);
+      ac.add(vStab);
+
+      if (type === 'complete') {
+        const blueBand = new THREE.Mesh(
+          new THREE.BoxGeometry(1.6, 0.04, 0.04),
+          M.aircraftAccent
+        );
+        blueBand.position.set(0, 0.04, 0.105);
+        ac.add(blueBand);
+        const blueBand2 = blueBand.clone();
+        blueBand2.position.z = -0.105;
+        ac.add(blueBand2);
+
+        [-0.35, 0.35].forEach((wz) => {
+          const eng = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.06, 0.05, 0.22, 16),
+            M.darkMetal
+          );
+          eng.rotation.z = Math.PI / 2;
+          eng.position.set(0.05, -0.12, wz);
+          ac.add(eng);
+          const intake = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.07, 0.07, 0.04, 16),
+            mat('#1a1a1a')
+          );
+          intake.rotation.z = Math.PI / 2;
+          intake.position.set(0.16, -0.12, wz);
+          ac.add(intake);
+        });
+
+        for (let i = -7; i <= 7; i++) {
+          const win = new THREE.Mesh(
+            new THREE.BoxGeometry(0.025, 0.025, 0.005),
+            M.warmWindow.clone()
+          );
+          win.position.set(i * 0.08, 0.02, 0.142);
+          ac.add(win);
+          const winBack = win.clone();
+          winBack.position.z = -0.142;
+          ac.add(winBack);
+        }
+      }
+
+      return ac;
+    }
+
+    // ===== 분리된 날개 (컨베이어 위) =====
+    function createSeparateWing(g, x, y, z, scale = 0.7) {
+      const wingGroup = new THREE.Group();
+      wingGroup.position.set(x, y, z);
+      wingGroup.scale.setScalar(scale);
+      g.add(wingGroup);
+
+      // 날개 본체
+      const wing = new THREE.Mesh(
+        new THREE.BoxGeometry(1.4, 0.04, 0.45),
+        M.aircraftPrimer
+      );
+      wing.castShadow = true;
+      wingGroup.add(wing);
+
+      // 날개 끝 작은 윙렛
+      const winglet = new THREE.Mesh(
+        new THREE.BoxGeometry(0.04, 0.12, 0.18),
+        M.aircraftPrimer
+      );
+      winglet.position.set(0.68, 0.08, 0);
+      wingGroup.add(winglet);
+
+      return wingGroup;
+    }
+
+    // ===== 전투기 (방산, F-15/F-18 톤) =====
+    function createFighterJet(g, x, y, z, scale = 1) {
+      const fj = new THREE.Group();
+      fj.position.set(x, y, z);
+      fj.scale.setScalar(scale);
+      g.add(fj);
+
+      const bodyMat = M.militaryBody;
+
+      // 동체 (날렵한 박스 + 콘)
+      const body = new THREE.Mesh(
+        new THREE.BoxGeometry(1.0, 0.12, 0.18),
+        bodyMat
+      );
+      body.castShadow = true;
+      fj.add(body);
+
+      // 노즈콘 (앞)
+      const nose = new THREE.Mesh(
+        new THREE.ConeGeometry(0.09, 0.3, 12),
+        bodyMat
+      );
+      nose.position.set(0.65, 0, 0);
+      nose.rotation.z = -Math.PI / 2;
+      fj.add(nose);
+
+      // 꼬리 (뒤)
+      const tail = new THREE.Mesh(
+        new THREE.BoxGeometry(0.15, 0.1, 0.14),
+        bodyMat
+      );
+      tail.position.set(-0.58, 0, 0);
+      fj.add(tail);
+
+      // 메인 삼각 날개 (델타윙)
+      const wing = new THREE.Mesh(
+        new THREE.BoxGeometry(0.55, 0.02, 0.9),
+        bodyMat
+      );
+      wing.position.set(-0.05, -0.04, 0);
+      fj.add(wing);
+
+      // 꼬리 수직 안정판 2개 (트윈 테일)
+      [-0.06, 0.06].forEach((tz) => {
+        const vStab = new THREE.Mesh(
+          new THREE.BoxGeometry(0.15, 0.18, 0.018),
+          bodyMat
+        );
+        vStab.position.set(-0.55, 0.11, tz);
+        vStab.rotation.z = Math.PI / 16;
+        fj.add(vStab);
+      });
+
+      // 캐노피 (조종석, 어두운 유리)
+      const canopy = new THREE.Mesh(
+        new THREE.SphereGeometry(0.07, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2),
+        mat('#1a1a2a', { roughness: 0.1, metalness: 0.7, emissive: '#2a3a6a', emissiveIntensity: 0.2 })
+      );
+      canopy.position.set(0.25, 0.06, 0);
+      canopy.scale.set(1.5, 1, 0.7);
+      fj.add(canopy);
+
+      // 엔진 배기 (뒤, 작은 cylinder × 2)
+      [-0.05, 0.05].forEach((tz) => {
+        const exhaust = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.04, 0.04, 0.08, 12),
+          M.darkMetal
+        );
+        exhaust.rotation.z = Math.PI / 2;
+        exhaust.position.set(-0.7, -0.01, tz);
+        fj.add(exhaust);
+      });
+
+      // 미사일 2개 (날개 아래)
+      [-0.35, 0.35].forEach((wz) => {
+        const missile = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.018, 0.018, 0.25, 8),
+          M.militaryDark
+        );
+        missile.rotation.z = Math.PI / 2;
+        missile.position.set(0, -0.07, wz);
+        fj.add(missile);
+        // 미사일 끝 콘
+        const tip = new THREE.Mesh(
+          new THREE.ConeGeometry(0.018, 0.04, 8),
+          M.militaryDark
+        );
+        tip.position.set(0.14, -0.07, wz);
+        tip.rotation.z = -Math.PI / 2;
+        fj.add(tip);
+      });
+
+      return fj;
+    }
+
+    function createBoeingDiorama() {
+      const g = new THREE.Group();
+
+      // ===== Base =====
+      box(g, 'dark cell plinth', 0, -0.13, 0, gx(4.8), 0.26, gx(4.3), M.base);
+      box(g, 'cell platform', 0, 0.02, 0, gx(4.35), 0.12, gx(3.85), M.platform);
+
+      // ===== 메인 격납고 (Commercial, 직사각 평면 지붕) =====
+      // 본체
+      box(g, 'hangar main body', -0.4, 0.95, -0.8, 2.4, 1.9, 1.7, M.whiteAccent);
+      // ★ 새 직사각 평면 지붕 (반원통 제거)
+      box(g, 'hangar flat roof', -0.4, 1.96, -0.8, 2.5, 0.12, 1.8, M.grayLight);
+      // 옥상 액센트 띠 (Boeing 파랑)
+      box(g, 'hangar roof blue band', -0.4, 2.04, -0.8, 2.52, 0.04, 1.82, M.boeingBlueLight);
+
+      // 옥상 HVAC 6개 (모던 분위기)
+      const hvacPositions = [
+        [-1.2, -1.3], [-0.4, -1.3], [0.4, -1.3],
+        [-1.2, -0.3], [-0.4, -0.3], [0.4, -0.3]
+      ];
+      hvacPositions.forEach(([hx, hz], i) => {
+        box(g, `hangar HVAC ${i}`, hx, 2.1, hz, 0.18, 0.1, 0.18, M.grayMid);
+      });
+
+      // 격납고 정면 큰 개방 입구 (어두운 내부)
+      box(g, 'hangar interior void', -0.4, 0.85, 0.075, 2.1, 1.5, 0.1, mat('#0a0a0e'));
+
+      // BOEING 광고판 (격납고 정면 상단)
+      const boeingTex = makeBoeingLogoTexture();
+      const boeingSign = planeWith(boeingTex, -0.4, 1.75, 0.06, 1.7, 0.34, 0.4);
+      g.add(boeingSign);
+
+      // 격납고 옥상 작은 액센트 라이트 6개 (모던)
+      const roofLights = [];
+      [-1.3, -0.8, -0.3, 0.2, 0.7, 1.2].forEach((rx, i) => {
+        const rl = new THREE.Mesh(
+          new THREE.SphereGeometry(0.025, 8, 6),
+          new THREE.MeshBasicMaterial({ color: '#5fa3ff' })
+        );
+        rl.position.set(rx + 0.4, 2.12, 0.05);
+        g.add(rl);
+        roofLights.push({ mesh: rl, phase: i * 0.2 });
+      });
+
+      // 미국 국기
+      const flagTex = makeFlagTexture();
+      const flag1 = planeWith(flagTex, -1.4, 1.0, 0.06, 0.22, 0.14, 0.5);
+      g.add(flag1);
+      cyl(g, 'flag pole 1', -1.4, 0.98, 0.06, 0.015, 0.3, M.darkMetal, 8);
+
+      // ===== 격납고 내부: 완성된 비행기 (조립 중, 노란 프라이머) =====
+      // 사용자 요청: 격납고 안에 비행기가 있어야
+      const inProgress = createAircraft(g, -0.4, 0.7, -0.85, 'primer', 0.95);
+      // 격납고 내부 비행기는 날개 없음 (날개는 컨베이어에서 따로 옴)
+      // 단, 동체 + 노즈 + 꼬리는 격납고 안에 확실히 위치
+
+      // 격납고 내부 작업등 (천장)
+      const workLights = [];
+      const workLightPositions = [
+        [-1.0, 1.6, -1.0], [0.2, 1.6, -1.0],
+        [-1.0, 1.6, -0.3], [0.2, 1.6, -0.3]
+      ];
+      workLightPositions.forEach(([x, y, z]) => {
+        const wl = new THREE.Mesh(new THREE.SphereGeometry(0.04, 12, 8), M.workLight);
+        wl.position.set(x, y, z);
+        g.add(wl);
+        workLights.push(wl);
+        const pl = new THREE.PointLight('#fff8c0', 0.55, 1.5);
+        pl.position.set(x, y, z);
+        g.add(pl);
+      });
+
+      // 격납고 천장 크레인
+      box(g, 'hangar crane beam', -0.4, 1.55, -0.8, 2.0, 0.04, 0.06, M.darkMetal);
+      cyl(g, 'crane cable', -0.4, 1.55, -0.85, 0.005, 1.0, M.darkMetal, 6);
+
+      // 격납고 내부 작은 부품 박스들 + 사다리
+      box(g, 'parts box 1', -1.4, 0.2, -0.4, 0.1, 0.12, 0.12, M.boeingBlueLight);
+      box(g, 'parts box 2', -1.4, 0.2, -0.6, 0.1, 0.12, 0.12, M.boeingBlueLight);
+      box(g, 'parts box 3', 0.8, 0.2, -0.4, 0.1, 0.12, 0.12, M.boeingBlueLight);
+      // 사다리 (얇은 박스 + 가로대)
+      box(g, 'ladder rail', -0.4, 0.4, -0.3, 0.04, 0.5, 0.04, M.darkMetal);
+
+      // ===== 컨베이어 벨트 (정면 도로 위, 날개 운반) =====
+      // 사용자 요청: 컨베이어 벨트에 날개 있어야
+      const conveyorY = 0.16;
+      const conveyorZ = 0.6;
+      box(g, 'conveyor base', -0.4, conveyorY, conveyorZ, 3.0, 0.06, 0.5, M.conveyorBase);
+      box(g, 'conveyor belt', -0.4, conveyorY + 0.035, conveyorZ, 3.0, 0.02, 0.46, M.conveyorBelt);
+      (() => { const m = cyl(g, 'conv roller L', -1.92, conveyorY + 0.02, conveyorZ, 0.05, 0.5, M.metal, 12); m.rotation.x = Math.PI / 2; return m; })();
+      (() => { const m = cyl(g, 'conv roller R', 1.12, conveyorY + 0.02, conveyorZ, 0.05, 0.5, M.metal, 12); m.rotation.x = Math.PI / 2; return m; })();
+      // 다리 6개
+      for (let i = 0; i < 3; i++) {
+        const lx = -1.7 + i * 1.3;
+        box(g, `conv leg ${i}`, lx, conveyorY - 0.04, conveyorZ + 0.18, 0.04, 0.08, 0.04, M.metal);
+        box(g, `conv leg back ${i}`, lx, conveyorY - 0.04, conveyorZ - 0.18, 0.04, 0.08, 0.04, M.metal);
+      }
+
+      // ===== 컨베이어 위 날개 2개 (천천히 이동) =====
+      const conveyorWings = [];
+      [0, 0.5].forEach((offset, i) => {
+        const wing = createSeparateWing(g, -1.6, conveyorY + 0.07, conveyorZ, 0.55);
+        conveyorWings.push({ group: wing, offset });
+      });
+
+      // ===== 활주로 (셀 우측, 좌측 그대로 유지) =====
+      box(g, 'runway main', 0.4, 0.105, 1.5, gx(3.7), 0.04, gx(0.7), M.runwayAsphalt);
+      for (let i = 0; i < 10; i++) {
+        box(g, `runway dash ${i}`,
+          -1.3 + i * 0.4, 0.135, 1.5,
+          0.18, 0.005, 0.04,
+          M.runwayLine);
+      }
+      box(g, 'runway threshold L', -1.4, 0.135, 1.5, 0.04, 0.005, 0.6, M.runwayLine);
+      box(g, 'runway threshold R', 2.1, 0.135, 1.5, 0.04, 0.005, 0.6, M.runwayLine);
+
+      // 활주로 등
+      const runwayLights = [];
+      const lightCount = 14;
+      for (let i = 0; i < lightCount; i++) {
+        const x = -1.4 + (i / (lightCount - 1)) * 3.5;
+        const lightT = new THREE.Mesh(new THREE.SphereGeometry(0.025, 8, 6), M.runwayLight.clone());
+        lightT.position.set(x, 0.14, 1.18);
+        g.add(lightT);
+        runwayLights.push({ mesh: lightT, phase: i * 0.15 });
+        const lightB = new THREE.Mesh(new THREE.SphereGeometry(0.025, 8, 6), M.runwayLight.clone());
+        lightB.position.set(x, 0.14, 1.82);
+        g.add(lightB);
+        runwayLights.push({ mesh: lightB, phase: i * 0.15 + 0.07 });
+      }
+
+      // ===== 완성된 비행기 (활주로 위, 이륙 안 함) =====
+      // 사용자 요청: 비행기 이륙 안 함, 활주로에 멈춰있거나 천천히 이동
+      const completeAircraft = createAircraft(g, 1.4, 0.4, 1.5, 'complete', 0.7);
+      // 활주로 따라 천천히 좌→우 이동만 (y 변화 X, 회전 X)
+
+      // ===== 관제탑 =====
+      box(g, 'control tower base', 2.0, 0.5, -1.2, 0.3, 0.7, 0.3, M.whiteAccent);
+      cyl(g, 'control tower shaft', 2.0, 1.65, -1.2, 0.06, 0.9, M.whiteAccent, 12);
+      box(g, 'control tower cabin', 2.0, 1.75, -1.2, 0.35, 0.22, 0.35, M.glass);
+      box(g, 'control tower roof', 2.0, 1.88, -1.2, 0.38, 0.04, 0.38, M.darkMetal);
+      const towerLightPivot = new THREE.Group();
+      towerLightPivot.position.set(2.0, 1.93, -1.2);
+      g.add(towerLightPivot);
+      const towerLight = new THREE.Mesh(
+        new THREE.ConeGeometry(0.15, 0.5, 12, 1, true),
+        M.towerLight
+      );
+      towerLight.rotation.x = -Math.PI / 2;
+      towerLight.position.set(0.15, 0, 0);
+      towerLightPivot.add(towerLight);
+      const towerPointLight = new THREE.PointLight('#ff6600', 0.6, 2.5);
+      towerLightPivot.add(towerPointLight);
+
+      // ===== 방산 격납고 (Boeing Defense, 셀 좌측) =====
+      // 메인 격납고보다 작고, 어두운 톤
+      box(g, 'defense hangar body', -1.9, 0.75, -0.5, 0.7, 1.5, 1.3, M.defenseGray);
+      box(g, 'defense hangar roof', -1.9, 1.52, -0.5, 0.75, 0.1, 1.35, M.defenseDark);
+      // 옥상 파란 액센트
+      box(g, 'defense roof accent', -1.9, 1.58, -0.5, 0.78, 0.04, 1.38, M.defenseAccent);
+
+      // 방산 격납고 정면 개방 입구
+      box(g, 'defense interior void', -1.9, 0.7, 0.16, 0.5, 1.2, 0.1, mat('#0a0a0e'));
+
+      // BOEING DEFENSE 광고판 (옆면, 작게)
+      const defenseTex = makeBoeingDefenseLogoTexture();
+      const defenseSign = planeWith(defenseTex, -2.26, 0.85, -0.5, 0.6, 0.18, 0.4);
+      defenseSign.rotation.y = Math.PI / 2;
+      g.add(defenseSign);
+
+      // 옥상 광고판 (DEFENSE)
+      const defenseRoofSign = planeWith(defenseTex, -1.9, 1.78, 0.1, 0.6, 0.18, 0.4);
+      defenseRoofSign.rotation.x = -Math.PI / 10;
+      g.add(defenseRoofSign);
+
+      // ===== 방산 격납고 안: 전투기 + 헬리콥터 =====
+      const fighterJet = createFighterJet(g, -1.9, 0.5, -0.55, 0.85);
+
+      // 옥상 큰 미국 국기 (방산은 국가 사업)
+      const defenseFlagTex = makeFlagTexture();
+      const defenseFlag = planeWith(defenseFlagTex, -1.55, 1.0, 0.16, 0.18, 0.12, 0.5);
+      g.add(defenseFlag);
+      cyl(g, 'defense flag pole', -1.55, 0.955, 0.16, 0.013, 0.25, M.darkMetal, 8);
+
+      // 방산 격납고 작업등 (파란 톤)
+      const defenseLights = [];
+      [[-1.7, 1.3, -0.5], [-2.05, 1.3, -0.5]].forEach(([x, y, z]) => {
+        const dl = new THREE.Mesh(new THREE.SphereGeometry(0.035, 12, 8),
+          new THREE.MeshBasicMaterial({ color: '#5fa3ff' }));
+        dl.position.set(x, y, z);
+        g.add(dl);
+        defenseLights.push(dl);
+        const pl = new THREE.PointLight('#5fa3ff', 0.5, 1.2);
+        pl.position.set(x, y, z);
+        g.add(pl);
+      });
+
+      // 방산 격납고 옆 작은 보안 게이트
+      box(g, 'security gate', -1.55, 0.2, 0.45, 0.06, 0.3, 0.04, M.darkMetal);
+      box(g, 'security gate top', -1.55, 0.37, 0.45, 0.06, 0.06, 0.04, mat('#ff3344', { emissive: '#ff3344', emissiveIntensity: 1.5 }));
+
+      // ===== Boeing HQ (사옥, 격납고 좌측 뒤) =====
+      // 직사각 모던 사옥
+      box(g, 'Boeing HQ', -1.7, 0.6, -1.8, 0.8, 1.2, 0.6, M.whiteAccent);
+      box(g, 'Boeing HQ roof', -1.7, 1.22, -1.8, 0.85, 0.06, 0.65, M.boeingBlue);
+
+      // 사옥 정면 창문 격자
+      const hqWindows = [];
+      for (let row = 0; row < 4; row++) {
+        for (let col = 0; col < 4; col++) {
+          const x = -1.9 + col * 0.13;
+          const y = 0.3 + row * 0.22;
+          const win = box(g, `HQ window ${row}-${col}`, x, y, -1.5, 0.1, 0.16, 0.025, M.warmWindow.clone());
+          hqWindows.push({ mesh: win, row, col });
+        }
+      }
+
+      // HQ Boeing 로고
+      const hqSignTex = makeBoeingLogoTexture();
+      const hqSign = planeWith(hqSignTex, -1.7, 1.05, -1.49, 0.6, 0.16, 0.25);
+      g.add(hqSign);
+
+      // ===== 매출 비중 보드 (정면, 사용자 요청 핵심) =====
+      // Commercial 50% · Defense 50% 도넛 차트
+      box(g, 'revenue board frame', 0.5, 0.4, 1.95, 0.5, 0.5, 0.08, M.darkMetal);
+      const revBoardTex = makeRevenueBoardTexture();
+      const revBoard = planeWith(revBoardTex, 0.5, 0.4, 2.0, 0.45, 0.45, 0.4);
+      g.add(revBoard);
+      // 보드 지지대
+      box(g, 'revenue board pole', 0.5, 0.18, 1.95, 0.03, 0.25, 0.03, M.darkMetal);
+
+      // ===== 진입로 / 도로 =====
+      box(g, 'apron concrete', 0.4, 0.105, 1.0, gx(3.5), 0.04, gx(0.3), M.grayMid);
+      for (let i = 0; i < 6; i++) {
+        box(g, `apron line ${i}`,
+          -1.0 + i * 0.6, 0.135, 0.95,
+          0.1, 0.005, 0.03,
+          M.runwayLine);
+      }
+
+      // 견인 차량
+      box(g, 'tug vehicle body', 0.4, 0.18, 1.0, 0.18, 0.09, 0.1, M.boeingBlue);
+      box(g, 'tug vehicle cabin', 0.42, 0.25, 1.0, 0.1, 0.06, 0.09, M.glassDark);
+
+      // 군용 트럭 (방산 옆)
+      box(g, 'military truck cabin', -1.2, 0.2, 1.0, 0.22, 0.18, 0.22, M.militaryBody);
+      box(g, 'military truck cargo', -0.95, 0.22, 1.0, 0.38, 0.22, 0.26, M.militaryBody);
+
+      // BOEING 큰 로고 (정면 잔디 위)
+      box(g, 'company sign frame', -1.0, 0.42, 1.7, 0.6, 0.32, 0.06, M.boeingBlue);
+      const groundSignTex = makeSimpleSign('BOEING', C.boeingBlue, '#ffffff');
+      const groundSign = planeWith(groundSignTex, -1.0, 0.45, 1.735, 0.55, 0.25, 0.5);
+      g.add(groundSign);
+
+      // ===== 사람들 =====
+      const peopleColors = ['#fffae0', '#ffaa00', '#fffae0', '#0033a0', '#2a3a25'];
+      for (let i = 0; i < 12; i++) {
+        const px = -1.5 + (i % 6) * 0.45;
+        const pz = 0.2 + Math.floor(i / 6) * 0.15;
+        const color = peopleColors[i % peopleColors.length];
+        const person = new THREE.Mesh(
+          new THREE.BoxGeometry(0.035, 0.09, 0.035),
+          mat(color, { roughness: 0.7 })
+        );
+        person.position.set(px, 0.175, pz);
+        person.castShadow = true;
+        g.add(person);
+      }
+
+      // ===== 나무 =====
+      tree(g, -2.1, 1.95, .42);
+      tree(g, 2.05, 1.95, .42);
+      tree(g, 2.05, -1.85, .42);
+
+      // ===== 조명 =====
+      const hangarLight = new THREE.PointLight('#fff8c0', 1.0, 3.5);
+      hangarLight.position.set(-0.4, 1.2, -0.8);
+      g.add(hangarLight);
+      const hqGlow = new THREE.PointLight('#fff2c8', 0.5, 2.5);
+      hqGlow.position.set(-1.7, 0.6, -1.6);
+      g.add(hqGlow);
+      const runwayRim = new THREE.PointLight('#3a78d0', 0.4, 4);
+      runwayRim.position.set(0.4, 0.3, 1.5);
+      g.add(runwayRim);
+      // 방산 어두운 글로우
+      const defenseGlow = new THREE.PointLight('#5fa3ff', 0.5, 2);
+      defenseGlow.position.set(-1.9, 0.8, 0);
+      g.add(defenseGlow);
+
+      g.userData = {
+        hqWindows, workLights, runwayLights,
+        towerLightPivot, completeAircraft, conveyorWings,
+        defenseLights, roofLights
+      };
+      return g;
+    }
+
+    function tree(g, x, z, s = .5) {
+      cyl(g, 'tree trunk', x, .23 * s / .5, z, .035, .38 * s / .5, mat('#7a4b2a', { roughness: .8 }), 10);
+      const crown = new THREE.Mesh(new THREE.SphereGeometry(.18 * s / .5, 18, 12), M.grass);
+      crown.position.set(x, .52 * s / .5, z);
+      crown.castShadow = true;
+      crown.receiveShadow = true;
+      g.add(crown);
+    }
+
+    // Lighting
+    scene.add(new THREE.HemisphereLight('#dceaff', '#1b2430', 1.0));
+    const key = new THREE.DirectionalLight('#ffffff', 1.9);
+    key.position.set(4.5, 7, 5.5);
+    key.castShadow = true;
+    key.shadow.mapSize.set(2048, 2048);
+    key.shadow.camera.left = -7;
+    key.shadow.camera.right = 7;
+    key.shadow.camera.top = 7;
+    key.shadow.camera.bottom = -7;
+    scene.add(key);
+    const rim = new THREE.DirectionalLight('#5fa3ff', 0.6);
+    rim.position.set(-4, 4, -5);
+    scene.add(rim);
+
+    const boeing = createBoeingDiorama();
+    boeing.scale.setScalar(1.58);
+    scene.add(boeing);
+
+    const clock = new THREE.Clock();
+    const SPEED = 0.4;
+
+    function animate() {
+      const t = clock.getElapsedTime() * SPEED;
+      const tRaw = clock.getElapsedTime();
+      const u = boeing.userData;
+
+      // 사옥 창문 wave
+      u.hqWindows.forEach(fw => {
+        const wave = 0.4 + 0.6 * Math.max(0, Math.sin(t * 1.2 - fw.row * 0.3 + fw.col * 0.1));
+        fw.mesh.material.emissiveIntensity = wave;
+      });
+
+      // 작업등
+      u.workLights.forEach((wl, i) => {
+        wl.material.color.setRGB(1, 0.97 + 0.03 * Math.sin(t * 3 + i), 0.75 + 0.05 * Math.sin(t * 4 + i));
+      });
+
+      // 활주로 등
+      u.runwayLights.forEach(rl => {
+        const pulse = 0.5 + 1.5 * Math.abs(Math.sin(t * 2 + rl.phase * 4));
+        rl.mesh.material.emissiveIntensity = pulse;
+      });
+
+      // 관제탑 회전등
+      u.towerLightPivot.rotation.y = tRaw * 1.5;
+
+      // ★ 완성 비행기 활주로 따라 천천히 이동만 (이륙 X)
+      const acProgress = (t * 0.06) % 1;
+      u.completeAircraft.position.x = -1.0 + acProgress * 3.0;
+      // y와 rotation은 고정 — 이륙 안 함
+      u.completeAircraft.position.y = 0.4;
+      u.completeAircraft.rotation.z = 0;
+
+      // ★ 컨베이어 날개 2개 천천히 이동
+      u.conveyorWings.forEach(w => {
+        const progress = ((t * 0.12) + w.offset) % 1;
+        w.group.position.x = -1.85 + progress * 2.9;
+      });
+
+      // 방산 격납고 작업등 박동 (파란)
+      u.defenseLights.forEach((dl, i) => {
+        const c = 0.6 + 0.4 * Math.abs(Math.sin(t * 2 + i));
+        dl.material.color.setRGB(0.37 * c, 0.64 * c, 1.0 * c);
+      });
+
+      // 옥상 액센트 라이트 시퀀스
+      u.roofLights.forEach(rl => {
+        const c = 0.5 + 0.5 * Math.abs(Math.sin(t * 1.8 + rl.phase * 3));
+        rl.mesh.material.color.setRGB(0.37 * c, 0.64 * c, 1.0 * c);
+      });
+
+      boeing.rotation.y = Math.sin(t * .25) * .012;
+
+      controls.update();
+      renderer.render(scene, camera);
+      requestAnimationFrame(animate);
+    }
+    animate();
+
+    addEventListener('resize', () => {
+      camera.aspect = innerWidth / innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(innerWidth, innerHeight);
+    });
+  </script>
+</body>
+</html>

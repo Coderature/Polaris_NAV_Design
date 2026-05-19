@@ -6,46 +6,90 @@
       "id": "IT",
       "name": "Information Tech",
       "ko": "정보기술",
-      "color": "#f59e0b"
+      "color": "#00ff88"
     },
     {
       "id": "CONS_DISC",
       "name": "Consumer Discr.",
       "ko": "임의소비재",
-      "color": "#c084fc"
+      "color": "#ff2bd6"
     },
     {
       "id": "COMMS",
       "name": "Communication Svc.",
       "ko": "커뮤니케이션",
-      "color": "#a78bfa"
+      "color": "#00e0ff"
     },
     {
       "id": "INDUST",
       "name": "Industrials",
       "ko": "산업재",
-      "color": "#6b7c93"
+      "color": "#c6ff00"
     },
     {
       "id": "ENERGY",
       "name": "Energy",
       "ko": "에너지",
-      "color": "#d97757"
-    },
-    {
-      "id": "FIN",
-      "name": "Financials",
-      "ko": "금융",
-      "color": "#38bdf8"
-    },
-    {
-      "id": "HEALTH",
-      "name": "Health Care",
-      "ko": "헬스케어",
-      "color": "#ec4899"
+      "color": "#ff7a00"
     }
   ],
   "stocks": [
+    {
+      "t": "AAPL",
+      "n": "Apple",
+      "m": "US",
+      "s": "IT",
+      "cap": 3450,
+      "per": 33.2,
+      "pbr": 51.3,
+      "vol": 52.1,
+      "div": 0.5,
+      "chg": -1.03,
+      "price": 585,
+      "metaphor": "Apple Park 도넛 사옥"
+    },
+    {
+      "t": "GOOGL",
+      "n": "Alphabet",
+      "m": "US",
+      "s": "COMMS",
+      "cap": 2180,
+      "per": 26.3,
+      "pbr": 7.4,
+      "vol": 22.1,
+      "div": 0.4,
+      "chg": 0.27,
+      "price": 425,
+      "metaphor": "데이터센터 + 쿨링 타워"
+    },
+    {
+      "t": "NVDA",
+      "n": "NVIDIA",
+      "m": "US",
+      "s": "IT",
+      "cap": 2940,
+      "per": 65.4,
+      "pbr": 48,
+      "vol": 380.1,
+      "div": 0.03,
+      "chg": 0.65,
+      "price": 874,
+      "metaphor": "서버랙 + GPU"
+    },
+    {
+      "t": "AMZN",
+      "n": "Amazon",
+      "m": "US",
+      "s": "CONS_DISC",
+      "cap": 1980,
+      "per": 44.2,
+      "pbr": 8.1,
+      "vol": 35.4,
+      "div": 0,
+      "chg": -2.83,
+      "price": 539,
+      "metaphor": "물류센터 + 컨베이어"
+    },
     {
       "t": "BA",
       "n": "Boeing",
@@ -61,18 +105,18 @@
       "metaphor": "격납고 + 여객기"
     },
     {
-      "t": "XOM",
-      "n": "Exxon Mobil",
+      "t": "TSLA",
+      "n": "Tesla",
       "m": "US",
-      "s": "ENERGY",
-      "cap": 450,
-      "per": 13.6,
-      "pbr": 2.1,
-      "vol": 14.6,
-      "div": 3.2,
-      "chg": -0.43,
-      "price": 939,
-      "metaphor": "정유 시설 + 저장 탱크"
+      "s": "CONS_DISC",
+      "cap": 870,
+      "per": 72.4,
+      "pbr": 13,
+      "vol": 95.1,
+      "div": 0,
+      "chg": -2.22,
+      "price": 835,
+      "metaphor": "전기차 + 충전소"
     },
     {
       "t": "005930",
@@ -100,147 +144,7 @@
       "div": 3.2,
       "chg": 0.85,
       "price": 72000,
-      "metaphor": "정유 탱크 + 굴뚝 + 파이프"
-    },
-    {
-      "t": "373220",
-      "n": "LG에너지솔루션",
-      "m": "KR",
-      "s": "INDUST",
-      "cap": 72,
-      "per": 28.4,
-      "pbr": 3.2,
-      "vol": 1.2,
-      "div": 0.3,
-      "chg": 2.15,
-      "price": 385000,
-      "metaphor": "배터리 셀 공장 + 충전 모듈"
-    },
-    {
-      "t": "005380",
-      "n": "현대차",
-      "m": "KR",
-      "s": "CONS_DISC",
-      "cap": 46,
-      "per": 5.8,
-      "pbr": 0.7,
-      "vol": 0.9,
-      "div": 4.1,
-      "chg": -2.53,
-      "price": 245000,
-      "metaphor": "자동차 조립 라인 + 전시장"
-    },
-    {
-      "t": "TSLA",
-      "n": "Tesla",
-      "m": "US",
-      "s": "CONS_DISC",
-      "cap": 870,
-      "per": 72.4,
-      "pbr": 13,
-      "vol": 95.1,
-      "div": 0,
-      "chg": -2.22,
-      "price": 835,
-      "metaphor": "전기차 + 충전소"
-    },
-    {
-      "t": "AAPL",
-      "n": "Apple",
-      "m": "US",
-      "s": "IT",
-      "cap": 3450,
-      "per": 33.2,
-      "pbr": 51.3,
-      "vol": 52.1,
-      "div": 0.5,
-      "chg": -1.03,
-      "price": 585,
-      "metaphor": "Apple Park 도넛 사옥"
-    },
-    {
-      "t": "AMZN",
-      "n": "Amazon",
-      "m": "US",
-      "s": "CONS_DISC",
-      "cap": 1980,
-      "per": 44.2,
-      "pbr": 8.1,
-      "vol": 35.4,
-      "div": 0,
-      "chg": -2.83,
-      "price": 539,
-      "metaphor": "물류센터 + 컨베이어"
-    },
-    {
-      "t": "GOOGL",
-      "n": "Alphabet",
-      "m": "US",
-      "s": "COMMS",
-      "cap": 2180,
-      "per": 26.3,
-      "pbr": 7.4,
-      "vol": 22.1,
-      "div": 0.4,
-      "chg": 0.27,
-      "price": 425,
-      "metaphor": "데이터센터 + 쿨링 타워"
-    },
-    {
-      "t": "BAC",
-      "n": "Bank of America",
-      "m": "US",
-      "s": "FIN",
-      "cap": 330,
-      "per": 14.1,
-      "pbr": 1.3,
-      "vol": 38.2,
-      "div": 2.6,
-      "chg": -1.87,
-      "price": 38,
-      "metaphor": "은행 본점 타워 + 지점"
-    },
-    {
-      "t": "BABA",
-      "n": "Alibaba",
-      "m": "US",
-      "s": "CONS_DISC",
-      "cap": 210,
-      "per": 18.5,
-      "pbr": 1.6,
-      "vol": 12.4,
-      "div": 0,
-      "chg": 1.92,
-      "price": 82,
-      "metaphor": "이커머스 물류 허브 + 클라우드"
-    },
-    {
-      "t": "PDD",
-      "n": "PDD Holdings",
-      "m": "US",
-      "s": "CONS_DISC",
-      "cap": 165,
-      "per": 11.2,
-      "pbr": 4.8,
-      "vol": 8.6,
-      "div": 0,
-      "chg": 3.41,
-      "price": 128,
-      "metaphor": "온라인 마켓플레이스 + 풀필먼트"
-    },
-    {
-      "t": "207940",
-      "n": "삼성바이오로직스",
-      "m": "KR",
-      "s": "HEALTH",
-      "cap": 60,
-      "per": 80.3,
-      "pbr": 6.4,
-      "vol": 0.5,
-      "div": 0,
-      "chg": -2.55,
-      "price": 1151000,
-      "metaphor": "바이오 클린룸 + 배양 탱크"
+      "metaphor": "초대형 정유탑과 에쓰-오일 밸류체인"
     }
   ]
 }

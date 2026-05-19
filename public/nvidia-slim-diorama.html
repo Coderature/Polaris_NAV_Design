@@ -1,0 +1,930 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NVIDIA Slim Cell Diorama · CUDA + AI Edition</title>
+  <style>
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: radial-gradient(circle at 50% 18%, #0e1410 0%, #050a08 58%, #02060a 100%);
+      font-family: "Malgun Gothic", "Apple SD Gothic Neo", Arial, sans-serif;
+    }
+    #hud {
+      position: fixed;
+      left: 20px;
+      top: 18px;
+      z-index: 10;
+      color: #f3f7e8;
+      background: rgba(8, 12, 8, 0.78);
+      border: 1px solid rgba(118, 185, 0, 0.55);
+      border-radius: 16px;
+      padding: 13px 15px;
+      line-height: 1.45;
+      box-shadow: 0 18px 40px rgba(0,0,0,.45);
+      pointer-events: none;
+    }
+    #hud b { color: #76b900; font-size: 18px; }
+    #hud span { color: #c7eaa0; font-size: 13px; }
+    #tip {
+      position: fixed;
+      right: 20px;
+      bottom: 18px;
+      z-index: 10;
+      color: #76b900;
+      background: rgba(245, 248, 240, .92);
+      border-radius: 999px;
+      padding: 9px 14px;
+      font-size: 13px;
+      box-shadow: 0 14px 30px rgba(0,0,0,.3);
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="hud">
+    <b>NVIDIA 1셀 슬림 디오라마</b><br />
+    <span>HQ · CUDA Ecosystem · GeForce RTX · DGX AI · Manufacturing Partners</span>
+  </div>
+  <div id="tip">드래그 회전 · 휠 확대 · 우클릭 이동</div>
+
+  <script type="module">
+    import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
+    import { OrbitControls } from 'https://unpkg.com/three@0.160.0/examples/jsm/controls/OrbitControls.js';
+
+    const GROUND_XZ = 1.25;
+    const gx = (n) => n * GROUND_XZ;
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color('#06080a');
+    scene.fog = new THREE.Fog('#06080a', 11, 26);
+
+    const camera = new THREE.PerspectiveCamera(38, innerWidth / innerHeight, 0.1, 100);
+    camera.position.set(6.0, 5.0, 6.7);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.setSize(innerWidth, innerHeight);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    document.body.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.target.set(0.2, 1.2, 0);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.06;
+    controls.minDistance = 4;
+    controls.maxDistance = 13;
+    controls.maxPolarAngle = Math.PI * 0.49;
+
+    const C = {
+      nvGreen: '#76b900',
+      nvGreenBright: '#9be820',
+      nvGreenDark: '#3a5e00',
+      cyan: '#00d4ff',
+      cyanBright: '#5fe8ff',
+      black: '#0a0a0e',
+      darkGray: '#1a1a20',
+      midGray: '#2a2a32',
+      grayLight: '#5a5a62',
+      silver: '#9a9a9e',
+      metal: '#888',
+      darkMetal: '#444',
+      glass: '#7eb5e0',
+      glassDark: '#0a141e',
+      warm: '#fff2c8',
+      base: '#020608',
+      platform: '#1a1e22',
+      road: '#0e1216',
+      grass: '#3a6a3a',
+      pcbGreen: '#143020',
+      gpuBlack: '#15151a',
+      rgbRed: '#ff2244',
+      rgbBlue: '#3a78ff'
+    };
+
+    const mat = (color, o = {}) => new THREE.MeshStandardMaterial({
+      color,
+      roughness: o.roughness ?? 0.6,
+      metalness: o.metalness ?? 0.05,
+      transparent: o.transparent ?? false,
+      opacity: o.opacity ?? 1,
+      emissive: o.emissive ?? '#000000',
+      emissiveIntensity: o.emissiveIntensity ?? 0
+    });
+
+    const M = {
+      nvGreen: mat(C.nvGreen, { roughness: .3, metalness: .15, emissive: C.nvGreen, emissiveIntensity: .4 }),
+      nvGreenStrong: mat(C.nvGreen, { roughness: .25, emissive: C.nvGreen, emissiveIntensity: 1.5 }),
+      nvGreenDim: mat(C.nvGreenDark, { roughness: .5, metalness: .1 }),
+      cyan: mat(C.cyan, { roughness: .25, emissive: C.cyan, emissiveIntensity: 1.8 }),
+      cyanDim: mat(C.cyan, { roughness: .35, emissive: C.cyan, emissiveIntensity: 0.5 }),
+      black: mat(C.black, { roughness: .35, metalness: .35 }),
+      darkGray: mat(C.darkGray, { roughness: .5, metalness: .35 }),
+      midGray: mat(C.midGray, { roughness: .55, metalness: .35 }),
+      grayLight: mat(C.grayLight, { roughness: .65, metalness: .25 }),
+      silver: mat(C.silver, { roughness: .42, metalness: .55 }),
+      metal: mat(C.metal, { roughness: .4, metalness: .65 }),
+      darkMetal: mat(C.darkMetal, { roughness: .3, metalness: .8 }),
+      glass: mat(C.glass, { roughness: .1, metalness: .15, transparent: true, opacity: .55, emissive: '#3a78a0', emissiveIntensity: .2 }),
+      glassDark: mat(C.glassDark, { roughness: .2, metalness: .5 }),
+      whiteAccent: mat('#ffffff', { roughness: .6 }),
+      warmWindow: mat(C.warm, { roughness: .35, emissive: '#ffb93d', emissiveIntensity: .65 }),
+      base: mat(C.base, { roughness: .55 }),
+      platform: mat(C.platform, { roughness: .8 }),
+      road: mat(C.road, { roughness: .85 }),
+      grass: mat(C.grass, { roughness: .9 }),
+      // CUDA 큐브 발광 머티리얼
+      cudaCube: new THREE.MeshStandardMaterial({
+        color: C.nvGreen, emissive: C.nvGreen, emissiveIntensity: 0.8,
+        roughness: 0.3, metalness: 0.2,
+        transparent: true, opacity: 0.85
+      }),
+      cudaCubeEdge: mat(C.nvGreen, { emissive: C.nvGreen, emissiveIntensity: 2.0, roughness: 0.2 }),
+      // GPU 본체
+      gpuBody: mat(C.gpuBlack, { roughness: .3, metalness: .55 }),
+      gpuPcb: mat(C.pcbGreen, { roughness: .55, metalness: .2 }),
+      // Server rack
+      serverRack: mat('#0a0a10', { roughness: .35, metalness: .65 }),
+      serverLed: new THREE.MeshStandardMaterial({
+        color: C.cyan, emissive: C.cyan, emissiveIntensity: 2.5, roughness: .2
+      }),
+      // Sky beam
+      skyBeamGreen: new THREE.MeshBasicMaterial({ color: C.nvGreen, transparent: true, opacity: .35 })
+    };
+
+    function box(g, name, x, y, z, sx, sy, sz, material) {
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), material);
+      mesh.name = name;
+      mesh.position.set(x, y, z);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      g.add(mesh);
+      return mesh;
+    }
+
+    function cyl(g, name, x, y, z, r, h, material, radial = 24) {
+      const mesh = new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, radial), material);
+      mesh.name = name;
+      mesh.position.set(x, y, z);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      g.add(mesh);
+      return mesh;
+    }
+
+    function sphere(g, name, x, y, z, r, material) {
+      const mesh = new THREE.Mesh(new THREE.SphereGeometry(r, 16, 12), material);
+      mesh.name = name;
+      mesh.position.set(x, y, z);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      g.add(mesh);
+      return mesh;
+    }
+
+    function roundRect(ctx, x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+    }
+
+    // NVIDIA 로고 텍스처 (eye + NVIDIA 텍스트)
+    function makeNvidiaLogoTexture(bgColor = '#0a0a0e') {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1024;
+      canvas.height = 256;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = bgColor;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // NVIDIA eye 로고 (간단화 — 녹색 곡선 두 개로 눈 모양)
+      ctx.strokeStyle = '#76b900';
+      ctx.lineWidth = 22;
+      ctx.lineCap = 'round';
+      const cx = 170;
+      const cy = canvas.height / 2;
+      // 위쪽 곡선
+      ctx.beginPath();
+      ctx.arc(cx, cy + 25, 60, Math.PI * 1.15, Math.PI * 1.85);
+      ctx.stroke();
+      // 아래쪽 곡선
+      ctx.beginPath();
+      ctx.arc(cx, cy - 25, 60, Math.PI * 0.15, Math.PI * 0.85);
+      ctx.stroke();
+      // 가운데 점 (눈동자)
+      ctx.fillStyle = '#76b900';
+      ctx.beginPath();
+      ctx.arc(cx, cy, 18, 0, Math.PI * 2);
+      ctx.fill();
+
+      // NVIDIA 텍스트
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 130px Arial, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('NVIDIA', 270, canvas.height / 2);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      return texture;
+    }
+
+    // CUDA 큐브 레이어 라벨 텍스처
+    function makeCudaLayerTexture(text, bgColor = '#0a0a0e') {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1024;
+      canvas.height = 128;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = bgColor;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#76b900';
+      ctx.font = 'bold 56px Arial, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      return texture;
+    }
+
+    // Manufacturing Partners 보드
+    function makePartnersBoardTexture() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1024;
+      canvas.height = 384;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#0a0a0e';
+      roundRect(ctx, 12, 12, canvas.width - 24, canvas.height - 24, 24);
+      ctx.fill();
+      ctx.strokeStyle = '#76b900';
+      ctx.lineWidth = 5;
+      roundRect(ctx, 12, 12, canvas.width - 24, canvas.height - 24, 24);
+      ctx.stroke();
+
+      // 제목
+      ctx.fillStyle = '#76b900';
+      ctx.font = 'bold 52px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('MANUFACTURING PARTNERS', canvas.width / 2, 70);
+
+      // 3개 파트너
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 72px Arial';
+      const partners = ['TSMC', 'SAMSUNG', 'FOXCONN'];
+      partners.forEach((name, i) => {
+        const x = 180 + i * 320;
+        ctx.fillText(name, x, 220);
+      });
+
+      // 하단 텍스트
+      ctx.fillStyle = '#9a9a9e';
+      ctx.font = 'bold 34px Arial';
+      ctx.fillText('NVIDIA designs · Partners manufacture', canvas.width / 2, 330);
+
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      return texture;
+    }
+
+    // "NVIDIA DOES NOT MANUFACTURE" 표지
+    function makeFablessSignTexture() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 512;
+      canvas.height = 256;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#0a0a0e';
+      roundRect(ctx, 8, 8, canvas.width - 16, canvas.height - 16, 18);
+      ctx.fill();
+      ctx.strokeStyle = '#ff3344';
+      ctx.lineWidth = 4;
+      roundRect(ctx, 8, 8, canvas.width - 16, canvas.height - 16, 18);
+      ctx.stroke();
+      // 좌측 빨간 원 + X
+      ctx.strokeStyle = '#ff3344';
+      ctx.lineWidth = 8;
+      ctx.beginPath();
+      ctx.arc(70, 128, 38, 0, Math.PI * 2);
+      ctx.stroke();
+      // X
+      ctx.beginPath();
+      ctx.moveTo(45, 103);
+      ctx.lineTo(95, 153);
+      ctx.moveTo(95, 103);
+      ctx.lineTo(45, 153);
+      ctx.stroke();
+      // 텍스트
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 22px Arial';
+      ctx.textAlign = 'left';
+      ctx.fillText('NVIDIA DOES NOT', 130, 100);
+      ctx.fillText('MANUFACTURE', 130, 130);
+      ctx.fillStyle = '#9a9a9e';
+      ctx.font = 'bold 16px Arial';
+      ctx.fillText('We design chips.', 130, 165);
+      ctx.fillText('Our partners manufacture.', 130, 188);
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      return texture;
+    }
+
+    // 간단한 라벨 텍스처
+    function makeLabelTexture(text, bg = '#0a0a0e', color = '#76b900') {
+      const canvas = document.createElement('canvas');
+      canvas.width = 512;
+      canvas.height = 128;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = bg;
+      roundRect(ctx, 6, 6, canvas.width - 12, canvas.height - 12, 14);
+      ctx.fill();
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 3;
+      roundRect(ctx, 6, 6, canvas.width - 12, canvas.height - 12, 14);
+      ctx.stroke();
+      ctx.fillStyle = color;
+      ctx.font = 'bold 56px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      return texture;
+    }
+
+    function planeWith(texture, x, y, z, w, h, emissiveStrength = 0.3) {
+      const material = new THREE.MeshStandardMaterial({
+        map: texture, side: THREE.DoubleSide,
+        roughness: 0.4, emissive: '#ffffff',
+        emissiveMap: texture, emissiveIntensity: emissiveStrength
+      });
+      const mesh = new THREE.Mesh(new THREE.PlaneGeometry(w, h), material);
+      mesh.position.set(x, y, z);
+      mesh.castShadow = true;
+      return mesh;
+    }
+
+    // ===== GeForce RTX 그래픽카드 빌더 (검정 + 팬 3개 + RGB) =====
+    function createGPU(g, x, y, z, scale = 1) {
+      const gpuGroup = new THREE.Group();
+      gpuGroup.position.set(x, y, z);
+      gpuGroup.scale.setScalar(scale);
+      g.add(gpuGroup);
+
+      // PCB (녹색)
+      const pcb = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.025, 0.18), M.gpuPcb);
+      pcb.castShadow = true;
+      gpuGroup.add(pcb);
+
+      // 본체 쉬라우드 (검정)
+      const shroud = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.08, 0.16), M.gpuBody);
+      shroud.position.set(0, 0.04, 0);
+      gpuGroup.add(shroud);
+
+      // 팬 3개 (작은 cylinder, 회전 대상)
+      const fans = [];
+      for (let i = 0; i < 3; i++) {
+        const fanPivot = new THREE.Group();
+        fanPivot.position.set(-0.15 + i * 0.15, 0.085, 0);
+        gpuGroup.add(fanPivot);
+        // 팬 본체 (어두운 cylinder)
+        const fan = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.055, 0.055, 0.005, 16),
+          mat('#1a1a1a')
+        );
+        fanPivot.add(fan);
+        // 팬 블레이드 (4개 박스, 회전 대상)
+        for (let b = 0; b < 4; b++) {
+          const blade = new THREE.Mesh(
+            new THREE.BoxGeometry(0.045, 0.003, 0.012),
+            mat('#3a3a3a')
+          );
+          blade.position.set(0, 0.003, 0);
+          blade.rotation.y = (b / 4) * Math.PI * 2;
+          // 블레이드를 팬 중심에서 살짝 옮김
+          blade.position.x = 0.025 * Math.cos((b / 4) * Math.PI * 2);
+          blade.position.z = 0.025 * Math.sin((b / 4) * Math.PI * 2);
+          fanPivot.add(blade);
+        }
+        fans.push(fanPivot);
+      }
+
+      // 측면 NVIDIA RGB LED (긴 띠)
+      const rgbStrip = new THREE.Mesh(
+        new THREE.BoxGeometry(0.48, 0.012, 0.005),
+        M.nvGreenStrong
+      );
+      rgbStrip.position.set(0, 0.07, 0.082);
+      gpuGroup.add(rgbStrip);
+
+      return { group: gpuGroup, fans, rgbStrip };
+    }
+
+    // ===== Server rack (DGX AI 슈퍼컴퓨팅) =====
+    function createServerRack(g, x, y, z, scale = 1) {
+      const rack = new THREE.Group();
+      rack.position.set(x, y, z);
+      rack.scale.setScalar(scale);
+      g.add(rack);
+
+      // 외부 케이스 (검정 박스)
+      box(rack, 'rack case', 0, 0, 0, 0.32, 0.8, 0.28, M.serverRack);
+      // 정면 어두운 유리
+      box(rack, 'rack front glass', 0, 0, 0.141, 0.28, 0.75, 0.005, M.glassDark);
+
+      // LED 8행 × 3열 = 24개 (시안 발광)
+      const leds = [];
+      for (let row = 0; row < 8; row++) {
+        for (let col = 0; col < 3; col++) {
+          const led = new THREE.Mesh(
+            new THREE.BoxGeometry(0.045, 0.025, 0.005),
+            M.serverLed.clone()
+          );
+          led.position.set(-0.08 + col * 0.08, 0.32 - row * 0.085, 0.145);
+          rack.add(led);
+          leds.push({ mesh: led, phase: (row * 3 + col) * 0.12 });
+        }
+      }
+
+      // 옥상 작은 NVIDIA 로고
+      const topLabelTex = makeLabelTexture('DGX', '#0a0a0e', '#76b900');
+      const topLabel = planeWith(topLabelTex, 0, 0.41, 0, 0.2, 0.05, 0.5);
+      topLabel.rotation.x = -Math.PI / 2;
+      rack.add(topLabel);
+
+      return { group: rack, leds };
+    }
+
+    // ===== CUDA 큐브 (계단식 스택, 시그니처) =====
+    function createCudaCube(g, x, y, z) {
+      const cudaGroup = new THREE.Group();
+      cudaGroup.position.set(x, y, z);
+      g.add(cudaGroup);
+
+      // 5단 스택 (위로 갈수록 작아짐)
+      const layers = [
+        { name: 'NVIDIA GPU', y: 0.0, size: 0.85, color: '#0a0a0e' },
+        { name: 'CUDA', y: 0.16, size: 0.75, color: '#143020' },
+        { name: 'CUDA-X LIBRARIES', y: 0.32, size: 0.65, color: '#1a3a20' },
+        { name: 'APPS & FRAMEWORKS', y: 0.48, size: 0.55, color: '#1f4625' },
+        { name: 'CUDA ECOSYSTEM', y: 0.64, size: 0.45, color: '#245a2a' }
+      ];
+
+      const layerMeshes = [];
+      layers.forEach((layer, i) => {
+        // 본체
+        const cube = new THREE.Mesh(
+          new THREE.BoxGeometry(layer.size, 0.14, layer.size),
+          mat(layer.color, { roughness: 0.35, metalness: 0.3, emissive: C.nvGreen, emissiveIntensity: 0.1 })
+        );
+        cube.position.set(0, layer.y, 0);
+        cube.castShadow = true;
+        cudaGroup.add(cube);
+
+        // 외곽 엣지 (발광)
+        const edgeGeom = new THREE.EdgesGeometry(new THREE.BoxGeometry(layer.size * 1.01, 0.142, layer.size * 1.01));
+        const edges = new THREE.LineSegments(edgeGeom, new THREE.LineBasicMaterial({ color: C.nvGreen, linewidth: 2 }));
+        edges.position.set(0, layer.y, 0);
+        cudaGroup.add(edges);
+
+        // 정면 라벨
+        const labelTex = makeCudaLayerTexture(layer.name);
+        const label = planeWith(labelTex, 0, layer.y, layer.size / 2 + 0.005, layer.size * 0.95, 0.1, 0.6);
+        cudaGroup.add(label);
+
+        layerMeshes.push({ cube, edges, phase: i * 0.4 });
+      });
+
+      // 꼭대기 작은 발광 sphere (NVIDIA 코어)
+      const core = new THREE.Mesh(
+        new THREE.SphereGeometry(0.06, 16, 12),
+        new THREE.MeshBasicMaterial({ color: C.nvGreenBright })
+      );
+      core.position.set(0, 0.78, 0);
+      cudaGroup.add(core);
+
+      // 바닥 발광 ring
+      const baseRing = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.5, 0.5, 0.02, 32),
+        mat('#0a0a0e', { emissive: C.nvGreen, emissiveIntensity: 1.5 })
+      );
+      baseRing.position.set(0, -0.085, 0);
+      cudaGroup.add(baseRing);
+
+      return { group: cudaGroup, layerMeshes, core, baseRing };
+    }
+
+    let cudaGlow;
+
+    function createNvidiaDiorama() {
+      const g = new THREE.Group();
+
+      // ===== Base =====
+      box(g, 'dark cell plinth', 0, -0.13, 0, gx(4.8), 0.26, gx(4.3), M.base);
+      box(g, 'cell platform', 0, 0.02, 0, gx(4.35), 0.12, gx(3.85), M.platform);
+      box(g, 'front road', 0, 0.105, 1.5, gx(4.0), 0.04, gx(0.55), M.road);
+      box(g, 'side road L', -1.5, .11, -1.2, gx(0.4), .04, gx(1.8), M.road);
+      box(g, 'side road R', 1.5, .11, -1.2, gx(0.4), .04, gx(1.8), M.road);
+
+      // 차선
+      for (let i = 0; i < 8; i++) {
+        box(g, `road line ${i}`, -1.6 + i * 0.45, 0.135, 1.5, 0.2, 0.005, 0.025, mat('#76b900', { emissive: '#76b900', emissiveIntensity: 0.5 }));
+      }
+
+      // ===== 메인 사옥 (검정 + 모던) =====
+      box(g, 'NVIDIA HQ main', 0.0, 1.0, -0.5, 1.9, 2.0, 1.4, M.black);
+      // 옥상 액센트 (그린 띠)
+      box(g, 'HQ rooftop nv-green band', 0.0, 2.04, -0.5, 1.95, 0.08, 1.45, M.nvGreen);
+
+      // 사옥 정면 큰 유리 + 발광 창문
+      const floorWindows = [];
+      const winCols = 7;
+      const winRows = 5;
+      const winW = 0.2;
+      const winH = 0.28;
+      const winGapX = 0.04;
+      const winGapY = 0.06;
+      const totalW = winCols * winW + (winCols - 1) * winGapX;
+      const totalH = winRows * winH + (winRows - 1) * winGapY;
+      const startX = 0 - totalW / 2 + winW / 2;
+      const startY = 1.0 - totalH / 2 + winH / 2;
+      for (let row = 0; row < winRows; row++) {
+        for (let col = 0; col < winCols; col++) {
+          const x = startX + col * (winW + winGapX);
+          const y = startY + row * (winH + winGapY);
+          const w = box(g, `front window ${row}-${col}`, x, y, 0.215, winW, winH, 0.02, M.warmWindow.clone());
+          floorWindows.push({ mesh: w, row, col });
+        }
+      }
+
+      // 사옥 좌우 측면 유리
+      box(g, 'HQ left glass', -0.96, 1.0, -0.5, 0.03, 2.0, 1.3, M.glass);
+      box(g, 'HQ right glass', 0.96, 1.0, -0.5, 0.03, 2.0, 1.3, M.glass);
+
+      // 1층 로비 (어두운 유리 + 그린 입구)
+      box(g, 'HQ lobby glass', 0.0, 0.2, 0.22, 1.5, 0.3, 0.04, M.glassDark);
+      box(g, 'HQ lobby canopy', 0.0, 0.4, 0.32, 1.6, 0.04, 0.2, M.nvGreen);
+      // 작은 NVIDIA 로고 (입구 위)
+      const entryLogoTex = makeNvidiaLogoTexture('#0a0a0e');
+      g.add(planeWith(entryLogoTex, 0.0, 0.6, 0.245, 0.8, 0.16, 0.5));
+
+      // ===== 옥상 거대 NVIDIA 광고판 =====
+      const nvSignTex = makeNvidiaLogoTexture('#0a0a0e');
+      const nvSign = planeWith(nvSignTex, 0.0, 2.6, 0.05, 1.8, 0.4, 0.7);
+      nvSign.rotation.x = -Math.PI / 9;
+      g.add(nvSign);
+      // 광고판 지지대
+      box(g, 'nv sign post L', -0.55, 2.3, 0.0, 0.05, 0.4, 0.05, M.darkMetal);
+      box(g, 'nv sign post R', 0.55, 2.3, 0.0, 0.05, 0.4, 0.05, M.darkMetal);
+
+      // 옥상 작은 NVIDIA 광고판 (위에 또 하나)
+      const nvSignSmall = planeWith(nvSignTex, 0.0, 2.18, -0.5, 0.7, 0.16, 0.5);
+      g.add(nvSignSmall);
+
+      // 옥상 HVAC + 솔라
+      [[-0.6, -0.5], [0.6, -0.5], [-0.6, -1.0], [0.6, -1.0]].forEach(([hx, hz], i) => {
+        box(g, `HVAC ${i}`, hx, 2.13, hz, 0.18, 0.1, 0.18, M.midGray);
+      });
+
+      // ===== CUDA 큐브 에코시스템 (메인 시그니처, 정면 잔디 위) =====
+      const cuda = createCudaCube(g, 0.0, 0.18, 0.85);
+
+      // ===== GeForce RTX 그래픽카드 디스플레이 (셀 좌측 앞) =====
+      // 베이스 패드
+      box(g, 'gpu pad', -1.55, 0.13, 0.7, 0.8, 0.02, 0.55, M.darkGray);
+      // 패드 위 GPU 3개 (계단식)
+      const gpus = [];
+      gpus.push(createGPU(g, -1.55, 0.18, 0.55, 0.95));
+      gpus.push(createGPU(g, -1.55, 0.28, 0.7, 0.95));
+      gpus.push(createGPU(g, -1.55, 0.38, 0.85, 0.95));
+      // GeForce RTX 라벨
+      const gpuLabelTex = makeLabelTexture('GeForce RTX', '#0a0a0e', '#76b900');
+      g.add(planeWith(gpuLabelTex, -1.55, 0.55, 0.99, 0.5, 0.1, 0.5));
+      // 라벨 지지 박스
+      box(g, 'gpu label box', -1.55, 0.55, 0.985, 0.55, 0.12, 0.02, M.darkGray);
+
+      // ===== DGX AI 슈퍼컴퓨팅 (셀 우측 앞, 서버랙 3개) =====
+      const dgxRacks = [];
+      dgxRacks.push(createServerRack(g, 1.3, 0.55, 0.7, 1.0));
+      dgxRacks.push(createServerRack(g, 1.55, 0.55, 0.7, 1.0));
+      dgxRacks.push(createServerRack(g, 1.8, 0.55, 0.7, 1.0));
+      // 라벨
+      const dgxLabelTex = makeLabelTexture('DGX AI', '#0a0a0e', '#00d4ff');
+      g.add(planeWith(dgxLabelTex, 1.55, 1.05, 0.84, 0.5, 0.1, 0.5));
+
+      // ===== AI Infrastructure (셀 우측 뒤, 더 많은 서버랙) =====
+      const aiInfraRacks = [];
+      for (let i = 0; i < 4; i++) {
+        const rack = createServerRack(g, 1.6 + (i % 2) * 0.3, 0.55, -1.0 - Math.floor(i / 2) * 0.4, 0.85);
+        aiInfraRacks.push(rack);
+      }
+      // 라벨
+      const aiInfraLabelTex = makeLabelTexture('AI INFRASTRUCTURE', '#0a0a0e', '#00d4ff');
+      g.add(planeWith(aiInfraLabelTex, 1.75, 1.1, -1.55, 0.55, 0.1, 0.5));
+
+      // ===== Design & Innovation (셀 좌측 뒤, 작은 R&D 사옥) =====
+      box(g, 'R&D body', -1.65, 0.5, -1.2, 0.75, 1.0, 0.7, M.darkGray);
+      box(g, 'R&D roof', -1.65, 1.02, -1.2, 0.8, 0.05, 0.75, M.nvGreen);
+      // 정면 유리 + 모니터들 (작은 발광 사각형)
+      box(g, 'R&D front glass', -1.65, 0.55, -0.85, 0.65, 0.6, 0.025, M.glass);
+      // 모니터 4개 (작은 발광 emissive)
+      for (let i = 0; i < 4; i++) {
+        const mx = -1.85 + (i % 2) * 0.4;
+        const my = 0.4 + Math.floor(i / 2) * 0.3;
+        box(g, `monitor ${i}`, mx, my, -0.836, 0.15, 0.1, 0.005, mat('#00d4ff', { emissive: '#00d4ff', emissiveIntensity: 0.6 }));
+      }
+      // R&D 라벨
+      const rdLabelTex = makeLabelTexture('DESIGN & INNOVATION', '#0a0a0e', '#76b900');
+      g.add(planeWith(rdLabelTex, -1.65, 1.13, -1.2, 0.7, 0.1, 0.5));
+
+      // ===== Manufacturing Partners 보드 (정면, 사용자 의도 핵심) =====
+      box(g, 'partners board frame', 0.0, 0.5, 1.85, 1.2, 0.5, 0.06, M.darkGray);
+      const partnersBoardTex = makePartnersBoardTexture();
+      const partnersBoard = planeWith(partnersBoardTex, 0.0, 0.5, 1.885, 1.15, 0.45, 0.5);
+      g.add(partnersBoard);
+      // 지지대
+      box(g, 'partners board pole L', -0.5, 0.2, 1.85, 0.04, 0.3, 0.04, M.darkMetal);
+      box(g, 'partners board pole R', 0.5, 0.2, 1.85, 0.04, 0.3, 0.04, M.darkMetal);
+
+      // ===== "NVIDIA DOES NOT MANUFACTURE" 표지 (정면 좌측) =====
+      box(g, 'fabless sign frame', -0.95, 0.42, 1.4, 0.4, 0.32, 0.04, M.darkGray);
+      const fablessTex = makeFablessSignTexture();
+      const fablessSign = planeWith(fablessTex, -0.95, 0.42, 1.425, 0.36, 0.28, 0.4);
+      g.add(fablessSign);
+      // 지지대
+      cyl(g, 'fabless pole', -0.95, 0.11, 1.4, 0.02, 0.18, M.darkMetal, 8);
+
+      // ===== Blackwell Architecture 보드 (셀 우측 뒤 옆) =====
+      box(g, 'blackwell sign frame', 2.2, 0.7, -0.3, 0.05, 0.65, 0.4, M.darkGray);
+      const blackwellTex = (() => {
+        const canvas = document.createElement('canvas');
+        canvas.width = 512; canvas.height = 384;
+        const ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#0a0a0e';
+        roundRect(ctx, 8, 8, canvas.width - 16, canvas.height - 16, 18);
+        ctx.fill();
+        ctx.strokeStyle = '#76b900';
+        ctx.lineWidth = 4;
+        roundRect(ctx, 8, 8, canvas.width - 16, canvas.height - 16, 18);
+        ctx.stroke();
+        // 헤더
+        ctx.fillStyle = '#9a9a9e';
+        ctx.font = 'bold 30px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('NVIDIA GPU ARCHITECTURE', canvas.width / 2, 50);
+        // 빅 제목
+        ctx.fillStyle = '#76b900';
+        ctx.font = 'bold 50px Arial';
+        ctx.fillText('BLACKWELL', canvas.width / 2, 130);
+        ctx.fillText('ARCHITECTURE', canvas.width / 2, 185);
+        // 불릿
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 28px Arial';
+        ctx.textAlign = 'left';
+        ctx.fillText('> Higher Performance', 50, 250);
+        ctx.fillText('> Lower Power', 50, 295);
+        ctx.fillText('> AI-Optimized', 50, 340);
+        const tex = new THREE.CanvasTexture(canvas);
+        tex.colorSpace = THREE.SRGBColorSpace;
+        return tex;
+      })();
+      const blackwellPlane = planeWith(blackwellTex, 2.175, 0.7, -0.3, 0.45, 0.55, 0.4);
+      blackwellPlane.rotation.y = -Math.PI / 2;
+      g.add(blackwellPlane);
+
+      // ===== NVIDIA 트럭 (정면 도로) =====
+      const truckGroup = new THREE.Group();
+      truckGroup.position.set(-0.5, 0.2, 1.55);
+      g.add(truckGroup);
+      // 트럭 캐빈
+      box(truckGroup, 'truck cabin', 0, 0, 0, 0.18, 0.16, 0.18, M.nvGreen);
+      // 트럭 카고
+      box(truckGroup, 'truck cargo', 0.22, 0.02, 0, 0.32, 0.2, 0.2, M.darkGray);
+      // 옆 NVIDIA 로고
+      const truckLogoTex = makeNvidiaLogoTexture('#0a0a0e');
+      const truckLogo = planeWith(truckLogoTex, 0.22, 0.05, 0.101, 0.3, 0.1, 0.4);
+      truckGroup.add(truckLogo);
+      // 바퀴
+      for (let i = 0; i < 4; i++) {
+        const wx = -0.05 + (i % 2) * 0.32;
+        const wz = -0.07 + Math.floor(i / 2) * 0.14;
+        const wheel = cyl(truckGroup, 'truck wheel', wx, -0.085, wz, 0.04, 0.04, mat('#1a1a1a'), 12);
+        wheel.rotation.x = Math.PI / 2;
+      }
+      // 헤드라이트
+      [[-0.06, 0.07], [-0.06, -0.07]].forEach(([hx, hz]) => {
+        const hl = new THREE.Mesh(new THREE.SphereGeometry(0.012, 8, 6), new THREE.MeshBasicMaterial({ color: '#fff8c0' }));
+        hl.position.set(-0.09, -0.02, hz);
+        truckGroup.add(hl);
+      });
+
+      // ===== sky beam (그린) =====
+      const skyBeam = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.05, 0.13, 3.5, 12, 1, true),
+        M.skyBeamGreen
+      );
+      skyBeam.position.set(0.0, 4.4, 0.05);
+      skyBeam.castShadow = false;
+      g.add(skyBeam);
+
+      // ===== AI 데이터 비드 (CUDA 큐브 → 사옥 사이) =====
+      const dataPath = new THREE.CatmullRomCurve3([
+        new THREE.Vector3(0.0, 0.8, 0.85),       // CUDA 위
+        new THREE.Vector3(0.0, 1.5, 0.4),
+        new THREE.Vector3(0.0, 1.2, -0.45),      // 사옥 안
+      ]);
+      const dataBeads = [];
+      const beadMat = new THREE.MeshStandardMaterial({
+        color: C.nvGreenBright, emissive: C.nvGreenBright,
+        emissiveIntensity: 2.5, roughness: 0.2
+      });
+      for (let i = 0; i < 6; i++) {
+        const b = new THREE.Mesh(new THREE.SphereGeometry(0.05, 14, 10), beadMat);
+        b.castShadow = false;
+        g.add(b);
+        dataBeads.push({ mesh: b, offset: i / 6 });
+      }
+
+      // ===== 사람들 =====
+      const peopleColors = ['#76b900', '#ffffff', '#3a3a3a', '#0a0a0e', '#76b900'];
+      for (let i = 0; i < 8; i++) {
+        const px = -0.9 + (i % 4) * 0.3;
+        const pz = 0.4 + Math.floor(i / 4) * 0.12;
+        const color = peopleColors[i % peopleColors.length];
+        const person = new THREE.Mesh(
+          new THREE.BoxGeometry(0.04, 0.1, 0.04),
+          mat(color, { roughness: 0.7 })
+        );
+        person.position.set(px, 0.18, pz);
+        person.castShadow = true;
+        g.add(person);
+      }
+
+      // ===== 나무 =====
+      tree(g, -2.1, 1.85, .42);
+      tree(g, 2.1, 1.85, .42);
+      tree(g, -2.1, -1.85, .42);
+      tree(g, 2.1, -1.85, .42);
+
+      // ===== 조명 =====
+      const heroGlow = new THREE.PointLight('#fff2c8', 0.5, 3);
+      heroGlow.position.set(0.0, 1.0, -0.3);
+      g.add(heroGlow);
+      // CUDA 그린 림
+      cudaGlow = new THREE.PointLight(C.nvGreen, 1.5, 3);
+      cudaGlow.position.set(0.0, 0.5, 0.85);
+      g.add(cudaGlow);
+      // DGX 시안 글로우
+      const dgxGlow = new THREE.PointLight(C.cyan, 0.7, 2.5);
+      dgxGlow.position.set(1.55, 0.7, 0.7);
+      g.add(dgxGlow);
+      // AI Infra 시안 글로우
+      const aiGlow = new THREE.PointLight(C.cyan, 0.6, 3);
+      aiGlow.position.set(1.7, 0.7, -1.2);
+      g.add(aiGlow);
+      // GPU 그린 글로우
+      const gpuGlow = new THREE.PointLight(C.nvGreen, 0.6, 2);
+      gpuGlow.position.set(-1.55, 0.4, 0.7);
+      g.add(gpuGlow);
+      // R&D 그린 글로우
+      const rdGlow = new THREE.PointLight(C.nvGreen, 0.5, 2);
+      rdGlow.position.set(-1.65, 0.6, -1.0);
+      g.add(rdGlow);
+
+      g.userData = {
+        floorWindows, cuda, gpus, dgxRacks, aiInfraRacks,
+        skyBeam, nvSign, dataBeads, dataPath, truckGroup
+      };
+      return g;
+    }
+
+    function tree(g, x, z, s = .5) {
+      cyl(g, 'tree trunk', x, .23 * s / .5, z, .035, .38 * s / .5, mat('#5a3a20', { roughness: .8 }), 10);
+      const crown = new THREE.Mesh(new THREE.SphereGeometry(.18 * s / .5, 18, 12), M.grass);
+      crown.position.set(x, .52 * s / .5, z);
+      crown.castShadow = true;
+      crown.receiveShadow = true;
+      g.add(crown);
+    }
+
+    // Lighting
+    scene.add(new THREE.HemisphereLight('#a8d8a8', '#0a1410', 0.6));
+    const key = new THREE.DirectionalLight('#ffffff', 1.5);
+    key.position.set(4.5, 7, 5.5);
+    key.castShadow = true;
+    key.shadow.mapSize.set(2048, 2048);
+    key.shadow.camera.left = -7;
+    key.shadow.camera.right = 7;
+    key.shadow.camera.top = 7;
+    key.shadow.camera.bottom = -7;
+    scene.add(key);
+    const rim = new THREE.DirectionalLight(C.nvGreen, 0.5);
+    rim.position.set(-4, 4, -5);
+    scene.add(rim);
+
+    const nvidia = createNvidiaDiorama();
+    nvidia.scale.setScalar(1.58);
+    scene.add(nvidia);
+
+    const clock = new THREE.Clock();
+    const SPEED = 0.4;
+
+    function animate() {
+      const t = clock.getElapsedTime() * SPEED;
+      const tRaw = clock.getElapsedTime();
+      const u = nvidia.userData;
+
+      // 사옥 창문 wave
+      u.floorWindows.forEach(fw => {
+        const wave = 0.4 + 0.6 * Math.max(0, Math.sin(t * 1.2 - fw.row * 0.3 + fw.col * 0.1));
+        fw.mesh.material.emissiveIntensity = wave;
+      });
+
+      // CUDA 큐브 레이어 박동 (각 레이어 별 시퀀스)
+      u.cuda.layerMeshes.forEach((layer) => {
+        const pulse = 0.1 + 0.4 * Math.max(0, Math.sin(t * 1.2 + layer.phase));
+        layer.cube.material.emissiveIntensity = pulse;
+      });
+      // CUDA 코어 박동
+      u.cuda.core.material.color.setRGB(0.46 + 0.4 * Math.sin(t * 3), 0.92, 0.0);
+      // 바닥 ring 강하게 박동
+      u.cuda.baseRing.material.emissiveIntensity = 1.0 + 1.0 * Math.sin(t * 2);
+      // CUDA glow 박동
+      cudaGlow.intensity = 1.2 + 0.5 * Math.sin(t * 2);
+
+      // GPU 팬 회전 (실시간 속도)
+      u.gpus.forEach((gpu, gi) => {
+        gpu.fans.forEach(fan => {
+          fan.rotation.y = tRaw * 8;  // 빠르게 회전
+        });
+        // RGB strip 색상 변화 (그린 ↔ 다른 색)
+        const r = 0.46 + 0.3 * Math.sin(t * 2 + gi);
+        const g_ = 0.72;
+        const b = 0.0 + 0.3 * Math.abs(Math.sin(t * 1.5 + gi));
+        gpu.rgbStrip.material.color.setRGB(r, g_, b);
+        gpu.rgbStrip.material.emissive.setRGB(r, g_, b);
+      });
+
+      // DGX 서버랙 LED 시퀀스
+      u.dgxRacks.forEach(rack => {
+        rack.leds.forEach(led => {
+          led.mesh.material.emissiveIntensity = 1.5 + 1.5 * Math.abs(Math.sin(t * 4 + led.phase * 3));
+        });
+      });
+
+      // AI Infra 서버랙 LED 시퀀스 (다른 페이즈)
+      u.aiInfraRacks.forEach(rack => {
+        rack.leds.forEach(led => {
+          led.mesh.material.emissiveIntensity = 1.0 + 1.5 * Math.abs(Math.sin(t * 3.5 + led.phase * 2.5));
+        });
+      });
+
+      // sky beam
+      u.skyBeam.material.opacity = 0.3 + 0.15 * Math.sin(t * 1.5);
+      u.skyBeam.scale.x = u.skyBeam.scale.z = 1 + 0.13 * Math.sin(t * 2);
+
+      // NVIDIA 광고판 박동
+      u.nvSign.material.emissiveIntensity = 0.6 + 0.3 * Math.sin(t * 1.5);
+
+      // AI 데이터 비드 (CUDA → 사옥)
+      u.dataBeads.forEach((b, i) => {
+        const progress = ((t * 0.4) + b.offset) % 1;
+        const pos = u.dataPath.getPoint(progress);
+        b.mesh.position.copy(pos);
+        b.mesh.material.emissiveIntensity = 1.5 + 1.0 * Math.sin(t * 6 + i);
+      });
+
+      // 트럭 좌→우 이동 (NVIDIA 출하)
+      const truckProgress = (t * 0.1 + 0.3) % 1.2;
+      if (truckProgress < 1.0) {
+        u.truckGroup.position.x = -1.8 + truckProgress * 3.3;
+        u.truckGroup.visible = true;
+      } else {
+        u.truckGroup.visible = false;
+      }
+
+      nvidia.rotation.y = Math.sin(t * .25) * .012;
+
+      controls.update();
+      renderer.render(scene, camera);
+      requestAnimationFrame(animate);
+    }
+    animate();
+
+    addEventListener('resize', () => {
+      camera.aspect = innerWidth / innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(innerWidth, innerHeight);
+    });
+  </script>
+</body>
+</html>

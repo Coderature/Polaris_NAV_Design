@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>??-?? ?? ???? v3 ? Gas Station Edition</title>
+  <style>
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: radial-gradient(circle at 50% 20%, #20251f 0%, #121613 58%, #090b0a 100%);
+      font-family: "Malgun Gothic", "Apple SD Gothic Neo", Arial, sans-serif;
+    }
+    #hud {
+      position: fixed;
+      left: 22px;
+      top: 20px;
+      z-index: 10;
+      color: #f7eedb;
+      background: rgba(8, 12, 10, 0.72);
+      border: 1px solid rgba(244, 196, 48, 0.45);
+      border-radius: 16px;
+      padding: 14px 16px;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.35);
+      backdrop-filter: blur(10px);
+      pointer-events: none;
+      line-height: 1.45;
+    }
+    #hud b { color: #f4c430; font-size: 18px; }
+    #hud span { color: #9dd8b6; font-size: 13px; }
+    #tip {
+      position: fixed;
+      right: 22px;
+      bottom: 20px;
+      z-index: 10;
+      color: #0b5a35;
+      background: rgba(255, 242, 213, 0.9);
+      border-radius: 999px;
+      padding: 9px 14px;
+      font-size: 13px;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.28);
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="hud">
+    <b>S-OIL Slim Diorama v3</b><br />
+    <span>HQ ? ?? ? ?? ? ?? ? ??? ? ??? ? 010950</span>
+  </div>
+  <div id="tip">??? ?? ? ? ?? ? ??? ??</div>
+
+
+<script type="module">
+    import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
+    import { OrbitControls } from 'https://unpkg.com/three@0.160.0/examples/jsm/controls/OrbitControls.js';
+
+    const GROUND_XZ = 1.25;
+    const gx = (n) => n * GROUND_XZ;
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color('#101411');
+    scene.fog = new THREE.Fog('#101411', 12, 28);
+
+    const camera = new THREE.PerspectiveCamera(38, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.position.set(5.4, 4.7, 6.1);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    document.body.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.target.set(0, 1.5, 0);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.06;
+    controls.minDistance = 4;
+    controls.maxDistance = 12;
+    controls.maxPolarAngle = Math.PI * 0.49;
+
+    const COLORS = {
+      green: '#0b5a35',
+      greenDark: '#063a22',
+      yellow: '#f4c430',
+      cream: '#e8e4d0',
+      paper: '#d8ccb4',
+      wood: '#6d4b32',
+      metal: '#c0c0c0',
+      metalDark: '#888888',
+      pipe: '#666666',
+      glass: '#a8d4ee',
+      glassDark: '#2a3a4a',
+      road: '#242824',
+    };
+
+    const mat = (color, opts = {}) => new THREE.MeshStandardMaterial({
+      color,
+      roughness: opts.roughness ?? 0.62,
+      metalness: opts.metalness ?? 0.05,
+      transparent: opts.transparent ?? false,
+      opacity: opts.opacity ?? 1,
+      emissive: opts.emissive ?? '#000000',
+      emissiveIntensity: opts.emissiveIntensity ?? 0,
+    });
+
+    const M = {
+      green: mat(COLORS.green, { roughness: 0.55, metalness: 0.15 }),
+      greenDark: mat(COLORS.greenDark, { roughness: 0.5, metalness: 0.2 }),
+      yellow: mat(COLORS.yellow, { roughness: 0.45, metalness: 0.05, emissive: '#8a6400', emissiveIntensity: 0.1 }),
+      cream: mat(COLORS.cream, { roughness: 0.75, metalness: 0.1 }),
+      paper: mat(COLORS.paper, { roughness: 0.8 }),
+      wood: mat(COLORS.wood, { roughness: 0.58 }),
+      metal: mat(COLORS.metal, { roughness: 0.3, metalness: 0.7 }),
+      metalDark: mat(COLORS.metalDark, { roughness: 0.5, metalness: 0.4 }),
+      pipe: mat(COLORS.pipe, { roughness: 0.38, metalness: 0.6 }),
+      road: mat(COLORS.road, { roughness: 0.8 }),
+      glass: mat(COLORS.glass, { roughness: 0.1, metalness: 0.1, transparent: true, opacity: 0.55, emissive: '#3a78a0', emissiveIntensity: 0.15 }),
+      glassDark: mat(COLORS.glassDark, { roughness: 0.2, metalness: 0.5 }),
+      whiteAccent: mat('#f4f4f4', { roughness: 0.6 }),
+      warmWindow: mat('#fff2c8', { roughness: 0.35, emissive: '#ffb93d', emissiveIntensity: 0.85 }),
+      oilDrop: mat('#2a1500', { roughness: 0.15, metalness: 0.3, emissive: '#3a1a08', emissiveIntensity: 0.4 }),
+      smoke: new THREE.MeshBasicMaterial({ color: '#aaaaaa', transparent: true, opacity: 0.45 }),
+      gasPad: mat('#bdbdb5', { roughness: 0.95 }),
+      gasLine: mat('#fff8e8', { roughness: 0.8 }),
+      pumpBody: mat('#e8e4d0', { roughness: 0.7 }),
+      pumpScreen: mat('#003322', { emissive: '#1a8a55', emissiveIntensity: 1.5 }),
+      headlight: new THREE.MeshBasicMaterial({ color: '#fff8c0' }),
+    };
+
+    function box(g, name, x, y, z, sx, sy, sz, material) {
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), material);
+      mesh.name = name;
+      mesh.position.set(x, y, z);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      g.add(mesh);
+      return mesh;
+    }
+
+    function cyl(g, name, x, y, z, rt, rb, h, radial, material) {
+      const mesh = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, radial), material);
+      mesh.name = name;
+      mesh.position.set(x, y, z);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      g.add(mesh);
+      return mesh;
+    }
+
+    function roundRect(ctx, x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+    }
+
+    function makeBillboardTexture(text, bgColor = '#ffffff', textColor = '#0b5a35') {
+      const canvas = document.createElement('canvas');
+      canvas.width = 1024;
+      canvas.height = 256;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = bgColor;
+      roundRect(ctx, 14, 14, canvas.width - 28, canvas.height - 28, 28);
+      ctx.fill();
+      ctx.strokeStyle = textColor;
+      ctx.lineWidth = 8;
+      roundRect(ctx, 14, 14, canvas.width - 28, canvas.height - 28, 28);
+      ctx.stroke();
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = textColor;
+      ctx.font = 'bold 130px Arial, sans-serif';
+      ctx.fillText(text, canvas.width / 2, canvas.height / 2);
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      return texture;
+    }
+
+    function makePriceBoardTexture() {
+      const canvas = document.createElement('canvas');
+      canvas.width = 256;
+      canvas.height = 320;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = '#0a0a0a';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#0b5a35';
+      ctx.fillRect(8, 8, canvas.width - 16, 60);
+      ctx.fillStyle = '#fff8e8';
+      ctx.font = 'bold 36px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('S-OIL', canvas.width / 2, 40);
+      ctx.fillStyle = '#ff7a00';
+      ctx.font = 'bold 28px Arial';
+      ctx.textAlign = 'left';
+      const labels = ['???', '??', 'LPG'];
+      const prices = ['1,657', '1,527', '1,077'];
+      for (let i = 0; i < 3; i++) {
+        ctx.fillText(labels[i], 18, 110 + i * 60);
+        ctx.textAlign = 'right';
+        ctx.fillText(prices[i], canvas.width - 18, 110 + i * 60);
+        ctx.textAlign = 'left';
+      }
+      const texture = new THREE.CanvasTexture(canvas);
+      texture.colorSpace = THREE.SRGBColorSpace;
+      return texture;
+    }
+
+    function sign(g, text, x, y, z, w, h, bg, color) {
+      const texture = makeBillboardTexture(text, bg, color);
+      const material = new THREE.MeshStandardMaterial({
+        map: texture,
+        side: THREE.DoubleSide,
+        roughness: 0.5,
+        metalness: 0,
+        emissive: '#ffffff',
+        emissiveMap: texture,
+        emissiveIntensity: 0.2,
+      });
+      const mesh = new THREE.Mesh(new THREE.PlaneGeometry(w, h), material);
+      mesh.position.set(x, y, z);
+      mesh.castShadow = true;
+      g.add(mesh);
+      return mesh;
+    }
+
+    function createTree(group, x, y, z) {
+      const trunk = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.05, 0.07, 0.3, 8),
+        mat('#5a3a20', { roughness: 0.85 }),
+      );
+      trunk.position.set(x, y - 0.7, z);
+      trunk.castShadow = true;
+      group.add(trunk);
+      const leaves = new THREE.Mesh(
+        new THREE.SphereGeometry(0.18, 12, 10),
+        mat('#2a6b3a', { roughness: 0.7 }),
+      );
+      leaves.position.set(x, y - 0.45, z);
+      leaves.castShadow = true;
+      group.add(leaves);
+    }
+
+    function createGasStation(group, baseX, baseZ) {
+      const station = new THREE.Group();
+      station.position.set(baseX, 0, baseZ);
+      group.add(station);
+
+      const addToStation = (mesh) => {
+        station.add(mesh);
+        return mesh;
+      };
+
+      box(station, 'gas pad', 0, 0.13, 0, 0.9, 0.02, 0.7, M.gasPad);
+      box(station, 'gas line A', -0.18, 0.142, 0.15, 0.005, 0.005, 0.18, M.gasLine);
+      box(station, 'gas line B', 0.18, 0.142, 0.15, 0.005, 0.005, 0.18, M.gasLine);
+      box(station, 'gas line C', -0.18, 0.142, -0.15, 0.005, 0.005, 0.18, M.gasLine);
+      box(station, 'gas line D', 0.18, 0.142, -0.15, 0.005, 0.005, 0.18, M.gasLine);
+
+      for (const [px, pz] of [
+        [-0.38, -0.28],
+        [0.38, -0.28],
+        [-0.38, 0.18],
+        [0.38, 0.18],
+      ]) {
+        const pillar = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.025, 0.4, 12), M.metalDark);
+        pillar.position.set(px, 0.34, pz);
+        pillar.castShadow = true;
+        addToStation(pillar);
+      }
+
+      box(station, 'canopy slab', 0, 0.56, -0.05, 0.85, 0.04, 0.55, M.whiteAccent);
+      box(station, 'canopy front trim', 0, 0.535, 0.225, 0.87, 0.06, 0.03, M.green);
+      box(station, 'canopy side L', -0.43, 0.535, -0.05, 0.03, 0.06, 0.55, M.green);
+      box(station, 'canopy side R', 0.43, 0.535, -0.05, 0.03, 0.06, 0.55, M.green);
+
+      [[-0.18, -0.05], [0.18, -0.05]].forEach(([px, pz]) => {
+        box(station, 'pump body', px, 0.22, pz, 0.08, 0.16, 0.05, M.pumpBody);
+        box(station, 'pump screen', px, 0.27, pz - 0.0265, 0.06, 0.04, 0.005, M.pumpScreen);
+        const hose = new THREE.Mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.08, 6), mat('#222222'));
+        hose.position.set(px + 0.045, 0.18, pz - 0.025);
+        hose.rotation.z = Math.PI / 4;
+        addToStation(hose);
+      });
+
+      box(station, 'convenience store body', 0, 0.27, -0.55, 0.55, 0.3, 0.18, M.whiteAccent);
+      box(station, 'convenience store roof', 0, 0.43, -0.55, 0.57, 0.05, 0.2, M.green);
+      box(station, 'store glass', 0, 0.22, -0.45, 0.4, 0.13, 0.01, M.glassDark);
+      box(station, 'store window glow', 0, 0.22, -0.444, 0.38, 0.11, 0.005, M.warmWindow.clone());
+
+      const storeTex = makeBillboardTexture('S-OIL', '#ffffff', COLORS.green);
+      const storeSign = new THREE.Mesh(
+        new THREE.PlaneGeometry(0.32, 0.08),
+        new THREE.MeshStandardMaterial({
+          map: storeTex,
+          side: THREE.DoubleSide,
+          emissive: '#ffffff',
+          emissiveMap: storeTex,
+          emissiveIntensity: 0.2,
+        }),
+      );
+      storeSign.position.set(0, 0.46, -0.443);
+      addToStation(storeSign);
+
+      const priceTex = makePriceBoardTexture();
+      const priceBoard = new THREE.Mesh(
+        new THREE.PlaneGeometry(0.18, 0.22),
+        new THREE.MeshStandardMaterial({
+          map: priceTex,
+          emissive: '#ffffff',
+          emissiveMap: priceTex,
+          emissiveIntensity: 0.5,
+          side: THREE.DoubleSide,
+        }),
+      );
+      priceBoard.position.set(0.55, 0.35, 0.05);
+      priceBoard.rotation.y = -Math.PI / 2;
+      addToStation(priceBoard);
+      const pricePole = new THREE.Mesh(new THREE.CylinderGeometry(0.015, 0.015, 0.2, 8), M.metalDark);
+      pricePole.position.set(0.55, 0.18, 0.05);
+      addToStation(pricePole);
+
+      const car = new THREE.Group();
+      car.position.set(-0.18, 0.18, 0.08);
+      addToStation(car);
+      box(car, 'car body', 0, 0, 0, 0.18, 0.06, 0.1, M.whiteAccent);
+      box(car, 'car cabin', 0, 0.05, 0, 0.13, 0.04, 0.09, M.whiteAccent);
+      const hl1 = new THREE.Mesh(new THREE.SphereGeometry(0.012, 8, 6), M.headlight.clone());
+      hl1.position.set(0.09, 0, 0.035);
+      car.add(hl1);
+      const hl2 = new THREE.Mesh(new THREE.SphereGeometry(0.012, 8, 6), M.headlight.clone());
+      hl2.position.set(0.09, 0, -0.035);
+      car.add(hl2);
+      for (const [wx, wz] of [
+        [-0.06, -0.04],
+        [0.06, -0.04],
+        [-0.06, 0.04],
+        [0.06, 0.04],
+      ]) {
+        const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.018, 0.015, 8), mat('#1a1a1a'));
+        wheel.position.set(wx, -0.03, wz);
+        wheel.rotation.x = Math.PI / 2;
+        car.add(wheel);
+      }
+
+      const canopyLight = new THREE.PointLight('#fff8c0', 0.6, 1.2);
+      canopyLight.position.set(0, 0.5, 0);
+      station.add(canopyLight);
+
+      return { canopyLight, headlights: [hl1, hl2] };
+    }
+
+    function createSlimSOilDiorama() {
+      const group = new THREE.Group();
+
+      box(group, 'dark base plinth', 0, -0.13, 0, gx(4.8), 0.26, gx(4.3), M.wood);
+      box(group, 'one-cell platform', 0, 0.02, 0, gx(4.35), 0.12, gx(3.85), M.paper);
+      box(group, 'front road strip', 0, 0.1, 1.5, gx(4.0), 0.04, gx(0.5), M.road);
+      box(group, 'tank service road', 0.6, 0.11, -0.55, gx(2.45), 0.04, gx(0.38), M.road);
+
+      const hqX = -1.4;
+      const hqZ = -0.55;
+      box(group, 'HQ main tower', hqX, 1.2, hqZ, 1.6, 2.4, 1.2, M.green);
+      box(group, 'HQ rooftop accent', hqX, 2.46, hqZ, 1.7, 0.14, 1.3, M.whiteAccent);
+      box(group, 'HQ penthouse', hqX, 2.65, hqZ, 0.9, 0.22, 0.7, M.greenDark);
+
+      const winCols = 6;
+      const winRows = 8;
+      const winW = 0.18;
+      const winH = 0.22;
+      const winGapX = 0.05;
+      const winGapY = 0.05;
+      const totalW = winCols * winW + (winCols - 1) * winGapX;
+      const totalH = winRows * winH + (winRows - 1) * winGapY;
+      const startX = hqX - totalW / 2 + winW / 2;
+      const startY = 1.2 - totalH / 2 + winH / 2;
+
+      const frontWindows = [];
+      for (let row = 0; row < winRows; row++) {
+        for (let col = 0; col < winCols; col++) {
+          const x = startX + col * (winW + winGapX);
+          const y = startY + row * (winH + winGapY);
+          const w = box(group, `HQ front window ${row}-${col}`, x, y, 0.06, winW, winH, 0.025, M.warmWindow.clone());
+          frontWindows.push({ mesh: w, row, col });
+        }
+      }
+
+      for (let i = 0; i < 5; i++) {
+        const x = startX - winW / 2 - winGapX / 2 + i * (winW + winGapX);
+        box(group, `HQ vertical mullion ${i}`, x, 1.2, 0.07, 0.025, totalH + 0.1, 0.03, M.whiteAccent);
+      }
+
+      box(group, 'HQ left glass wall', -2.215, 1.2, hqZ, 0.035, 2.2, 1.1, M.glass);
+      box(group, 'HQ right glass wall', -0.585, 1.2, hqZ, 0.035, 2.2, 1.1, M.glass);
+      box(group, 'HQ lobby dark glass', hqX, 0.25, 0.07, 1.3, 0.4, 0.06, M.glassDark);
+      box(group, 'HQ lobby canopy', hqX, 0.5, 0.18, 1.4, 0.05, 0.25, M.whiteAccent);
+      box(group, 'HQ entrance glow', hqX, 0.2, 0.085, 0.4, 0.18, 0.03, M.warmWindow.clone());
+      box(group, 'HQ HVAC 1', -1.7, 2.62, -0.7, 0.3, 0.2, 0.3, M.metalDark);
+      box(group, 'HQ HVAC 2', -1.1, 2.62, -0.4, 0.3, 0.2, 0.3, M.metalDark);
+
+      const dishPivot = new THREE.Group();
+      dishPivot.position.set(-1.8, 2.92, hqZ);
+      group.add(dishPivot);
+      const dish = new THREE.Mesh(
+        new THREE.SphereGeometry(0.13, 14, 10, 0, Math.PI * 2, 0, Math.PI / 2.2),
+        M.metal,
+      );
+      dish.rotation.x = Math.PI;
+      dishPivot.add(dish);
+      cyl(dishPivot, 'dish antenna', 0, 0.12, 0, 0.012, 0.012, 0.2, 8, M.metalDark);
+      const dishLed = new THREE.Mesh(
+        new THREE.SphereGeometry(0.025, 10, 8),
+        new THREE.MeshBasicMaterial({ color: '#ff3355' }),
+      );
+      dishLed.position.set(0, 0.24, 0);
+      dishPivot.add(dishLed);
+
+      const roofSign = sign(group, 'S-OIL', hqX, 2.85, 0.1, 1.0, 0.32, '#ffffff', COLORS.green);
+      roofSign.rotation.x = -Math.PI / 10;
+      box(group, 'roof sign post A', -1.85, 2.72, 0.1, 0.04, 0.28, 0.04, M.metalDark);
+      box(group, 'roof sign post B', -0.95, 2.72, 0.1, 0.04, 0.28, 0.04, M.metalDark);
+      sign(group, 'S-OIL', hqX, 1.7, 0.084, 0.9, 0.32, COLORS.green, '#ffffff');
+
+      cyl(group, 'main refinery tower', 0, 1.5, 0, 0.35, 0.4, 3.0, 16, M.metal);
+      cyl(group, 'main tower lower ring', 0, 0.95, 0, 0.49, 0.49, 0.06, 24, M.yellow);
+      cyl(group, 'main tower middle ring', 0, 1.7, 0, 0.47, 0.47, 0.06, 24, M.yellow);
+      cyl(group, 'main tower upper ring', 0, 2.45, 0, 0.44, 0.44, 0.06, 24, M.yellow);
+      cyl(group, 'main tower cap', 0, 3.07, 0, 0.3, 0.35, 0.15, 16, M.metalDark);
+      cyl(group, 'auxiliary stack', 0.7, 1.1, 0.5, 0.2, 0.22, 2.2, 14, M.metalDark);
+      cyl(group, 'auxiliary stack cap', 0.7, 2.24, 0.5, 0.18, 0.2, 0.12, 14, M.metalDark);
+
+      const smokeBeads = [];
+      const smokeOrigins = [
+        { x: 0, y: 3.25, z: 0, count: 5 },
+        { x: 0.7, y: 2.35, z: 0.5, count: 4 },
+      ];
+      smokeOrigins.forEach((origin, originIdx) => {
+        for (let i = 0; i < origin.count; i++) {
+          const smoke = new THREE.Mesh(new THREE.SphereGeometry(0.12, 12, 10), M.smoke.clone());
+          smoke.castShadow = false;
+          group.add(smoke);
+          smokeBeads.push({
+            mesh: smoke,
+            baseX: origin.x,
+            baseY: origin.y,
+            baseZ: origin.z,
+            offset: i / origin.count,
+            originIdx,
+            drift: (originIdx * 2 + i) * 1.1,
+            speed: 0.18 + originIdx * 0.02 + i * 0.01,
+          });
+        }
+      });
+
+      const tankPositions = [[0.5, 0.35, -1.5], [1.4, 0.35, -1.5], [0.5, 0.35, -0.6], [1.4, 0.35, -0.6]];
+      tankPositions.forEach(([x, y, z], i) => {
+        cyl(group, `storage tank ${i + 1}`, x, y, z, 0.4, 0.4, 0.7, 32, M.cream.clone());
+        cyl(group, `storage tank yellow rim ${i + 1}`, x, y + 0.38, z, 0.42, 0.42, 0.035, 32, M.yellow);
+        const tex = makeBillboardTexture('S-OIL', COLORS.green, '#ffffff');
+        const logo = new THREE.Mesh(
+          new THREE.PlaneGeometry(0.36, 0.16),
+          new THREE.MeshStandardMaterial({ map: tex, side: THREE.DoubleSide, roughness: 0.5 }),
+        );
+        logo.position.set(x, y + 0.04, z - 0.405);
+        group.add(logo);
+      });
+
+      const pipe1 = cyl(group, 'pipe row front', 0.95, 0.8, -1.5, 0.05, 0.05, 1.0, 8, M.pipe);
+      pipe1.rotation.z = Math.PI / 2;
+      const pipe2 = cyl(group, 'pipe row back', 0.95, 0.8, -0.6, 0.05, 0.05, 1.0, 8, M.pipe);
+      pipe2.rotation.z = Math.PI / 2;
+      const pipe3 = cyl(group, 'pipe to tower', 0.55, 0.78, -0.25, 0.045, 0.045, 1.25, 8, M.pipe);
+      pipe3.rotation.x = Math.PI / 2;
+      pipe3.rotation.z = Math.PI / 8;
+
+      const gasStation = createGasStation(group, 1.35, 0.7);
+
+      box(group, 'tiny tanker truck cabin', -0.9, 0.24, 1.2, 0.32, 0.28, 0.32, M.green);
+      const truckTank = cyl(group, 'tiny oil tanker truck', -0.45, 0.28, 1.2, 0.18, 0.18, 0.75, 16, M.cream);
+      truckTank.rotation.z = Math.PI / 2;
+      for (let i = 0; i < 4; i++) {
+        const w = cyl(group, 'truck wheel', -0.85 + i * 0.22, 0.13, 1.4, 0.055, 0.055, 0.05, 12, M.road);
+        w.rotation.x = Math.PI / 2;
+      }
+
+      createTree(group, -2.0, 0.9, 0.55);
+      createTree(group, -1.95, -1.45, 0.45);
+      createTree(group, 1.95, 0.88, 0.45);
+      createTree(group, 1.95, -1.65, 0.42);
+      box(group, 'parking car white', -2.05, 0.13, 0.5, 0.3, 0.12, 0.2, M.cream);
+
+      const buildingLight = new THREE.PointLight('#fff2c8', 0.7, 3.5);
+      buildingLight.position.set(hqX, 1.2, hqZ);
+      group.add(buildingLight);
+
+      const oilPaths = [];
+      function addOilPath(start, end, beadCount, speed) {
+        const startVec = new THREE.Vector3(...start);
+        const endVec = new THREE.Vector3(...end);
+        const beads = [];
+        for (let i = 0; i < beadCount; i++) {
+          const bead = new THREE.Mesh(new THREE.SphereGeometry(0.05, 14, 10), M.oilDrop.clone());
+          bead.castShadow = false;
+          group.add(bead);
+          beads.push({ mesh: bead, phaseOffset: i / beadCount });
+        }
+        oilPaths.push({ start: startVec, end: endVec, beads, speed });
+      }
+
+      addOilPath([0, 0.8, 0], [0.5, 0.8, -1.45], 5, 0.4);
+      addOilPath([0, 0.8, 0], [1.4, 0.8, -1.45], 4, 0.35);
+      addOilPath([0, 0.8, 0], [0.5, 0.8, -0.6], 4, 0.45);
+      addOilPath([0, 0.8, 0], [1.4, 0.8, -0.6], 4, 0.38);
+
+      group.userData = {
+        frontWindows,
+        smokeBeads,
+        oilPaths,
+        dishPivot,
+        dishLed,
+        gasStation,
+      };
+      return group;
+    }
+
+    scene.add(new THREE.AmbientLight('#445566', 0.6));
+    scene.add(new THREE.HemisphereLight('#aaccff', '#202028', 0.5));
+    const sun = new THREE.DirectionalLight('#e8eeff', 1.4);
+    sun.position.set(8, 14, 6);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.camera.left = -8;
+    sun.shadow.camera.right = 8;
+    sun.shadow.camera.top = 8;
+    sun.shadow.camera.bottom = -8;
+    sun.shadow.camera.near = 0.5;
+    sun.shadow.camera.far = 30;
+    scene.add(sun);
+
+    const diorama = createSlimSOilDiorama();
+    diorama.scale.setScalar(1.58);
+    scene.add(diorama);
+
+    const clock = new THREE.Clock();
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const t = clock.getElapsedTime();
+      const u = diorama.userData;
+
+      u.oilPaths.forEach((path) => {
+        path.beads.forEach((b) => {
+          const progress = ((t * path.speed) + b.phaseOffset) % 1;
+          const pos = new THREE.Vector3().lerpVectors(path.start, path.end, progress);
+          b.mesh.position.copy(pos);
+          b.mesh.position.y += Math.sin(t * 8 + b.phaseOffset * 10) * 0.015;
+          b.mesh.material.emissiveIntensity = 0.3 + 0.15 * Math.sin(t * 3 + b.phaseOffset * 6);
+        });
+      });
+
+      u.smokeBeads.forEach((s) => {
+        const progress = ((t * s.speed) + s.offset) % 1;
+        s.mesh.position.set(
+          s.baseX + Math.sin(t * 0.8 + s.drift) * 0.1 + progress * 0.15,
+          s.baseY + progress * 1.4,
+          s.baseZ + Math.cos(t * 0.8 + s.drift) * 0.1,
+        );
+        s.mesh.material.opacity = 0.5 * (1 - progress);
+        s.mesh.scale.setScalar(0.6 + progress * 1.5);
+      });
+
+      u.frontWindows.forEach((fw) => {
+        const wave = 0.5 + 0.6 * Math.max(0, Math.sin(t * 1.2 - fw.row * 0.3 + fw.col * 0.1));
+        fw.mesh.material.emissiveIntensity = wave;
+      });
+
+      u.dishPivot.rotation.y = t * 0.5;
+      u.dishLed.material.color.setHSL(0, 1, 0.5 + 0.25 * Math.sin(t * 8));
+
+      u.gasStation.canopyLight.intensity = 0.6 + 0.1 * Math.sin(t * 1.2);
+      u.gasStation.headlights.forEach((h, i) => {
+        h.material.color.setRGB(1, 0.97 + 0.03 * Math.sin(t * 4 + i), 0.75);
+      });
+
+      controls.update();
+      renderer.render(scene, camera);
+    }
+
+    animate();
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>

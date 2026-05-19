@@ -243,7 +243,7 @@ function main() {
 
   function updateLegendAndHintForView() {
     hintEl.innerHTML =
-      '<span class="kbd">드래그</span> 회전 · <span class="kbd">스크롤</span> 확대 · <span class="kbd">클릭</span> 상세 패널';
+      '<span class="kbd">드래그</span> 회전 · <span class="kbd">우클릭</span> 이동 · <span class="kbd">스크롤</span> 확대 · <span class="kbd">클릭</span> 상세';
     if (navigatorView === 'overview') {
       legendStaticRows.innerHTML =
         '<div class="row"><span class="swatch" style="background:#4b5563"></span>빌딩 본체 · 중립 톤 · 균일 높이</div>';
