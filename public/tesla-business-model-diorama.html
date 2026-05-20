@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tesla Business Model Diorama · TSLA</title>
+  <style>
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden;
+      background: radial-gradient(circle at 50% 20%, #4a5f7a 0%, #2a3d58 55%, #1e2a40 100%);
+      font-family: "Malgun Gothic", "Apple SD Gothic Neo", Arial, sans-serif; }
+    #hud { position: fixed; left: 20px; top: 18px; z-index: 10; color: #f3f7ff;
+      background: rgba(32, 38, 52, 0.88); border: 1px solid rgba(227, 25, 55, 0.45);
+      border-radius: 16px; padding: 13px 16px; line-height: 1.5;
+      box-shadow: 0 18px 40px rgba(0,0,0,.4); pointer-events: none; }
+    #hud b { color: #ff5a73; font-size: 18px; letter-spacing: 0.5px; }
+    #hud span { color: #c0cdd8; font-size: 13px; }
+    #valuechain { position: fixed; bottom: 0; left: 0; right: 0; z-index: 10;
+      background: rgba(36, 40, 52, 0.94); padding: 14px 24px;
+      border-top: 1px solid rgba(227, 25, 55, 0.4); box-shadow: 0 -10px 30px rgba(0,0,0,.4);
+      font-family: -apple-system, "Malgun Gothic", Arial, sans-serif; pointer-events: none; }
+    #valuechain .top { display: flex; align-items: center; gap: 18px; margin-bottom: 10px; }
+    #valuechain .brand { display: flex; flex-direction: column; padding-right: 18px;
+      border-right: 1px solid #2a2a30; min-width: 180px; }
+    #valuechain .brand b { font-size: 22px; color: #e31937; letter-spacing: 4px; font-weight: 700; }
+    #valuechain .brand .sub { font-size: 10px; color: #888; letter-spacing: 2px; margin-top: 2px; }
+    #valuechain .brand .mission { font-size: 11px; color: #ccc; margin-top: 5px; line-height: 1.3; font-style: italic; }
+    #valuechain .steps { display: flex; gap: 8px; flex: 1; flex-wrap: wrap; }
+    #valuechain .step { flex: 1; min-width: 130px; padding: 8px 10px; border-radius: 8px;
+      border: 1px solid #4a5060; background: rgba(48, 54, 68, 0.72); }
+    #valuechain .step .n { display: inline-block; width: 18px; height: 18px; border-radius: 50%;
+      text-align: center; line-height: 18px; color: #fff; font-size: 11px; font-weight: 700; margin-right: 6px; }
+    #valuechain .step.s1 .n { background: #2f7d42; }
+    #valuechain .step.s2 .n { background: #e31937; }
+    #valuechain .step.s3 .n { background: #4a8eda; }
+    #valuechain .step.s4 .n { background: #ffcf3a; color: #0a0a0a; }
+    #valuechain .step.s5 .n { background: #c8c8cc; color: #0a0a0a; }
+    #valuechain .step.s6 .n { background: #a259ff; }
+    #valuechain .step .t { display: inline; font-size: 12px; font-weight: 700; color: #fff; }
+    #valuechain .step .d { font-size: 10px; color: #999; margin-top: 4px; line-height: 1.35; }
+    #valuechain .slogan { text-align: center; font-size: 12px; color: #e31937;
+      padding-top: 6px; border-top: 1px solid #2a2a30; letter-spacing: 1px; }
+    #valuechain .slogan span { color: #888; margin: 0 12px; }
+    #tip { position: fixed; right: 20px; top: 18px; z-index: 10; color: #f3f7ff;
+      background: rgba(20, 20, 24, 0.92); border-radius: 999px; padding: 9px 14px; font-size: 13px;
+      box-shadow: 0 14px 30px rgba(0,0,0,.3); pointer-events: none; }
+  </style>
+</head>
+<body>
+  <div id="hud">
+    <b>TESLA BUSINESS MODEL</b><br />
+    <span>메인 공장 + AI/SW + 태양광 + 충전 + 서비스 + Starlink</span><br />
+    <span style="color:#ff5a73">⚡ 데이터·매출이 본사로 환류</span>
+  </div>
+  <div id="tip">드래그 회전 · 휠 확대 · 우클릭 이동</div>
+  <div id="valuechain">
+    <div class="top">
+      <div class="brand">
+        <b>TESLA</b>
+        <div class="sub">BUSINESS MODEL</div>
+        <div class="mission">Accelerate the World's<br/>Transition to Sustainable Energy</div>
+      </div>
+      <div class="steps">
+        <div class="step s1"><span class="n">1</span><span class="t">에너지 · 배터리</span><div class="d">배터리 셀·팩, Megapack, Powerwall</div></div>
+        <div class="step s2"><span class="n">2</span><span class="t">차량 설계·생산</span><div class="d">전기차 설계·제조, 자동화 라인</div></div>
+        <div class="step s3"><span class="n">3</span><span class="t">소프트웨어 · AI</span><div class="d">FSD 자율주행, Dojo 슈퍼컴, OTA</div></div>
+        <div class="step s4"><span class="n">4</span><span class="t">태양광·저장</span><div class="d">태양광 발전, Megapack 저장</div></div>
+        <div class="step s5"><span class="n">5</span><span class="t">충전 인프라</span><div class="d">슈퍼차저 네트워크, 가정용 충전</div></div>
+        <div class="step s6"><span class="n">6</span><span class="t">서비스 · 생태계</span><div class="d">Tesla App, 보험, OTA 업그레이드</div></div>
+      </div>
+    </div>
+    <div class="slogan">🌱 지속가능성 <span>→</span> ⚡ 클린 에너지 <span>→</span> 🚗 전기차 혁신 <span>→</span> 🌐 더 나은 미래</div>
+  </div>
+  <script type="module" src="./tesla-business-model-diorama.mjs"></script>
+</body>
+</html>

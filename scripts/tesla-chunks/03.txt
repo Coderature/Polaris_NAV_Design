@@ -1,0 +1,136 @@
+function createMegapack(g, x, y, z, scale = 1) {
+  const grp = new THREE.Group();
+  grp.position.set(x, y, z); grp.scale.setScalar(scale);
+  g.add(grp);
+  box(grp, 'mp body', 0, 0.14, 0, 0.22, 0.28, 0.42, M.silver);
+  for (let i = 0; i < 3; i++) {
+    box(grp, `mp stripe ${i}`, 0, 0.07 + i*0.08, 0, 0.222, 0.005, 0.42, M.metalDark);
+  }
+  return grp;
+}
+
+function createSupercharger(g, x, y, z, rotY = 0, scale = 1) {
+  const grp = new THREE.Group();
+  grp.position.set(x, y, z); grp.rotation.y = rotY; grp.scale.setScalar(scale);
+  g.add(grp);
+  box(grp, 'sc body', 0, 0.18, 0, 0.09, 0.36, 0.05, M.white);
+  box(grp, 'sc red top', 0, 0.34, 0.026, 0.09, 0.04, 0.005, M.teslaRedHot);
+  box(grp, 'sc base', 0, 0.02, 0, 0.11, 0.04, 0.08, M.platform);
+  return grp;
+}
+
+function createSuperchargerSign(g, x, y, z, rotY = 0, scale = 1) {
+  const grp = new THREE.Group();
+  grp.position.set(x, y, z); grp.rotation.y = rotY; grp.scale.setScalar(scale);
+  g.add(grp);
+  cyl(grp, 'sign post', 0, 0.18, 0, 0.025, 0.36, M.metalDark, 12);
+  box(grp, 'sign box', 0, 0.42, 0, 0.34, 0.42, 0.05, M.teslaRed);
+  const signTex = (() => {
+    const c = document.createElement('canvas');
+    c.width = 384; c.height = 480;
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = '#e31937';
+    ctx.fillRect(0, 0, c.width, c.height);
+    drawTeslaT(ctx, c.width/2, 130, 180, '#ffffff');
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 48px "Helvetica Neue", Arial';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText('T E S L A', c.width/2, 260);
+    ctx.font = 'bold 28px "Helvetica Neue", Arial';
+    ctx.fillText('SUPERCHARGER', c.width/2, 330);
+    const t = new THREE.CanvasTexture(c);
+    t.colorSpace = THREE.SRGBColorSpace;
+    return t;
+  })();
+  const front = new THREE.Mesh(
+    new THREE.PlaneGeometry(0.32, 0.4),
+    new THREE.MeshStandardMaterial({
+      map: signTex, side: THREE.DoubleSide,
+      emissive: '#ffffff', emissiveMap: signTex, emissiveIntensity: 0.45, roughness: .4
+    })
+  );
+  front.position.set(0, 0.42, 0.026);
+  grp.add(front);
+  return grp;
+}
+
+function createSatelliteDish(g, x, y, z, scale = 1) {
+  const grp = new THREE.Group();
+  grp.position.set(x, y, z); grp.scale.setScalar(scale);
+  g.add(grp);
+  cyl(grp, 'dish post', 0, 0.15, 0, 0.025, 0.3, M.metalDark, 12);
+  const dish = new THREE.Mesh(
+    new THREE.SphereGeometry(0.12, 16, 12, 0, Math.PI*2, 0, Math.PI / 2.2),
+    M.silver
+  );
+  dish.rotation.x = Math.PI;
+  dish.position.set(0, 0.36, 0);
+  grp.add(dish);
+  return grp;
+}
+
+function createStarlinkSatellite(g, x, y, z, scale = 1) {
+  const grp = new THREE.Group();
+  grp.position.set(x, y, z); grp.scale.setScalar(scale);
+  g.add(grp);
+  box(grp, 'sl body', 0, 0, 0, 0.06, 0.04, 0.12, M.silver);
+  box(grp, 'sl panel L', -0.14, 0, 0, 0.18, 0.005, 0.1, M.solar);
+  box(grp, 'sl panel R', 0.14, 0, 0, 0.18, 0.005, 0.1, M.solar);
+  return grp;
+}
+
+function createTeslaAppDisplay(g, x, y, z, scale = 1) {
+  const grp = new THREE.Group();
+  grp.position.set(x, y, z); grp.scale.setScalar(scale);
+  g.add(grp);
+  box(grp, 'app body', 0, 0.32, 0, 0.32, 0.62, 0.025, mat('#1a1a1d', { metalness: .6, roughness: .25 }));
+  const appTex = makeTeslaAppTexture();
+  const screen = new THREE.Mesh(
+    new THREE.PlaneGeometry(0.3, 0.6),
+    new THREE.MeshStandardMaterial({
+      map: appTex, emissive: '#ffffff', emissiveMap: appTex, emissiveIntensity: 0.55, roughness: 0.15
+    })
+  );
+  screen.position.set(0, 0.32, 0.013);
+  grp.add(screen);
+  box(grp, 'app stand base', 0, 0.025, 0, 0.18, 0.05, 0.12, M.platform);
+  return { group: grp, screen };
+}
+
+function createTeslaFactory(g, cx, cy, cz) {
+  const grp = new THREE.Group();
+  grp.position.set(cx, cy, cz);
+  g.add(grp);
+  const W = 3.5, H = 0.85, D = 1.6;
+  box(grp, 'fac body', 0, H/2, 0, W, H, D, M.darkGrey);
+  box(grp, 'fac roof', 0, H + 0.025, 0, W + 0.05, 0.05, D + 0.05, M.metalDark);
+  box(grp, 'fac base', 0, 0.04, 0, W + 0.1, 0.06, D + 0.1, M.platform);
+  const showW = 1.0;
+  const showCx = -W/2 + showW/2 + 0.1;
+  box(grp, 'show front glass', showCx, 0.45, D/2 + 0.005, showW - 0.1, 0.7, 0.02, M.glass);
+  const showLabelTex = makeFacadeTextTexture('SHOWROOM', '#0a0a0a', '#ffffff');
+  texturedPlane(grp, showLabelTex, showCx, 0.86, D/2 + 0.015, showW - 0.15, 0.045, 0, 0.4);
+  createTeslaCar(grp, showCx - 0.3, 0.07, 0.45, '#f4f4f4', Math.PI / 6, 0.9);
+  createTeslaCar(grp, showCx, 0.07, 0.4, '#e31937', -Math.PI / 8, 0.9);
+  createTeslaCar(grp, showCx + 0.3, 0.07, 0.45, '#1c1c1e', Math.PI / 4, 0.9);
+  const lineW = 2.5;
+  const lineCx = -W/2 + showW + lineW/2 + 0.1;
+  box(grp, 'fac red wall', lineCx + lineW/2 - 0.6, H/2 + 0.05, D/2 + 0.012, 1.0, 0.7, 0.02, M.teslaRed);
+  const logoTex = makeTeslaLogoTexture('#e31937', '#ffffff', true);
+  texturedPlane(grp, logoTex, lineCx + lineW/2 - 0.6, H/2 + 0.05, D/2 + 0.024, 0.95, 0.45, 0, 0.5);
+  const openW = 1.5;
+  const openCx = lineCx - lineW/2 + openW/2 + 0.05;
+  box(grp, 'line conveyor', openCx, 0.07, 0.3, 1.4, 0.04, 0.4, M.metalDark);
+  const carColors = ['#e8e8e8', '#1c1c1e', '#e31937', '#aeb4bd'];
+  for (let i = 0; i < 4; i++) {
+    createTeslaCar(grp, openCx - 0.5 + i * 0.35, 0.105, 0.3, carColors[i], Math.PI/2, 0.85);
+  }
+  const robotArms = [];
+  for (let i = 0; i < 2; i++) {
+    const armX = openCx - 0.4 + i * 0.6;
+    robotArms.push(createRobotArm(grp, armX, 0.1, 0.62, 0, 0.9));
+    robotArms.push(createRobotArm(grp, armX, 0.1, 0.0, Math.PI, 0.9));
+  }
+  rooftopPanel(grp, '2', '차량 설계·생산', '전기차 설계·제조·생산', 0, H + 0.55, 0, 1.0, 0.36);
+  return { group: grp, robotArms };
+}

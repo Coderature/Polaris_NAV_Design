@@ -1,0 +1,75 @@
+function createAISoftware(g, cx, cy, cz) {
+  const grp = new THREE.Group();
+  grp.position.set(cx, cy, cz);
+  g.add(grp);
+  const W = 1.1, H = 0.55, D = 0.75;
+  box(grp, 'ai body', 0, H/2, 0, W, H, D, M.darkGrey);
+  box(grp, 'ai roof', 0, H + 0.02, 0, W + 0.04, 0.04, D + 0.04, M.metalDark);
+  box(grp, 'ai base', 0, 0.04, 0, W + 0.08, 0.06, D + 0.08, M.platform);
+  const fsdTex = makeFSDDisplayTexture();
+  texturedPlane(grp, fsdTex, 0, H/2 + 0.05, D/2 + 0.005, W - 0.15, H - 0.15, 0, 0.55);
+  const facadeTex = makeFacadeTextTexture('AI & SOFTWARE', '#0a0a0a', '#4a8eda');
+  texturedPlane(grp, facadeTex, 0, 0.07, D/2 + 0.008, W - 0.2, 0.06, 0, 0.5);
+  rooftopPanel(grp, '3', '소프트웨어 · AI', 'AI · FSD · 자율주행\nDojo 슈퍼컴퓨팅', 0, H + 0.5, 0, 0.95, 0.34, '#4a8eda');
+  return grp;
+}
+
+function createSolarStorage(g, cx, cy, cz) {
+  const grp = new THREE.Group();
+  grp.position.set(cx, cy, cz);
+  g.add(grp);
+  const W = 1.2, H = 0.45, D = 0.9;
+  box(grp, 'ss body', 0, H/2, 0, W, H, D, M.darkGrey);
+  box(grp, 'ss roof', 0, H + 0.018, 0, W + 0.04, 0.035, D + 0.04, M.metalDark);
+  box(grp, 'ss base', 0, 0.04, 0, W + 0.08, 0.06, D + 0.08, M.platform);
+  for (let i = 0; i < 4; i++) {
+    for (let j = 0; j < 3; j++) {
+      const sx = -W/2 + 0.18 + i * 0.27;
+      const sz = -D/2 + 0.2 + j * 0.27;
+      const panel = box(grp, `ss solar ${i}_${j}`, sx, H + 0.045, sz, 0.24, 0.012, 0.24, M.solar);
+      panel.rotation.x = -Math.PI / 28;
+    }
+  }
+  const facadeTex = makeFacadeTextTexture('SOLAR & STORAGE', '#0a0a0a', '#ffcf3a');
+  texturedPlane(grp, facadeTex, 0, 0.07, D/2 + 0.011, W - 0.25, 0.06, 0, 0.5);
+  for (let i = 0; i < 3; i++) {
+    createMegapack(grp, W/2 + 0.18, 0, -D/2 + 0.25 + i * 0.45, 1.0);
+  }
+  rooftopPanel(grp, '4', '태양광·저장 에너지', '태양광 발전 · 에너지 저장 · 메가팩', 0, H + 0.6, 0, 1.05, 0.34, '#ffcf3a');
+  return grp;
+}
+
+function createSuperchargerArea(g, cx, cy, cz) {
+  const grp = new THREE.Group();
+  grp.position.set(cx, cy, cz);
+  g.add(grp);
+  box(grp, 'sca base', 0, 0.04, 0, 1.8, 0.06, 0.95, M.platform);
+  box(grp, 'sca lane', 0, 0.072, 0, 1.7, 0.005, 0.85, M.road);
+  for (let i = 0; i < 6; i++) {
+    createSupercharger(grp, -0.65 + i * 0.26, 0, -0.32, 0, 0.85);
+  }
+  box(grp, 'sca canopy', 0, 0.55, -0.15, 1.7, 0.04, 0.45, M.darkGrey);
+  const sccColors = ['#1c1c1e', '#f4f4f4', '#e31937', '#aeb4bd'];
+  for (let i = 0; i < 4; i++) {
+    createTeslaCar(grp, -0.55 + i * 0.36, 0.07, 0.15, sccColors[i], 0, 0.95);
+  }
+  createSuperchargerSign(grp, -1.0, 0.04, 0.0, Math.PI / 6, 0.85);
+  rooftopPanel(grp, '5', '충전 인프라', '슈퍼차저 네트워크 · 가정용 충전', 0, 0.95, 0, 1.0, 0.34, '#c8c8cc');
+  return grp;
+}
+
+function createServiceCenter(g, cx, cy, cz) {
+  const grp = new THREE.Group();
+  grp.position.set(cx, cy, cz);
+  g.add(grp);
+  const W = 1.4, H = 0.5, D = 0.85;
+  box(grp, 'svc body', -0.3, H/2, 0, W * 0.6, H, D, M.darkGrey);
+  box(grp, 'svc roof', -0.3, H + 0.02, 0, W * 0.6 + 0.04, 0.035, D + 0.04, M.metalDark);
+  box(grp, 'svc base', 0, 0.04, 0, W + 0.08, 0.06, D + 0.08, M.platform);
+  box(grp, 'svc front glass', -0.3, H/2 + 0.02, D/2 + 0.005, W * 0.55, H - 0.1, 0.018, M.glass);
+  const appDisplay = createTeslaAppDisplay(grp, W/2 - 0.15, 0.04, 0.0, 0.95);
+  const facadeTex = makeFacadeTextTexture('SERVICE', '#0a0a0a', '#ffffff');
+  texturedPlane(grp, facadeTex, -0.3, 0.085, D/2 + 0.008, W * 0.5, 0.05, 0, 0.4);
+  rooftopPanel(grp, '6', '서비스 · 생태계', '테슬라 앱 · 서비스 · 보험 · 업그레이드', 0, 0.95, 0, 1.05, 0.34, '#a259ff');
+  return { group: grp, appDisplay };
+}

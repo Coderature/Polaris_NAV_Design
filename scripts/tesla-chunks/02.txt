@@ -1,0 +1,227 @@
+function drawTeslaT(ctx, cx, cy, size, color) {
+  ctx.save();
+  ctx.fillStyle = color;
+  const s = size;
+  ctx.beginPath();
+  ctx.moveTo(cx - s * 0.42, cy - s * 0.5);
+  ctx.lineTo(cx + s * 0.42, cy - s * 0.5);
+  ctx.lineTo(cx + s * 0.32, cy - s * 0.36);
+  ctx.lineTo(cx - s * 0.32, cy - s * 0.36);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillRect(cx - s * 0.28, cy - s * 0.32, s * 0.56, s * 0.06);
+  ctx.fillRect(cx - s * 0.08, cy - s * 0.22, s * 0.16, s * 0.72);
+  ctx.beginPath();
+  ctx.moveTo(cx - s * 0.18, cy - s * 0.22);
+  ctx.lineTo(cx - s * 0.08, cy - s * 0.22);
+  ctx.lineTo(cx - s * 0.08, cy - s * 0.1);
+  ctx.closePath();
+  ctx.fill();
+  ctx.beginPath();
+  ctx.moveTo(cx + s * 0.18, cy - s * 0.22);
+  ctx.lineTo(cx + s * 0.08, cy - s * 0.22);
+  ctx.lineTo(cx + s * 0.08, cy - s * 0.1);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+}
+
+function makeTeslaLogoTexture(bg = '#0a0a0a', fg = '#e31937', withText = true) {
+  const c = document.createElement('canvas');
+  c.width = withText ? 1024 : 512;
+  c.height = 512;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, c.width, c.height);
+  if (withText) {
+    drawTeslaT(ctx, 200, c.height/2, 280, fg);
+    ctx.fillStyle = fg;
+    ctx.font = 'bold 180px "Helvetica Neue", Arial';
+    ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+    ctx.fillText('T E S L A', 380, c.height/2);
+  } else {
+    drawTeslaT(ctx, c.width/2, c.height/2, 360, fg);
+  }
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+
+function makeLabelPanelTexture(num, korTitle, korSubtitle, accentColor = '#e31937') {
+  const c = document.createElement('canvas');
+  c.width = 768; c.height = 280;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#0a0a0a';
+  roundRect(ctx, 6, 6, c.width-12, c.height-12, 32);
+  ctx.fill();
+  ctx.strokeStyle = '#3a3a3a';
+  ctx.lineWidth = 3;
+  roundRect(ctx, 6, 6, c.width-12, c.height-12, 32);
+  ctx.stroke();
+  ctx.fillStyle = accentColor;
+  ctx.beginPath();
+  ctx.arc(90, 85, 42, 0, Math.PI*2);
+  ctx.fill();
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 56px "Helvetica Neue", Arial';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(num, 90, 88);
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 56px "Malgun Gothic", Arial';
+  ctx.textAlign = 'left';
+  ctx.fillText(korTitle, 160, 85);
+  if (korSubtitle) {
+    ctx.fillStyle = '#c4c4c8';
+    ctx.font = '34px "Malgun Gothic", Arial';
+    korSubtitle.split('\n').forEach((line, i) => {
+      ctx.fillText(line, 50, 175 + i * 44);
+    });
+  }
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+
+function makeFacadeTextTexture(text, bg = '#0a0a0a', fg = '#ffffff') {
+  const c = document.createElement('canvas');
+  c.width = 1024; c.height = 128;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, c.width, c.height);
+  ctx.fillStyle = fg;
+  ctx.font = 'bold 72px "Helvetica Neue", Arial';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText(text, c.width/2, c.height/2);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+
+function makeFSDDisplayTexture() {
+  const c = document.createElement('canvas');
+  c.width = 1024; c.height = 512;
+  const ctx = c.getContext('2d');
+  const grad = ctx.createLinearGradient(0, 0, 0, c.height);
+  grad.addColorStop(0, '#0a1828');
+  grad.addColorStop(1, '#1a3052');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, c.width, c.height);
+  ctx.fillStyle = '#4a8eda';
+  ctx.beginPath();
+  ctx.arc(180, 220, 75, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 64px "Helvetica Neue", Arial';
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('AI', 180, 230);
+  ctx.fillStyle = 'rgba(227, 25, 55, 0.85)';
+  roundRect(ctx, 320, 170, 220, 110, 16);
+  ctx.fill();
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 60px "Helvetica Neue", Arial';
+  ctx.fillText('FSD', 430, 230);
+  ctx.fillStyle = 'rgba(74, 142, 218, 0.85)';
+  roundRect(ctx, 600, 170, 240, 110, 16);
+  ctx.fill();
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 48px "Helvetica Neue", Arial';
+  ctx.fillText('Dojo', 720, 230);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+
+function makeTeslaAppTexture() {
+  const c = document.createElement('canvas');
+  c.width = 384; c.height = 768;
+  const ctx = c.getContext('2d');
+  ctx.fillStyle = '#0a0a0a';
+  roundRect(ctx, 0, 0, c.width, c.height, 30);
+  ctx.fill();
+  drawTeslaT(ctx, 80, 95, 50, '#e31937');
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 28px "Helvetica Neue", Arial';
+  ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  ctx.fillText('TESLA APP', 120, 95);
+  const t = new THREE.CanvasTexture(c);
+  t.colorSpace = THREE.SRGBColorSpace;
+  return t;
+}
+
+function rooftopPanel(g, num, title, subtitle, x, y, z, w = 0.95, h = 0.35, accent = '#e31937') {
+  const tex = makeLabelPanelTexture(num, title, subtitle, accent);
+  const m = new THREE.MeshStandardMaterial({
+    map: tex, side: THREE.DoubleSide, roughness: .4,
+    emissive: '#ffffff', emissiveMap: tex, emissiveIntensity: .35
+  });
+  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(w, h), m);
+  mesh.position.set(x, y, z);
+  g.add(mesh);
+  cyl(g, `panel post ${num}`, x, y - h/2 - 0.16, z, 0.014, 0.32, M.silver, 8);
+  return mesh;
+}
+
+function texturedPlane(g, tex, x, y, z, w, h, rotY = 0, emissive = 0.3) {
+  const m = new THREE.MeshStandardMaterial({
+    map: tex, side: THREE.DoubleSide, roughness: .4,
+    emissive: '#ffffff', emissiveMap: tex, emissiveIntensity: emissive
+  });
+  const mesh = new THREE.Mesh(new THREE.PlaneGeometry(w, h), m);
+  mesh.position.set(x, y, z);
+  mesh.rotation.y = rotY;
+  g.add(mesh);
+  return mesh;
+}
+
+function tree(g, x, z, s = .5) {
+  cyl(g, 'tree trunk', x, .23 * s / .5, z, .035, .38 * s / .5, M.bark, 10);
+  const crown = new THREE.Mesh(new THREE.SphereGeometry(.18 * s / .5, 16, 12), M.green);
+  crown.position.set(x, .52 * s / .5, z);
+  crown.castShadow = true; crown.receiveShadow = true;
+  g.add(crown);
+}
+
+function createTeslaCar(g, x, y, z, color = '#e8e8e8', rotY = 0, scale = 1) {
+  const grp = new THREE.Group();
+  grp.position.set(x, y, z);
+  grp.rotation.y = rotY;
+  grp.scale.setScalar(scale);
+  g.add(grp);
+  const carMat = mat(color, { metalness: .55, roughness: .25 });
+  box(grp, 'car lower', 0, 0.035, 0, 0.28, 0.05, 0.13, carMat);
+  box(grp, 'car cabin', 0, 0.085, 0, 0.22, 0.05, 0.12, carMat);
+  box(grp, 'car glass', 0, 0.085, 0, 0.21, 0.045, 0.122, M.glassDeep);
+  [[-0.1, 0.062], [0.1, 0.062], [-0.1, -0.062], [0.1, -0.062]].forEach(([bx, bz]) => {
+    const w = cyl(grp, 'wheel', bx, 0.022, bz, 0.022, 0.025, M.metalDark, 14);
+    w.rotation.x = Math.PI / 2;
+  });
+  return grp;
+}
+
+function createRobotArm(g, x, y, z, baseRot = 0, scale = 1) {
+  const grp = new THREE.Group();
+  grp.position.set(x, y, z);
+  grp.rotation.y = baseRot;
+  grp.scale.setScalar(scale);
+  g.add(grp);
+  cyl(grp, 'arm base', 0, 0.04, 0, 0.06, 0.08, M.darkGrey, 16);
+  const shoulder = new THREE.Group();
+  shoulder.position.set(0, 0.1, 0);
+  grp.add(shoulder);
+  const seg1 = new THREE.Group();
+  seg1.rotation.z = -Math.PI / 4;
+  shoulder.add(seg1);
+  box(seg1, 'arm seg1', 0, 0.13, 0, 0.05, 0.28, 0.05, M.teslaRed);
+  const seg2 = new THREE.Group();
+  seg2.position.set(0, 0.27, 0);
+  seg2.rotation.z = -Math.PI / 5;
+  seg1.add(seg2);
+  box(seg2, 'arm seg2', 0, 0.09, 0, 0.04, 0.2, 0.04, mat('#cc0a26', { metalness: .35 }));
+  const led = new THREE.Mesh(
+    new THREE.SphereGeometry(0.008, 8, 8),
+    new THREE.MeshBasicMaterial({ color: '#ffcf3a' })
+  );
+  led.position.set(0, 0.265, 0);
+  seg2.add(led);
+  return { group: grp, shoulder, seg1, seg2, led };
+}

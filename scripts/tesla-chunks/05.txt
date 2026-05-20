@@ -1,0 +1,185 @@
+function createTeslaCampus() {
+  const g = new THREE.Group();
+  box(g, 'plinth', 0, -0.13, 0, gx(6.4), .26, gx(5.6), M.base);
+  box(g, 'platform', 0, .02, 0, gx(5.9), .12, gx(5.1), M.platform);
+  box(g, 'main road x', 0, 0.084, 0.5, gx(5.6), 0.012, gx(0.5), M.road);
+  box(g, 'main road z', 0, 0.084, 0, gx(0.5), 0.012, gx(4.8), M.road);
+
+  const factory = createTeslaFactory(g, 0, 0.08, -1.6);
+  createAISoftware(g, -2.7, 0.08, -0.4);
+  createSolarStorage(g, 2.85, 0.08, -0.8);
+  createSuperchargerArea(g, -1.5, 0.08, 1.75);
+  const service = createServiceCenter(g, 1.6, 0.08, 1.75);
+
+  createSatelliteDish(g, 3.3, 0.08, -2.0, 1.0);
+  const starlink = createStarlinkSatellite(g, 3.5, 1.5, -1.4, 1.2);
+  const starlinkTex = makeFacadeTextTexture('STARLINK', '#0a0a0a', '#4ab8e8');
+  texturedPlane(g, starlinkTex, 3.3, 0.7, -1.85, 0.45, 0.07, -Math.PI / 6, 0.45);
+
+  const treeSpots = [
+    [-3.4, -2.6], [3.6, -2.6], [-3.6, 2.6], [3.6, 2.6],
+    [-3.5, 0.5], [3.5, 0.5], [0, -2.85]
+  ];
+  treeSpots.forEach(([x, z]) => tree(g, x, z, 0.4));
+
+  const movingCars = [];
+  for (let i = 0; i < 3; i++) {
+    const car = createTeslaCar(g, -2.0 + i * 2.0, 0.105, 0.5, ['#f4f4f4', '#1c1c1e', '#aeb4bd'][i], Math.PI/2, 1.0);
+    movingCars.push({ group: car, axis: 'x', baseX: -2.0 + i * 2.0, z: 0.5 });
+  }
+
+  const dataPaths = [];
+  const satellites = [
+    { name: 'aiSW', x: -2.7, y: 0.7, z: -0.4 },
+    { name: 'solar', x: 2.85, y: 0.7, z: -0.8 },
+    { name: 'supercharger', x: -1.5, y: 0.55, z: 1.75 },
+    { name: 'service', x: 1.6, y: 0.55, z: 1.75 }
+  ];
+  const satSplashLights = [];
+  satellites.forEach((sat, idx) => {
+    const start = new THREE.Vector3(0, 0.9, -1.0);
+    const mid = new THREE.Vector3((start.x + sat.x)/2, 1.4, (start.z + sat.z)/2);
+    const end = new THREE.Vector3(sat.x, sat.y, sat.z);
+    const curve = new THREE.CatmullRomCurve3([start, mid, end]);
+    const beads = [];
+    const beadMat = new THREE.MeshStandardMaterial({
+      color: C.hotData, emissive: C.hotData, emissiveIntensity: 2.0, roughness: .25
+    });
+    for (let i = 0; i < 5; i++) {
+      const b = new THREE.Mesh(new THREE.SphereGeometry(.055, 14, 10), beadMat);
+      const bLight = new THREE.PointLight(C.hotData, 0.18, 0.6);
+      b.add(bLight);
+      g.add(b);
+      beads.push({ mesh: b, light: bLight, offset: i / 5 });
+    }
+    const splash = new THREE.PointLight(C.hotData, 0, 1.4);
+    splash.position.set(sat.x, sat.y + 0.1, sat.z);
+    g.add(splash);
+    satSplashLights.push(splash);
+    dataPaths.push({ curve, beads, speed: 0.07 + idx * 0.008 });
+  });
+
+  const moneyPaths = [];
+  satellites.forEach((sat, idx) => {
+    const start = new THREE.Vector3(sat.x, sat.y + 0.3, sat.z);
+    const mid = new THREE.Vector3(sat.x / 2, 1.8, (sat.z - 1.6) / 2);
+    const end = new THREE.Vector3(0, 1.5, -1.6);
+    const curve = new THREE.CatmullRomCurve3([start, mid, end]);
+    const coins = [];
+    for (let i = 0; i < 3; i++) {
+      const coin = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.05, 0.05, 0.014, 16),
+        M.goldCoin.clone()
+      );
+      g.add(coin);
+      coins.push({ mesh: coin, offset: i / 3 });
+    }
+    moneyPaths.push({ curve, coins, speed: 0.05 + idx * 0.004 });
+  });
+
+  const goldGlow = new THREE.PointLight('#ffd700', 0.65, 2.8);
+  goldGlow.position.set(0, 1.5, -1.6);
+  g.add(goldGlow);
+
+  const factoryGlow = new THREE.PointLight('#fff8e8', 1.1, 4.5);
+  factoryGlow.position.set(0, 0.7, -1.2);
+  g.add(factoryGlow);
+  const redGlow = new THREE.PointLight('#ff8a9a', 0.75, 2.8);
+  redGlow.position.set(1.0, 0.5, -1.3);
+  g.add(redGlow);
+
+  g.userData = {
+    factoryArms: factory.robotArms,
+    appScreen: service.appDisplay.screen,
+    dataPaths, satSplashLights, moneyPaths, goldGlow,
+    movingCars, starlink
+  };
+  return g;
+}
+
+// ===== Lighting =====
+scene.add(new THREE.HemisphereLight('#f2f7ff', '#5a6578', 1.2));
+const key = new THREE.DirectionalLight('#ffffff', 2.35);
+key.position.set(6, 8, 7);
+key.castShadow = true;
+key.shadow.mapSize.set(2048, 2048);
+key.shadow.camera.left = -9;
+key.shadow.camera.right = 9;
+key.shadow.camera.top = 9;
+key.shadow.camera.bottom = -9;
+scene.add(key);
+const rim = new THREE.DirectionalLight('#ffb8c4', 0.45);
+rim.position.set(-5, 3, -6);
+scene.add(rim);
+const fillBlue = new THREE.DirectionalLight('#9ec8ff', 0.72);
+fillBlue.position.set(-6, 4, 4);
+scene.add(fillBlue);
+
+const tesla = createTeslaCampus();
+tesla.scale.setScalar(1.0);
+scene.add(tesla);
+
+const clock = new THREE.Clock();
+const SPEED = 0.4;
+
+function animate() {
+  const t = clock.getElapsedTime() * SPEED;
+  const tRaw = clock.getElapsedTime();
+  const u = tesla.userData;
+
+  u.factoryArms.forEach((arm, i) => {
+    arm.shoulder.rotation.y = Math.sin(tRaw * 0.8 + i) * 0.3;
+    arm.seg1.rotation.z = -Math.PI / 4 + Math.sin(tRaw * 1.2 + i * 0.5) * 0.2;
+    arm.seg2.rotation.z = -Math.PI / 5 + Math.cos(tRaw * 1.0 + i * 0.7) * 0.25;
+    arm.led.material.color.setHSL(0.13, 1, 0.5 + 0.3 * Math.sin(tRaw * 5 + i));
+  });
+
+  u.dataPaths.forEach((path, pIdx) => {
+    path.beads.forEach((b, idx) => {
+      const progress = ((tRaw * path.speed) + b.offset) % 1;
+      const pos = path.curve.getPoint(progress);
+      b.mesh.position.copy(pos);
+      const pulse = 1.2 + 0.5 * Math.sin(t * 3 + idx);
+      b.mesh.material.emissiveIntensity = pulse;
+      b.light.intensity = 0.16 + 0.1 * Math.sin(t * 3.5 + idx);
+      if (progress > 0.92) {
+        u.satSplashLights[pIdx].intensity = 1.4 * (progress - 0.92) / 0.08;
+      }
+    });
+    u.satSplashLights[pIdx].intensity *= 0.94;
+  });
+
+  u.moneyPaths.forEach((path, pIdx) => {
+    path.coins.forEach((c, idx) => {
+      const progress = ((tRaw * path.speed) + c.offset) % 1;
+      const pos = path.curve.getPoint(progress);
+      c.mesh.position.copy(pos);
+      c.mesh.rotation.x = Math.PI / 2;
+      c.mesh.rotation.y = tRaw * 4 + idx;
+      c.mesh.material.emissiveIntensity = 1.4 + 0.4 * Math.sin(t * 2.5 + idx);
+    });
+  });
+  u.goldGlow.intensity = 0.4 + 0.25 * Math.sin(t * 1.5);
+
+  u.movingCars.forEach((c, idx) => {
+    const speed = 0.3 + idx * 0.05;
+    const pos = ((tRaw * speed) + idx * 0.33) % 1;
+    c.group.position.x = -3.5 + pos * 7.0;
+  });
+
+  u.starlink.rotation.y = tRaw * 0.3;
+  u.appScreen.material.emissiveIntensity = 0.5 + 0.2 * Math.sin(t * 1.6);
+
+  tesla.rotation.y = Math.sin(t * .2) * .008;
+
+  controls.update();
+  renderer.render(scene, camera);
+  requestAnimationFrame(animate);
+}
+animate();
+
+addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});

@@ -1,0 +1,114 @@
+import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
+import { OrbitControls } from 'https://unpkg.com/three@0.160.0/examples/jsm/controls/OrbitControls.js';
+
+const GROUND_XZ = 1.25;
+const gx = (n) => n * GROUND_XZ;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color('#2a3d58');
+scene.fog = new THREE.Fog('#2a3d58', 16, 34);
+
+const camera = new THREE.PerspectiveCamera(36, innerWidth / innerHeight, 0.1, 100);
+camera.position.set(8, 6.5, 9);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.body.appendChild(renderer.domElement);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.target.set(0, 0.8, 0.2);
+controls.enableDamping = true;
+controls.dampingFactor = 0.06;
+controls.minDistance = 5;
+controls.maxDistance = 18;
+controls.maxPolarAngle = Math.PI * 0.49;
+
+// ===== Palette (Tesla tone: black, red, silver, glass) =====
+const C = {
+  teslaRed: '#e31937', teslaRedDark: '#b8001e',
+  black: '#2a2e36', darkGrey: '#4a5260',
+  metalDark: '#6a727c', metal: '#a8acb4', silver: '#e4e8ee',
+  glass: '#72b8ff', glassLight: '#c8e8ff', glassDeep: '#4a90d8',
+  road: '#4a5460', base: '#1e2838', platform: '#d4dae4',
+  grass: '#3a9a58', grassLight: '#52b872',
+  warm: '#fff6dc', amber: '#ffc85a',
+  solar: '#2a5080', solarHot: '#1a5aaa',
+  screenBlue: '#4a88ff', screenCyan: '#5ac8f8', screenAI: '#6a5ad9',
+  hotData: '#ff92a8', goldGlow: '#ffe080'
+};
+
+const mat = (color, o = {}) => new THREE.MeshStandardMaterial({
+  color,
+  roughness: o.roughness ?? 0.6,
+  metalness: o.metalness ?? 0.08,
+  transparent: o.transparent ?? false,
+  opacity: o.opacity ?? 1,
+  emissive: o.emissive ?? '#000000',
+  emissiveIntensity: o.emissiveIntensity ?? 0,
+  side: o.side ?? THREE.FrontSide
+});
+
+const M = {
+  teslaRed: mat(C.teslaRed, { roughness: .35, metalness: .35, emissive: '#5a0d18', emissiveIntensity: .15 }),
+  teslaRedHot: mat(C.teslaRed, { emissive: C.teslaRed, emissiveIntensity: 1.2, roughness: .25 }),
+  black: mat(C.black, { roughness: .55, metalness: .15 }),
+  darkGrey: mat(C.darkGrey, { roughness: .42, metalness: .18 }),
+  metalDark: mat(C.metalDark, { roughness: .32, metalness: .55 }),
+  metal: mat(C.metal, { roughness: .3, metalness: .5 }),
+  silver: mat(C.silver, { roughness: .28, metalness: .48 }),
+  white: mat('#fafafa', { roughness: .35, metalness: .1 }),
+  glass: mat(C.glass, { roughness: .08, metalness: .12, transparent: true, opacity: .52, emissive: '#3a88e8', emissiveIntensity: .22 }),
+  glassDeep: mat(C.glassDeep, { roughness: .1, metalness: .12, transparent: true, opacity: .62, emissive: '#2a68c8', emissiveIntensity: .18 }),
+  glassLight: mat(C.glassLight, { roughness: .06, metalness: .08, transparent: true, opacity: .4 }),
+  road: mat(C.road, { roughness: .78 }),
+  base: mat(C.base, { roughness: .5 }),
+  platform: mat(C.platform, { roughness: .72 }),
+  grass: mat(C.grass, { roughness: .82 }),
+  grassLight: mat(C.grassLight, { roughness: .78 }),
+  warmWindow: mat(C.warm, { roughness: .32, emissive: '#ffc85a', emissiveIntensity: .85 }),
+  amberLight: mat(C.amber, { emissive: C.amber, emissiveIntensity: 1.0, roughness: .3 }),
+  green: mat('#2f7d42', { roughness: .8 }),
+  bark: mat('#7a4b2a', { roughness: .85 }),
+  solar: mat(C.solar, { roughness: .22, metalness: .55, emissive: C.solarHot, emissiveIntensity: .32 }),
+  solarGrid: mat('#2a4880', { roughness: .3, metalness: .5 }),
+  screen: mat(C.screenBlue, { emissive: C.screenBlue, emissiveIntensity: 1.2, roughness: .15 }),
+  screenAI: mat(C.screenAI, { emissive: C.screenAI, emissiveIntensity: 1.0, roughness: .15 }),
+  dataBead: new THREE.MeshStandardMaterial({
+    color: C.hotData, emissive: C.hotData, emissiveIntensity: 2.0, roughness: .25
+  }),
+  goldCoin: new THREE.MeshStandardMaterial({
+    color: '#ffd700', emissive: '#ffaa00', emissiveIntensity: 1.6,
+    roughness: .25, metalness: .85
+  })
+};
+
+function box(g, name, x, y, z, sx, sy, sz, material) {
+  const mesh = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), material);
+  mesh.name = name;
+  mesh.position.set(x, y, z);
+  mesh.castShadow = true; mesh.receiveShadow = true;
+  g.add(mesh);
+  return mesh;
+}
+function cyl(g, name, x, y, z, r, h, material, radial = 24) {
+  const mesh = new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, radial), material);
+  mesh.name = name;
+  mesh.position.set(x, y, z);
+  mesh.castShadow = true; mesh.receiveShadow = true;
+  g.add(mesh);
+  return mesh;
+}
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+
