@@ -3,52 +3,42 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Samsung Slim Cell Diorama v4 · Semiconductor Fab Edition</title>
+  <title>Samsung Semiconductor Diorama · 005930</title>
   <style>
     html, body {
-      width: 100%;
-      height: 100%;
-      margin: 0;
-      overflow: hidden;
-      background: radial-gradient(circle at 50% 18%, #1b2433 0%, #0b1018 58%, #05070a 100%);
+      width: 100%; height: 100%; margin: 0; overflow: hidden;
+      background: #0b1018;
       font-family: "Malgun Gothic", "Apple SD Gothic Neo", Arial, sans-serif;
     }
     #hud {
-      position: fixed;
-      left: 20px;
-      top: 18px;
-      z-index: 10;
-      color: #f3f7ff;
-      background: rgba(4, 10, 20, 0.74);
-      border: 1px solid rgba(76, 149, 255, 0.5);
-      border-radius: 16px;
-      padding: 13px 15px;
-      line-height: 1.45;
-      box-shadow: 0 18px 40px rgba(0,0,0,.35);
+      position: fixed; left: 20px; top: 18px; z-index: 10;
+      color: #e8eef5;
+      background: rgba(11, 16, 24, 0.88);
+      border: 1px solid rgba(0, 229, 208, 0.45);
+      border-radius: 16px; padding: 13px 16px;
+      line-height: 1.55;
+      box-shadow: 0 18px 40px rgba(0,0,0,.45), 0 0 24px rgba(0, 229, 208, 0.08);
       pointer-events: none;
     }
-    #hud b { color: #87b7ff; font-size: 18px; }
-    #hud span { color: #c7d9ff; font-size: 13px; }
+    #hud b { color: #00e5d0; font-size: 18px; letter-spacing: 0.5px; }
+    #hud span { color: #b8c4d4; font-size: 13px; }
     #tip {
-      position: fixed;
-      right: 20px;
-      bottom: 18px;
-      z-index: 10;
-      color: #1428a0;
-      background: rgba(245, 248, 255, .92);
-      border-radius: 999px;
-      padding: 9px 14px;
+      position: fixed; right: 20px; top: 18px; z-index: 10;
+      color: #e8eef5;
+      background: rgba(20, 28, 42, 0.92);
+      border: 1px solid rgba(0, 229, 208, 0.25);
+      border-radius: 999px; padding: 9px 14px;
       font-size: 13px;
-      box-shadow: 0 14px 30px rgba(0,0,0,.3);
+      box-shadow: 0 14px 30px rgba(0,0,0,.35);
       pointer-events: none;
     }
   </style>
 </head>
 <body>
   <div id="hud">
-    <b>삼성전자 디오라마 v4</b><br />
-    <span>반도체 팹 (DRAM · NAND · Foundry) → 갤럭시 · QLED · D램 · SSD 출하</span><br />
-    <span style="color:#ffd700">💰 매출이 본사로 환류</span>
+    <b>SAMSUNG SEMICONDUCTOR</b><br />
+    <span>본사 · DRAM · NAND · FOUNDRY Fab 캠퍼스</span><br />
+    <span>시안 LED 베이스 · 공정 컨베이어 라인 · 옥상 제품 조형</span>
   </div>
   <div id="tip">드래그 회전 · 휠 확대 · 우클릭 이동</div>
 
@@ -56,19 +46,12 @@
     import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
     import { OrbitControls } from 'https://unpkg.com/three@0.160.0/examples/jsm/controls/OrbitControls.js';
 
-    const GROUND_XZ = 1.25;
-    const gx = (n) => n * GROUND_XZ;
-
-    // ===== HQ 새 중심 좌표 (변경 #1: 왼쪽 뒤로 이동) =====
-    const HQ_X = -1.55;
-    const HQ_Z = -1.05;
-
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color('#08101d');
-    scene.fog = new THREE.Fog('#08101d', 11, 26);
+    scene.background = new THREE.Color('#0b1018');
+    scene.fog = new THREE.Fog('#0b1018', 12, 26);
 
-    const camera = new THREE.PerspectiveCamera(38, innerWidth / innerHeight, 0.1, 100);
-    camera.position.set(6.0, 5.0, 6.7);
+    const camera = new THREE.PerspectiveCamera(36, innerWidth / innerHeight, 0.1, 100);
+    camera.position.set(6.2, 5.4, 7.2);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
@@ -79,77 +62,102 @@
     document.body.appendChild(renderer.domElement);
 
     const controls = new OrbitControls(camera, renderer.domElement);
-    controls.target.set(0.2, 1.55, 0);
+    controls.target.set(0.55, 0.55, 0.05);
     controls.enableDamping = true;
     controls.dampingFactor = 0.06;
-    controls.minDistance = 4;
-    controls.maxDistance = 13;
+    controls.minDistance = 4.5;
+    controls.maxDistance = 16;
     controls.maxPolarAngle = Math.PI * 0.49;
 
+    /** XZ footprint multiplier (matches village ground scale). */
+    const GROUND_XZ = 1.25;
+    const gx = (n) => n * GROUND_XZ;
+    
+    const HQ_X = -1.35;
+    const HQ_Z = -0.85;
+    
+    const FAB_X = [0.55, 1.62, 2.69];
+    const FAB_Z = -0.85;
+    const FAB_BODY_H = 1.05;
+    const SLAB_TOP = 0.08;
+    const FAB_Y = SLAB_TOP + FAB_BODY_H / 2;
+    const ROOF_TOP_Y = FAB_Y + FAB_BODY_H / 2 + 0.06;
+    
+    const CONVEYOR_Z = 1.05;
+    const CONVEYOR_Y = 0.18;
+    const CONVEYOR_LEN = 3.6;
+    const CONVEYOR_START = -CONVEYOR_LEN / 2 + 0.15;
+    const CONVEYOR_END = CONVEYOR_LEN / 2 - 0.15;
+    
     const C = {
-      blue: '#1428a0', blueDark: '#071a5f', blueLight: '#4d8dff',
-      cyan: '#5fb8ff', hotCyan: '#9be3ff',
-      white: '#f4f4f4', silver: '#cfd4dc', metal: '#999999', metalDark: '#5a5a64',
-      glass: '#78b7ff', warm: '#fff2c8',
-      road: '#242832', base: '#111827', platform: '#d7dce6',
-      green: '#2f7d42', pcbGreen: '#1a5c2f',
-      conveyor: '#3a3a45', conveyorBelt: '#1a1a22',
-      phoneBlack: '#0a0a0e', phoneScreen: '#3aa0ff',
-      dramGold: '#d4af6a',
-      tvFrame: '#1a1a1a', tvScreen: '#1e3a8a',
-      ssdBlack: '#181820', waferBlue: '#9ad5ff',
-      gold: '#ffd700', warning: '#ffcf3a'
+      samsungBlue: '#1e3a8a',
+      fabBlue: '#1a4fcf',
+      fabBlueEm: '#0a2a8c',
+      cyan: '#00e5d0',
+      white: '#e8eef5',
+      warm: '#ffe0a0',
+      road: '#2a3445',
+      base: '#1a2230',
+      platform: '#2a3445',
+      green: '#2f7d42',
+      pcbGreen: '#15803d',
+      gold: '#d4a017',
+      ssdBlack: '#0a0a0a',
+      wafer: '#c4b5fd',
+      metalDark: '#202632',
+      metalMid: '#2a3142',
+      screenCyan: '#7dd3fc',
+      ledGreen: '#34c759',
     };
-
-    const mat = (color, o = {}) => new THREE.MeshStandardMaterial({
-      color,
-      roughness: o.roughness ?? 0.62,
-      metalness: o.metalness ?? 0.05,
-      transparent: o.transparent ?? false,
-      opacity: o.opacity ?? 1,
-      emissive: o.emissive ?? '#000000',
-      emissiveIntensity: o.emissiveIntensity ?? 0
-    });
-
+    
+    const mat = (color, o: MatOpts = {}) =>
+      new THREE.MeshStandardMaterial({
+        color,
+        roughness: o.roughness ?? 0.6,
+        metalness: o.metalness ?? 0.08,
+        transparent: o.transparent ?? false,
+        opacity: o.opacity ?? 1,
+        emissive: o.emissive ?? '#000000',
+        emissiveIntensity: o.emissiveIntensity ?? 0,
+      });
+    
     const M = {
-      blue: mat(C.blue, { roughness: .6, metalness: .1 }),
-      blueDark: mat(C.blueDark, { roughness: .5, metalness: .12 }),
-      blueLight: mat(C.blueLight, { roughness: .3, metalness: .15, emissive: '#1b5dff', emissiveIntensity: .25 }),
-      white: mat(C.white, { roughness: .85 }),
-      silver: mat(C.silver, { roughness: .42, metalness: .35 }),
-      metal: mat(C.metal, { roughness: .4, metalness: .65 }),
-      metalDark: mat(C.metalDark, { roughness: .5, metalness: .75 }),
-      glass: mat(C.glass, { roughness: .1, metalness: .08, transparent: true, opacity: .42, emissive: '#0a3cff', emissiveIntensity: .12 }),
-      warmWindow: mat(C.warm, { roughness: .35, emissive: '#ffb93d', emissiveIntensity: .65 }),
-      road: mat(C.road, { roughness: .82 }),
-      base: mat(C.base, { roughness: .55 }),
-      platform: mat(C.platform, { roughness: .78 }),
-      green: mat(C.green, { roughness: .8 }),
-      conveyorBase: mat(C.conveyor, { roughness: .6, metalness: .4 }),
-      conveyorBelt: mat(C.conveyorBelt, { roughness: .9 }),
-      phoneBody: mat(C.phoneBlack, { roughness: .35, metalness: .6 }),
-      phoneScreen: mat(C.phoneScreen, { roughness: .15, emissive: C.phoneScreen, emissiveIntensity: 1.2 }),
-      dramPCB: mat(C.pcbGreen, { roughness: .6, metalness: .15 }),
-      dramChip: mat('#1a1a1a', { roughness: .4, metalness: .5 }),
-      dramGold: mat(C.dramGold, { roughness: .25, metalness: .85 }),
-      tvFrame: mat(C.tvFrame, { roughness: .3, metalness: .6 }),
-      tvScreen: mat(C.tvScreen, { roughness: .12, emissive: '#3a78ff', emissiveIntensity: 0.9 }),
-      ssdBody: mat(C.ssdBlack, { roughness: .35, metalness: .6 }),
-      wafer: mat(C.waferBlue, { roughness: .15, metalness: .4, emissive: '#1e4dcc', emissiveIntensity: .3 }),
-      circuitTrace: new THREE.MeshStandardMaterial({
-        color: C.cyan, emissive: C.cyan, emissiveIntensity: 1.8, roughness: .2
-      }),
-      scanLine: new THREE.MeshBasicMaterial({ color: C.cyan, transparent: true, opacity: .7 }),
-      skyBeam: new THREE.MeshBasicMaterial({ color: '#3aa0ff', transparent: true, opacity: .35 }),
-      // 변경 #6: 금색 코인 재질
-      goldCoin: new THREE.MeshStandardMaterial({
-        color: C.gold, emissive: '#ffaa00', emissiveIntensity: 1.6,
-        roughness: .25, metalness: .85
-      }),
-      warningStripe: mat(C.warning, { roughness: .5, emissive: C.warning, emissiveIntensity: .35 })
+      samsungBlue: mat(C.samsungBlue, { roughness: 0.4, metalness: 0.1 }),
+      fabBlue: mat(C.fabBlue, { emissive: C.fabBlueEm, emissiveIntensity: 0.35 }),
+      cyanLED: mat(C.cyan, { emissive: C.cyan, emissiveIntensity: 1.4, roughness: 0.2 }),
+      cyanLEDInner: mat(C.cyan, { emissive: C.cyan, emissiveIntensity: 0.9, roughness: 0.2 }),
+      white: mat(C.white, { roughness: 0.75 }),
+      dashWhite: mat('#f4f4f4', { roughness: 0.5 }),
+      warmWindow: mat(C.warm, { emissive: '#ffe0a0', emissiveIntensity: 0.55, roughness: 0.35 }),
+      road: mat(C.road, { roughness: 0.82 }),
+      base: mat(C.base, { roughness: 0.85 }),
+      platform: mat(C.platform, { roughness: 0.78 }),
+      green: mat(C.green, { roughness: 0.85 }),
+      dramPCB: mat(C.pcbGreen, { roughness: 0.6 }),
+      dramChip: mat('#0a0a0a', { roughness: 0.4, metalness: 0.5 }),
+      dramGold: mat(C.gold, { roughness: 0.25, metalness: 0.85 }),
+      ssdBody: mat(C.ssdBlack, { roughness: 0.35, metalness: 0.6 }),
+      wafer: mat(C.wafer, { roughness: 0.25, metalness: 0.85 }),
+      metalDark: mat(C.metalDark, { roughness: 0.6, metalness: 0.4 }),
+      metalMid: mat(C.metalMid, { roughness: 0.5, metalness: 0.5 }),
+      silver: mat('#cfd4dc', { roughness: 0.35, metalness: 0.55 }),
+      screen: mat(C.screenCyan, { emissive: C.screenCyan, emissiveIntensity: 0.6, roughness: 0.15 }),
+      ledGreen: mat(C.ledGreen, { emissive: C.ledGreen, emissiveIntensity: 1.0, roughness: 0.2 }),
+      conveyor: mat('#1f2733', { roughness: 0.7, metalness: 0.35 }),
+      conveyorBelt: mat('#252830', { roughness: 0.85 }),
     };
-
-    function box(g, name, x, y, z, sx, sy, sz, material) {
+    
+    function box(
+      g,
+      name,
+      x,
+      y,
+      z,
+      sx,
+      sy,
+      sz,
+      material,
+    ) {
       const mesh = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), material);
       mesh.name = name;
       mesh.position.set(x, y, z);
@@ -158,8 +166,18 @@
       g.add(mesh);
       return mesh;
     }
-
-    function cyl(g, name, x, y, z, r, h, material, radial = 24) {
+    
+    function cyl(
+      g,
+      name,
+      x,
+      y,
+      z,
+      r,
+      h,
+      material,
+      radial = 24,
+    ) {
       const mesh = new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, radial), material);
       mesh.name = name;
       mesh.position.set(x, y, z);
@@ -168,8 +186,8 @@
       g.add(mesh);
       return mesh;
     }
-
-    function roundRect(ctx, x, y, w, h, r) {
+    
+    function roundRect(ctx: CanvasRenderingContext2D, x, y, w, h, r) {
       ctx.beginPath();
       ctx.moveTo(x + r, y);
       ctx.arcTo(x + w, y, x + w, y + h, r);
@@ -178,717 +196,540 @@
       ctx.arcTo(x, y, x + w, y, r);
       ctx.closePath();
     }
-
-    function makeSamsungLogoTexture() {
-      const canvas = document.createElement('canvas');
-      canvas.width = 1024;
-      canvas.height = 256;
-      const ctx = canvas.getContext('2d');
-      ctx.fillStyle = '#ffffff';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = '#1428a0';
+    
+    function makeSamsungLogoTexture(fg = '#ffffff', bg = '#1e3a8a') {
+      const c = document.createElement('canvas');
+      c.width = 768;
+      c.height = 192;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = bg;
       ctx.beginPath();
-      ctx.ellipse(canvas.width / 2, canvas.height / 2, 400, 92, 0, 0, Math.PI * 2);
+      ctx.ellipse(c.width / 2, c.height / 2, c.width / 2 - 10, c.height / 2 - 10, 0, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 108px "Arial Black", Arial, sans-serif';
+      ctx.fillStyle = fg;
+      ctx.font = 'bold 76px "Arial Black", Arial';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText('SAMSUNG', canvas.width / 2, canvas.height / 2);
-      const texture = new THREE.CanvasTexture(canvas);
-      texture.colorSpace = THREE.SRGBColorSpace;
-      return texture;
+      ctx.fillText('SAMSUNG', c.width / 2, c.height / 2);
+      const t = new THREE.CanvasTexture(c);
+      t.colorSpace = THREE.SRGBColorSpace;
+      return t;
     }
-
-    function makeFabProductTexture(fabType) {
-      const canvas = document.createElement('canvas');
-      canvas.width = 512;
-      canvas.height = 384;
-      const ctx = canvas.getContext('2d');
+    
+    function makeSamsungElectronicsTexture() {
+      const c = document.createElement('canvas');
+      c.width = 1536;
+      c.height = 220;
+      const ctx = c.getContext('2d');
       ctx.fillStyle = '#ffffff';
-      roundRect(ctx, 8, 8, canvas.width - 16, canvas.height - 16, 24);
-      ctx.fill();
-      ctx.strokeStyle = '#1428a0';
-      ctx.lineWidth = 6;
-      roundRect(ctx, 8, 8, canvas.width - 16, canvas.height - 16, 24);
-      ctx.stroke();
-
-      ctx.fillStyle = '#1428a0';
-      ctx.fillRect(8, 8, canvas.width - 16, 80);
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 56px Arial';
+      ctx.fillRect(0, 0, c.width, c.height);
+      ctx.fillStyle = '#1e3a8a';
+      ctx.font = 'bold 88px "Helvetica Neue", Arial';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText(fabType, canvas.width / 2, 48);
-
-      const products = {
-        DRAM: ['DDR5 메모리', 'HBM3 (AI)', '서버 메모리'],
-        NAND: ['SSD 컨트롤러', 'V-NAND', '플래시 메모리'],
-        FOUNDRY: ['7나노 공정', '엑시노스', 'AI 칩 위탁생산']
-      };
-      const items = products[fabType] || ['제품 라인'];
-
-      ctx.fillStyle = '#1428a0';
-      ctx.font = 'bold 32px Arial';
-      ctx.textAlign = 'left';
-      items.forEach((item, i) => {
-        ctx.fillText('• ' + item, 30, 130 + i * 60);
-      });
-
-      const texture = new THREE.CanvasTexture(canvas);
-      texture.colorSpace = THREE.SRGBColorSpace;
-      return texture;
+      ctx.fillText('SAMSUNG ELECTRONICS', c.width / 2, c.height / 2);
+      const t = new THREE.CanvasTexture(c);
+      t.colorSpace = THREE.SRGBColorSpace;
+      return t;
     }
-
-    function fabProductBoard(g, fabType, x, y, z, w, h) {
-      const texture = makeFabProductTexture(fabType);
-      const material = new THREE.MeshStandardMaterial({
-        map: texture, side: THREE.DoubleSide,
-        roughness: 0.45, emissive: '#ffffff',
-        emissiveMap: texture, emissiveIntensity: 0.25
-      });
-      const mesh = new THREE.Mesh(new THREE.PlaneGeometry(w, h), material);
-      mesh.position.set(x, y, z);
-      g.add(mesh);
-      return mesh;
-    }
-
-    function makeProductLabelTexture(text) {
-      const canvas = document.createElement('canvas');
-      canvas.width = 256;
-      canvas.height = 64;
-      const ctx = canvas.getContext('2d');
-      ctx.fillStyle = '#1428a0';
-      roundRect(ctx, 4, 4, canvas.width - 8, canvas.height - 8, 12);
-      ctx.fill();
+    
+    function makeFabNameTexture(name) {
+      const c = document.createElement('canvas');
+      c.width = 256;
+      c.height = 64;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#1a4fcf';
+      ctx.fillRect(0, 0, c.width, c.height);
       ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 40px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(name, c.width / 2, c.height / 2);
+      const t = new THREE.CanvasTexture(c);
+      t.colorSpace = THREE.SRGBColorSpace;
+      return t;
+    }
+    
+    function makeFabPlaqueTexture(title, subtitle) {
+      const c = document.createElement('canvas');
+      c.width = 384;
+      c.height = 256;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      roundRect(ctx, 4, 4, c.width - 8, c.height - 8, 12);
+      ctx.fill();
+      ctx.fillStyle = '#1e3a8a';
       ctx.font = 'bold 36px Arial';
       ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(text, canvas.width / 2, canvas.height / 2);
-      const texture = new THREE.CanvasTexture(canvas);
-      texture.colorSpace = THREE.SRGBColorSpace;
-      return texture;
+      ctx.fillText(title, c.width / 2, 70);
+      ctx.fillStyle = '#555';
+      ctx.font = '22px Arial';
+      ctx.fillText(subtitle, c.width / 2, 120);
+      const t = new THREE.CanvasTexture(c);
+      t.colorSpace = THREE.SRGBColorSpace;
+      return t;
     }
-
-    function productLabel(g, text, x, y, z, w, h) {
-      const texture = makeProductLabelTexture(text);
-      const material = new THREE.MeshStandardMaterial({
-        map: texture, side: THREE.DoubleSide,
-        roughness: 0.5, emissive: '#ffffff',
-        emissiveMap: texture, emissiveIntensity: 0.3
-      });
-      const mesh = new THREE.Mesh(new THREE.PlaneGeometry(w, h), material);
-      mesh.position.set(x, y, z);
-      g.add(mesh);
-      return mesh;
-    }
-
-    function samsungSign(g, x, y, z, w, h) {
-      const texture = makeSamsungLogoTexture();
-      const material = new THREE.MeshStandardMaterial({
-        map: texture, side: THREE.DoubleSide,
-        roughness: 0.45, emissive: '#ffffff',
-        emissiveMap: texture, emissiveIntensity: 0.25
-      });
-      const mesh = new THREE.Mesh(new THREE.PlaneGeometry(w, h), material);
-      mesh.position.set(x, y, z);
-      mesh.castShadow = true;
-      g.add(mesh);
-      return mesh;
-    }
-
-    // ===== 변경 #8: 하만 카돈 텍스처 =====
-    function makeHarmanLabelTexture() {
-      const canvas = document.createElement('canvas');
-      canvas.width = 512;
-      canvas.height = 128;
-      const ctx = canvas.getContext('2d');
+    
+    function makeVNANDLabelTexture() {
+      const c = document.createElement('canvas');
+      c.width = 256;
+      c.height = 64;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, c.width, c.height);
       ctx.fillStyle = '#0a0a0a';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      ctx.strokeStyle = '#d4af6a';
-      ctx.lineWidth = 3;
-      ctx.strokeRect(8, 8, canvas.width - 16, canvas.height - 16);
-      ctx.fillStyle = '#d4af6a';
-      ctx.font = 'italic bold 52px Georgia, serif';
+      ctx.font = 'bold 14px Arial';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      ctx.fillText('harman/kardon', canvas.width / 2, canvas.height / 2);
-      const texture = new THREE.CanvasTexture(canvas);
-      texture.colorSpace = THREE.SRGBColorSpace;
-      return texture;
+      ctx.fillText('SAMSUNG', c.width / 2, 22);
+      ctx.fillText('V-NAND SSD', c.width / 2, 44);
+      const t = new THREE.CanvasTexture(c);
+      t.colorSpace = THREE.SRGBColorSpace;
+      return t;
     }
-
-    function harmanLabel(g, x, y, z, w, h) {
-      const texture = makeHarmanLabelTexture();
-      const material = new THREE.MeshStandardMaterial({
-        map: texture, side: THREE.DoubleSide,
-        roughness: 0.4, emissive: '#ffffff',
-        emissiveMap: texture, emissiveIntensity: 0.3
+    
+    function texturedPlane(
+      g,
+      tex,
+      x,
+      y,
+      z,
+      w,
+      h,
+      rotY = 0,
+      emissive = 0.35,
+    ) {
+      const m = new THREE.MeshStandardMaterial({
+        map: tex,
+        side,
+        roughness: 0.4,
+        emissive: '#ffffff',
+        emissiveMap: tex,
+        emissiveIntensity: emissive,
       });
-      const mesh = new THREE.Mesh(new THREE.PlaneGeometry(w, h), material);
+      const mesh = new THREE.Mesh(new THREE.PlaneGeometry(w, h), m);
       mesh.position.set(x, y, z);
+      mesh.rotation.y = rotY;
       g.add(mesh);
       return mesh;
     }
-
-    // ===== 제품 빌더 =====
-    function createPhone(g, x, y, z, scale = 1) {
-      const phoneGroup = new THREE.Group();
-      phoneGroup.position.set(x, y, z);
-      phoneGroup.scale.setScalar(scale);
-      g.add(phoneGroup);
-      const body = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.28, 0.018), M.phoneBody);
-      body.castShadow = true;
-      phoneGroup.add(body);
-      const screen = new THREE.Mesh(new THREE.PlaneGeometry(0.115, 0.245), M.phoneScreen.clone());
-      screen.position.set(0, 0, 0.01);
-      phoneGroup.add(screen);
-      const camMod = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.04, 0.005), mat('#333333', { metalness: 0.7 }));
-      camMod.position.set(-0.04, 0.1, -0.012);
-      phoneGroup.add(camMod);
-      return { group: phoneGroup, screen };
+    
+    function addCyanLedRim(g, cx, cy, cz, w, d, inset) {
+      const hw = w / 2;
+      const hd = d / 2;
+      const t = 0.02;
+      const h = 0.04;
+      const mat = inset === 0 ? M.cyanLED : M.cyanLEDInner;
+      box(g, `led rim F ${inset}`, cx, cy + h / 2, cz + hd + t / 2, w, h, t, mat);
+      box(g, `led rim B ${inset}`, cx, cy + h / 2, cz - hd - t / 2, w, h, t, mat);
+      box(g, `led rim L ${inset}`, cx - hw - t / 2, cy + h / 2, cz, t, h, d, mat);
+      box(g, `led rim R ${inset}`, cx + hw + t / 2, cy + h / 2, cz, t, h, d, mat);
     }
-
-    function createDRAM(g, x, y, z, scale = 1) {
-      const dramGroup = new THREE.Group();
-      dramGroup.position.set(x, y, z);
-      dramGroup.scale.setScalar(scale);
-      g.add(dramGroup);
-      const pcb = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.08, 0.015), M.dramPCB);
-      pcb.castShadow = true;
-      dramGroup.add(pcb);
-      for (let i = 0; i < 4; i++) {
-        const chipFront = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.045, 0.012), M.dramChip);
-        chipFront.position.set(-0.13 + i * 0.087, 0.005, 0.011);
-        dramGroup.add(chipFront);
-        const chipBack = new THREE.Mesh(new THREE.BoxGeometry(0.045, 0.045, 0.012), M.dramChip);
-        chipBack.position.set(-0.13 + i * 0.087, 0.005, -0.011);
-        dramGroup.add(chipBack);
-      }
-      const pins = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.012, 0.012), M.dramGold);
-      pins.position.set(0, -0.038, 0);
-      dramGroup.add(pins);
-      return dramGroup;
-    }
-
-    function createTV(g, x, y, z, scale = 1) {
-      const tvGroup = new THREE.Group();
-      tvGroup.position.set(x, y, z);
-      tvGroup.scale.setScalar(scale);
-      g.add(tvGroup);
-      const frame = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.2, 0.018), M.tvFrame);
-      frame.castShadow = true;
-      tvGroup.add(frame);
-      const screen = new THREE.Mesh(new THREE.PlaneGeometry(0.29, 0.17), M.tvScreen.clone());
-      screen.position.set(0, 0, 0.01);
-      tvGroup.add(screen);
-      const stand = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.04, 0.06), M.tvFrame);
-      stand.position.set(0, -0.12, 0);
-      tvGroup.add(stand);
-      const base = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.012, 0.08), M.tvFrame);
-      base.position.set(0, -0.146, 0);
-      tvGroup.add(base);
-      return { group: tvGroup, screen };
-    }
-
-    function createSSD(g, x, y, z, scale = 1) {
-      const ssdGroup = new THREE.Group();
-      ssdGroup.position.set(x, y, z);
-      ssdGroup.scale.setScalar(scale);
-      g.add(ssdGroup);
-      const body = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.025, 0.12), M.ssdBody);
-      body.castShadow = true;
-      ssdGroup.add(body);
-      const label = new THREE.Mesh(
-        new THREE.PlaneGeometry(0.08, 0.04),
-        new THREE.MeshStandardMaterial({ color: '#ffffff', emissive: '#ffffff', emissiveIntensity: 0.4 })
+    
+    function createFabRoof(w, d) {
+      const grp = new THREE.Group();
+      const slab = new THREE.Mesh(
+        new THREE.BoxGeometry(w, 0.04, d),
+        M.white,
       );
-      label.position.set(0, 0.014, 0);
-      label.rotation.x = -Math.PI / 2;
-      ssdGroup.add(label);
-      return ssdGroup;
+      slab.position.y = 0.02;
+      const trim = new THREE.Mesh(
+        new THREE.BoxGeometry(w + 0.02, 0.02, d + 0.02),
+        M.fabBlue,
+      );
+      trim.position.y = 0.05;
+      grp.add(slab, trim);
+      return grp;
     }
-
-    function createWaferDisc(g, x, y, z, scale = 1) {
-      const waferGroup = new THREE.Group();
-      waferGroup.position.set(x, y, z);
-      waferGroup.scale.setScalar(scale);
-      g.add(waferGroup);
-      const disc = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 0.012, 32), M.wafer);
+    
+    function createPedestal() {
+      const grp = new THREE.Group();
+      box(grp, 'ped base', 0, 0.03, 0, 0.5, 0.06, 0.5, M.metalDark);
+      box(grp, 'ped top', 0, 0.09, 0, 0.38, 0.05, 0.38, M.metalMid);
+      return grp;
+    }
+    
+    function createDRAMStatue() {
+      const grp = new THREE.Group();
+      const pcb = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.22, 0.04), M.dramPCB);
+      pcb.castShadow = true;
+      grp.add(pcb);
+      for (let i = 0; i < 4; i++) {
+        const chip = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.08, 0.012), M.dramChip);
+        chip.position.set(-0.24 + i * 0.16, 0.02, 0.022);
+        grp.add(chip);
+        const chipB = chip.clone();
+        chipB.position.z = -0.022;
+        grp.add(chipB);
+      }
+      const pins = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.02, 0.04), M.dramGold);
+      pins.position.set(0, -0.1, 0);
+      grp.add(pins);
+      const sticker = new THREE.Mesh(
+        new THREE.PlaneGeometry(0.2, 0.06),
+        mat('#ffffff', { emissive: '#ffffff', emissiveIntensity: 0.3 }),
+      );
+      sticker.position.set(0, 0.06, 0.025);
+      grp.add(sticker);
+      grp.rotation.y = -0.15;
+      return grp;
+    }
+    
+    function createNANDStatue() {
+      const grp = new THREE.Group();
+      const body = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.28, 0.08), M.ssdBody);
+      body.castShadow = true;
+      grp.add(body);
+      const labelTex = makeVNANDLabelTexture();
+      const label = new THREE.Mesh(
+        new THREE.PlaneGeometry(0.42, 0.12),
+        new THREE.MeshStandardMaterial({
+          map: labelTex,
+          emissive: '#ffffff',
+          emissiveMap: labelTex,
+          emissiveIntensity: 0.4,
+        }),
+      );
+      label.position.set(0, 0.02, 0.041);
+      grp.add(label);
+      box(grp, 'sata', 0.28, 0, 0, 0.04, 0.02, 0.08, M.dramGold);
+      return grp;
+    }
+    
+    function createWaferStatue() {
+      const grp = new THREE.Group();
+      const disc = new THREE.Mesh(new THREE.CylinderGeometry(0.36, 0.36, 0.025, 64), M.wafer);
+      disc.rotation.x = Math.PI / 2;
       disc.castShadow = true;
-      waferGroup.add(disc);
-      for (let i = -1; i <= 1; i++) {
-        for (let j = -1; j <= 1; j++) {
+      grp.add(disc);
+      for (let i = 0; i < 4; i++) {
+        for (let j = 0; j < 4; j++) {
           const die = new THREE.Mesh(
-            new THREE.BoxGeometry(0.025, 0.001, 0.025),
-            mat('#0a2a6a', { emissive: '#1e4dcc', emissiveIntensity: 0.4 })
+            new THREE.PlaneGeometry(0.14, 0.14),
+            mat(i % 2 === j % 2 ? '#7c3aed' : '#06b6d4', {
+              emissive: i % 2 === j % 2 ? '#7c3aed' : '#06b6d4',
+              emissiveIntensity: 0.35,
+            }),
           );
-          die.position.set(i * 0.04, 0.008, j * 0.04);
-          waferGroup.add(die);
+          die.position.set(-0.21 + i * 0.14, 0.014, -0.21 + j * 0.14);
+          die.rotation.x = -Math.PI / 2;
+          grp.add(die);
         }
       }
-      return waferGroup;
+      box(grp, 'wafer notch', 0.32, 0.01, 0, 0.06, 0.03, 0.04, M.metalDark);
+      grp.rotation.x = Math.PI / 2 * 0.92;
+      grp.rotation.z = 0.08;
+      return grp;
     }
-
-    function createSamsungDiorama() {
-      const g = new THREE.Group();
-
-      // ===== Base / 변경 #7: front road · crosswalk 제거 =====
-      box(g, 'dark cell plinth', 0, -0.13, 0, gx(4.8), .26, gx(4.3), M.base);
-      box(g, 'single cell platform', 0, .02, 0, gx(4.35), .12, gx(3.85), M.platform);
-      // fab road만 유지하되 HQ 이동 따라 위치 조정
-      box(g, 'fab road', 0.0, .11, -1.05, gx(2.4), .04, gx(0.35), M.road);
-
-      // ============================================================
-      // ===== HQ (변경 #1: 왼쪽 뒤로 이동, 변경 #9: 간판 키우기) =====
-      // ============================================================
-      box(g, 'Samsung HQ main tower', HQ_X, 1.5, HQ_Z, 2.0, 3.0, 1.5, M.blue);
-      box(g, 'HQ rooftop white accent', HQ_X, 3.08, HQ_Z, 2.1, .15, 1.6, M.white);
-      box(g, 'HQ lower lobby', HQ_X, .32, HQ_Z + 0.84, 1.65, .48, .18, M.white);
-      box(g, 'HQ entrance canopy', HQ_X, .72, HQ_Z + 1.0, .95, .12, .32, M.blueLight);
-
-      const floorWindows = [];
-      for (let floor = 0; floor < 8; floor++) {
-        const y = .65 + floor * .28;
-        const w = box(g, `front warm window ${floor}`, HQ_X, y, HQ_Z + 0.765, 1.64, .07, .035, M.warmWindow.clone());
-        floorWindows.push({ mesh: w, floor });
+    
+    function createMiniDRAM(scale = 1) {
+      const g = createDRAMStatue();
+      g.scale.setScalar(scale * 0.4);
+      return g;
+    }
+    
+    function createSemiPackage() {
+      const grp = new THREE.Group();
+      box(grp, 'pkg', 0, 0.02, 0, 0.12, 0.04, 0.12, mat('#1f2733'));
+      box(grp, 'pad', 0, 0.045, 0, 0.08, 0.005, 0.08, M.silver);
+      return grp;
+    }
+    
+    function createMiniSSD() {
+      const grp = new THREE.Group();
+      box(grp, 'ssd', 0, 0.015, 0, 0.14, 0.03, 0.1, M.ssdBody);
+      const t = makeVNANDLabelTexture();
+      const lbl = new THREE.Mesh(
+        new THREE.PlaneGeometry(0.1, 0.03),
+        new THREE.MeshStandardMaterial({ map: t, emissive: '#fff', emissiveMap: t, emissiveIntensity: 0.3 }),
+      );
+      lbl.position.set(0, 0.032, 0.051);
+      grp.add(lbl);
+      return grp;
+    }
+    
+    function createMiniWafer() {
+      const disc = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.06, 0.06, 0.015, 24),
+        M.wafer,
+      );
+      disc.rotation.x = Math.PI / 2;
+      return disc;
+    }
+    
+    function createProcessingStation(g, x, y, z, idx) {
+      const grp = new THREE.Group();
+      grp.position.set(x, y, z);
+      g.add(grp);
+      box(grp, `station body ${idx}`, 0, 0.14, 0, 0.25, 0.28, 0.4, M.white);
+      box(grp, `station band ${idx}`, 0, 0.27, 0, 0.25, 0.05, 0.4, M.fabBlue);
+      const screen = new THREE.Mesh(new THREE.PlaneGeometry(0.16, 0.12), M.screen.clone());
+      screen.position.set(0, 0.14, 0.205);
+      grp.add(screen);
+      const led = new THREE.Mesh(new THREE.SphereGeometry(0.012, 8, 8), M.ledGreen);
+      led.position.set(0.14, 0.2, 0.1);
+      grp.add(led);
+      return { group: grp, screen };
+    }
+    
+    function createSamsungTruck(g, x, y, z) {
+      const grp = new THREE.Group();
+      grp.position.set(x, y, z);
+      g.add(grp);
+      box(grp, 'truck cabin', -0.12, 0.06, 0, 0.14, 0.12, 0.14, M.samsungBlue);
+      box(grp, 'truck cargo', 0.1, 0.08, 0, 0.28, 0.16, 0.16, M.white);
+      const logoTex = makeSamsungLogoTexture('#1428a0', '#ffffff');
+      const side = new THREE.Mesh(
+        new THREE.PlaneGeometry(0.24, 0.08),
+        new THREE.MeshStandardMaterial({
+          map: logoTex,
+          emissive: '#ffffff',
+          emissiveMap: logoTex,
+          emissiveIntensity: 0.35,
+        }),
+      );
+      side.position.set(0.1, 0.1, 0.081);
+      side.rotation.y = 0;
+      grp.add(side);
+      [[-0.18, -0.07], [-0.18, 0.07], [0.22, -0.07], [0.22, 0.07]].forEach(([bx, bz], i) => {
+        const w = cyl(grp, `wheel ${i}`, bx, 0.025, bz, 0.025, 0.03, M.metalDark, 12);
+        w.rotation.x = Math.PI / 2;
+      });
+      return grp;
+    }
+    
+    function createSamsungHQ(g) {
+      const grp = new THREE.Group();
+      grp.position.set(HQ_X, SLAB_TOP, HQ_Z);
+      g.add(grp);
+    
+      const W = 1.9;
+      const H = 2.05;
+      const D = 1.6;
+      const colStep = (W - 0.24) / 7;
+      const rowStep = (H - 0.5) / 5;
+    
+      box(grp, 'hq body', 0, H / 2, 0, W, H, D, M.samsungBlue);
+    
+      for (let row = 0; row < 6; row++) {
+        for (let col = 0; col < 8; col++) {
+          const wx = -W / 2 + 0.12 + col * colStep;
+          const wy = 0.28 + row * rowStep;
+          const win = new THREE.Mesh(new THREE.PlaneGeometry(0.15, 0.17), M.warmWindow.clone());
+          win.position.set(wx, wy, D / 2 + 0.006);
+          grp.add(win);
+        }
       }
       for (let col = 0; col < 7; col++) {
-        const x = (HQ_X - 0.8) + col * .27;
-        box(g, `vertical glass mullion ${col}`, x, 1.73, HQ_Z + 0.785, .035, 2.25, .035, M.glass);
+        const mx = -W / 2 + 0.2 + col * colStep;
+        box(grp, `mullion ${col}`, mx, H / 2, D / 2 + 0.008, 0.014, H * 0.78, 0.012, M.silver);
       }
-      box(g, 'left blue glass wall', HQ_X - 1.02, 1.63, HQ_Z, .04, 2.45, 1.12, M.glass);
-      box(g, 'right blue glass wall', HQ_X + 1.02, 1.63, HQ_Z, .04, 2.45, 1.12, M.glass);
-
-      // Sky beam
-      const beam = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.04, 0.12, 4.0, 12, 1, true),
-        M.skyBeam
+    
+      box(grp, 'electronics band', 0, H * 0.5, D / 2 + 0.008, W + 0.08, 0.38, 0.014, M.white);
+      texturedPlane(grp, makeSamsungElectronicsTexture(), 0, H * 0.5, D / 2 + 0.016, W * 1.02, 0.34, 0, 0.6);
+    
+      box(grp, 'lobby canopy', 0, 0.22, D / 2 + 0.22, 1.0, 0.07, 0.52, M.samsungBlue);
+      const door = new THREE.Mesh(
+        new THREE.PlaneGeometry(0.48, 0.34),
+        mat('#0a1020', { emissive: '#00e5d0', emissiveIntensity: 0.25 }),
       );
-      beam.position.set(HQ_X, 5.2, HQ_Z);
-      beam.castShadow = false;
-      g.add(beam);
-      const beamBase = box(g, 'beam base emitter', HQ_X, 3.22, HQ_Z, 0.18, 0.06, 0.18, M.circuitTrace);
-
-      // ===== Samsung 옥상 사인 (변경 #9: 1.72×0.46 → 2.5×0.7) =====
-      const roofSign = samsungSign(g, HQ_X, 3.55, HQ_Z + 0.55, 2.5, 0.7);
-      roofSign.rotation.x = -Math.PI / 8;
-      box(g, 'roof sign post A', HQ_X - 0.78, 3.25, HQ_Z + 0.47, .06, .42, .06, M.silver);
-      box(g, 'roof sign post B', HQ_X + 0.78, 3.25, HQ_Z + 0.47, .06, .42, .06, M.silver);
-      // 정면 큰 사인 (1.45×0.46 → 2.2×0.65)
-      samsungSign(g, HQ_X, 1.9, HQ_Z + 0.776, 2.2, 0.65);
-
-      // 위성 디시
-      cyl(g, 'satellite dish mount', HQ_X - 0.7, 3.22, HQ_Z - 0.5, .04, .25, M.metal, 12);
-      const dishPivot = new THREE.Group();
-      dishPivot.position.set(HQ_X - 0.7, 3.4, HQ_Z - 0.5);
-      g.add(dishPivot);
-      const dish = new THREE.Mesh(
-        new THREE.SphereGeometry(0.18, 16, 12, 0, Math.PI * 2, 0, Math.PI / 2.2),
-        M.silver
-      );
-      dish.rotation.x = Math.PI;
-      dish.position.set(0, 0.05, 0);
-      dishPivot.add(dish);
-      cyl(dishPivot, 'dish antenna', 0, 0.15, 0, .015, .25, M.metal, 8);
-      const dishLed = new THREE.Mesh(new THREE.SphereGeometry(0.03, 12, 8), new THREE.MeshBasicMaterial({ color: '#ff3355' }));
-      dishLed.position.set(0, 0.3, 0);
-      dishPivot.add(dishLed);
-
-      // ============================================================
-      // ===== 팹 (변경 #2 반도체 디테일, #3 크기 확대, #4 제품 확대) =====
-      // ============================================================
-      // 본체: 1.0×1.2×1.0 → 1.4×1.6×1.4, Z 간격 ±1.15 → ±1.5
-      const fabPositions = [
-        [1.35, .8, -1.5, 'DRAM'],
-        [1.35, .8, 0.0, 'NAND'],
-        [1.35, .8, 1.5, 'FOUNDRY']
-      ];
-      const fabScanLines = [];
-      fabPositions.forEach(([x, y, z, label], i) => {
-        // 본체
-        box(g, `fab ${label}`, x, y, z, 1.4, 1.6, 1.4, M.white);
-        // 옥상 트림
-        box(g, `fab blue trim ${label}`, x, 1.64, z, 1.5, .08, 1.5, M.blueLight);
-        // 정면 유리
-        box(g, `fab front glass ${label}`, x, 0.8, z + 0.71, 1.0, 0.5, .035, M.glass);
-        // 측면 큰 제품 안내판 (좌측, 크게)
-        fabProductBoard(g, label, x - 0.71, 0.85, z, 0.65, 1.1);
-
-        // ===== 변경 #2: 반도체 공장 디테일 =====
-        // 옥상 대형 배기 덕트
-        box(g, `fab duct ${label}`, x, 1.82, z, 0.65, 0.32, 0.65, M.silver);
-        box(g, `fab duct cap ${label}`, x, 2.0, z, 0.72, 0.06, 0.72, M.metalDark);
-        // 옥상 굴뚝 4개 (모서리)
-        cyl(g, `fab stack ${label} A`, x - 0.55, 1.88, z - 0.55, 0.07, 0.42, M.metalDark, 16);
-        cyl(g, `fab stack ${label} B`, x + 0.55, 1.88, z - 0.55, 0.07, 0.42, M.metalDark, 16);
-        cyl(g, `fab stack ${label} C`, x - 0.55, 1.88, z + 0.55, 0.07, 0.42, M.metalDark, 16);
-        cyl(g, `fab stack ${label} D`, x + 0.55, 1.88, z + 0.55, 0.07, 0.42, M.metalDark, 16);
-        // 측면 수직 파이프 2개
-        cyl(g, `fab pipe ${label} L`, x - 0.74, 0.8, z - 0.5, 0.05, 1.5, M.metal, 12);
-        cyl(g, `fab pipe ${label} R`, x + 0.74, 0.8, z + 0.5, 0.05, 1.5, M.metal, 12);
-        // 수평 연결 파이프 (옥상 측)
-        const hPipe = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.6, 12), M.metal);
-        hPipe.position.set(x + 0.78, 1.55, z);
-        hPipe.rotation.x = Math.PI / 2;
-        g.add(hPipe);
-        // 로딩 도크 셔터 (정면 하단)
-        box(g, `fab dock ${label}`, x, 0.22, z + 0.715, 0.5, 0.4, 0.04, M.metalDark);
-        // 경고 노란 줄무늬 (옥상 가장자리, 정면 측)
-        box(g, `fab warning ${label}`, x, 1.605, z + 0.68, 1.4, 0.02, 0.04, M.warningStripe);
-
-        // 스캔라인 (위치 보정)
-        const scanLine = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 0.04), M.scanLine.clone());
-        scanLine.position.set(x, 1.0, z + 0.728);
-        g.add(scanLine);
-        fabScanLines.push({ mesh: scanLine, baseX: x, baseZ: z + 0.728, phase: i * 0.33 });
-      });
-
-      // ===== 변경 #4: 옥상 제품 확대 (scale ↑, 위치 보정) =====
-      // 옥상 새 Y = 1.64 → 제품 Y ≈ 1.7
-      // DRAM 팹 (z=-1.5)
-      createDRAM(g, 1.0, 1.72, -1.78, 1.7);
-      createDRAM(g, 1.7, 1.72, -1.78, 1.7).rotation.y = Math.PI / 8;
-      createDRAM(g, 1.35, 1.72, -1.25, 1.7).rotation.y = Math.PI / 4;
-      productLabel(g, 'DRAM', 1.35, 2.05, -2.15, 0.6, 0.14);
-
-      // NAND 팹 (z=0)
-      createSSD(g, 1.0, 1.74, -0.25, 1.8);
-      createSSD(g, 1.7, 1.74, -0.25, 1.8).rotation.y = Math.PI / 6;
-      createSSD(g, 1.35, 1.74, 0.28, 1.8).rotation.y = Math.PI / 3;
-      productLabel(g, 'SSD / V-NAND', 1.35, 2.05, -0.65, 0.75, 0.14);
-
-      // FOUNDRY 팹 (z=1.5)
-      createWaferDisc(g, 1.0, 1.72, 1.25, 1.8);
-      createWaferDisc(g, 1.7, 1.72, 1.78, 1.8);
-      productLabel(g, 'FOUNDRY 웨이퍼', 1.35, 2.05, 0.95, 0.85, 0.14);
-
-      // ===== 환기구 (옥상 위, 위치 업데이트) =====
-      const vents = [
-        [1.05, 1.92, -1.85], [1.7, 1.92, -1.2],
-        [1.05, 1.92, 0.3], [1.7, 1.92, -0.05],
-        [1.35, 1.92, 1.85]
-      ];
-      const steamBeads = [];
-      vents.forEach(([x, y, z], i) => {
-        cyl(g, `cleanroom vent ${i + 1}`, x, y, z, .1, .4, M.metal, 24);
-        cyl(g, `cleanroom vent cap ${i + 1}`, x, y + .23, z, .12, .05, M.silver, 24);
-        for (let j = 0; j < 3; j++) {
-          const steam = new THREE.Mesh(new THREE.SphereGeometry(0.07, 12, 10), new THREE.MeshBasicMaterial({
-            color: '#ffffff', transparent: true, opacity: 0.5
-          }));
-          steam.castShadow = false;
-          g.add(steam);
-          steamBeads.push({
-            mesh: steam, baseX: x, baseY: y + 0.3, baseZ: z,
-            offset: (i * 3 + j) / (vents.length * 3),
-            speed: 0.1 + (i * 3 + j) * 0.01
-          });
-        }
-      });
-
-      // 지면 대형 웨이퍼
-      const wafer = new THREE.Mesh(
-        new THREE.CylinderGeometry(.28, .28, .035, 40),
+      door.position.set(0, 0.24, D / 2 + 0.28);
+      grp.add(door);
+    
+      const canopy = box(grp, 'roof canopy', 0, H + 0.12, 0, W + 0.42, 0.1, D + 0.36, M.white);
+      canopy.rotation.x = -0.08;
+    
+      const logoDisc = cyl(grp, 'logo disc', 0, H + 0.28, D / 2 + 0.1, 0.78, 0.05, M.samsungBlue, 32);
+      logoDisc.scale.z = 0.45;
+      logoDisc.rotation.x = -0.12;
+      const logoTex = makeSamsungLogoTexture('#ffffff', '#1e3a8a');
+      const logoPlane = new THREE.Mesh(
+        new THREE.PlaneGeometry(1.45, 0.38),
         new THREE.MeshStandardMaterial({
-          color: '#9ad5ff', roughness: .18, metalness: .35, emissive: '#245dff', emissiveIntensity: .25
-        })
+          map: logoTex,
+          emissive: '#ffffff',
+          emissiveMap: logoTex,
+          emissiveIntensity: 0.65,
+        }),
       );
-      wafer.position.set(.2, .16, 1.0);
-      wafer.rotation.x = Math.PI / 2;
-      wafer.castShadow = true;
-      g.add(wafer);
-
-      // ============================================================
-      // ===== 변경 #5: 데이터 비드 감속 (HQ → 팹, 지시 흐름) =====
-      // ============================================================
-      const dataPaths = [];
-      const fabSplashLights = [];
-      fabPositions.forEach(([fx, fy, fz, label], idx) => {
-        const start = new THREE.Vector3(HQ_X + 0.7, 1.0, HQ_Z);
-        const mid = new THREE.Vector3((HQ_X + fx) / 2, 0.9, (HQ_Z + fz) / 2);
-        const end = new THREE.Vector3(fx - 0.7, 0.95, fz);
-        const curve = new THREE.CatmullRomCurve3([start, mid, end]);
-        const beads = [];
-        const beadMat = new THREE.MeshStandardMaterial({
-          color: C.hotCyan, emissive: C.hotCyan, emissiveIntensity: 2.0, roughness: .25
-        });
-        for (let i = 0; i < 5; i++) {
-          const b = new THREE.Mesh(new THREE.SphereGeometry(.055, 16, 12), beadMat);
-          b.castShadow = false;
-          const beadLight = new THREE.PointLight(C.hotCyan, 0.2, 0.6);
-          b.add(beadLight);
-          g.add(b);
-          beads.push({ mesh: b, light: beadLight, offset: i / 5 });
-        }
-        const splashLight = new THREE.PointLight(C.hotCyan, 0, 1.5);
-        splashLight.position.set(fx - 0.7, 1.1, fz);
-        g.add(splashLight);
-        fabSplashLights.push(splashLight);
-        // 기존 0.16~0.20 → 0.06~0.08 (60% 감속)
-        dataPaths.push({ curve, beads, speed: 0.06 + idx * 0.01 });
-      });
-
-      // ============================================================
-      // ===== 변경 #6: 돈(매출) 흐름 (팹 → HQ 옥상, 금색 코인) =====
-      // ============================================================
-      const moneyPaths = [];
-      fabPositions.forEach(([fx, fy, fz, label], idx) => {
-        const start = new THREE.Vector3(fx - 0.4, 1.3, fz);
-        // 위로 올라갔다가 HQ 옥상으로 내려오는 아치
-        const mid = new THREE.Vector3((fx + HQ_X) / 2, 2.8, (fz + HQ_Z) / 2);
-        const end = new THREE.Vector3(HQ_X, 2.5, HQ_Z);
-        const curve = new THREE.CatmullRomCurve3([start, mid, end]);
-        const coins = [];
-        for (let i = 0; i < 4; i++) {
-          const coin = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.06, 0.06, 0.018, 16),
-            M.goldCoin.clone()
-          );
-          coin.castShadow = false;
-          const coinLight = new THREE.PointLight('#ffd700', 0.15, 0.5);
-          coin.add(coinLight);
-          g.add(coin);
-          coins.push({ mesh: coin, light: coinLight, offset: i / 4 });
-        }
-        moneyPaths.push({ curve, coins, speed: 0.05 + idx * 0.005 });
-      });
-
-      // 컨베이어 벨트
-      const conveyorY = 0.16;
-      const conveyorZ = 0.85;
-      box(g, 'conveyor base', 0.0, conveyorY, conveyorZ, 3.6, 0.06, 0.35, M.conveyorBase);
-      box(g, 'conveyor belt', 0.0, conveyorY + 0.035, conveyorZ, 3.6, 0.02, 0.32, M.conveyorBelt);
-      const rollerL = cyl(g, 'conveyor roller left', -1.85, conveyorY + 0.02, conveyorZ, 0.05, 0.35, M.metal, 12);
-      rollerL.rotation.x = Math.PI / 2;
-      const rollerR = cyl(g, 'conveyor roller right', 1.85, conveyorY + 0.02, conveyorZ, 0.05, 0.35, M.metal, 12);
-      rollerR.rotation.x = Math.PI / 2;
-      for (let i = 0; i < 4; i++) {
-        const lx = -1.6 + i * 1.07;
-        box(g, `conveyor leg ${i}`, lx, conveyorY - 0.04, conveyorZ + 0.12, 0.04, 0.08, 0.04, M.metal);
-        box(g, `conveyor leg back ${i}`, lx, conveyorY - 0.04, conveyorZ - 0.12, 0.04, 0.08, 0.04, M.metal);
+      logoPlane.position.set(0, H + 0.3, D / 2 + 0.15);
+      logoPlane.rotation.x = -0.12;
+      grp.add(logoPlane);
+    
+      return grp;
+    }
+    
+    function createFab(
+      g,
+      x,
+      z,
+      fabType: FabType,
+      statue,
+      plaque: { title; sub },
+    ) {
+      const grp = new THREE.Group();
+      grp.position.set(x, SLAB_TOP, z);
+      g.add(grp);
+    
+      const W = 0.95;
+      const H = FAB_BODY_H;
+    
+      box(grp, `${fabType} body`, 0, FAB_Y, 0, W, H, 1.05, M.white);
+      box(grp, `${fabType} band`, 0, FAB_Y + H / 2 - 0.09, 1.05 / 2 + 0.006, W, 0.18, 0.012, M.fabBlue);
+      texturedPlane(grp, makeFabNameTexture(fabType), 0, FAB_Y + H / 2 - 0.09, 1.05 / 2 + 0.012, W * 0.85, 0.12, 0, 0.5);
+    
+      const plaqueTex = makeFabPlaqueTexture(plaque.title, plaque.sub);
+      texturedPlane(
+        grp,
+        plaqueTex,
+        W / 2 - 0.22,
+        FAB_Y - 0.05,
+        1.05 / 2 + 0.008,
+        0.35,
+        0.45,
+        0,
+        0.3,
+      );
+    
+      box(grp, `${fabType} dock`, -W / 2 + 0.28, 0.22, 1.05 / 2 + 0.008, 0.38, 0.32, 0.02, mat('#1c2030'));
+      const statusLed = new THREE.Mesh(new THREE.SphereGeometry(0.015, 8, 8), M.ledGreen);
+      statusLed.position.set(-W / 2 + 0.12, 0.38, 1.05 / 2 + 0.02);
+      grp.add(statusLed);
+    
+      const roof = createFabRoof(W + 0.05, 1.1);
+      roof.position.y = ROOF_TOP_Y;
+      grp.add(roof);
+    
+      const pedestal = createPedestal();
+      pedestal.position.set(0, ROOF_TOP_Y + 0.12, 0);
+      grp.add(pedestal);
+    
+      const statueMount = statue.clone();
+      statueMount.scale.setScalar(2.4);
+      statueMount.position.set(0, ROOF_TOP_Y + 0.28, 0);
+      grp.add(statueMount);
+    
+      const spot = new THREE.SpotLight('#fff4d6', 1.6, 2.4, Math.PI / 6, 0.4, 1.2);
+      spot.position.set(0, ROOF_TOP_Y + 1.2, 0.2);
+      spot.target.position.set(0, ROOF_TOP_Y + 0.2, 0);
+      grp.add(spot);
+      grp.add(spot.target);
+    
+      return { group: grp, statue: statueMount };
+    }
+    
+    function tree(g, x, z, s = 0.45) {
+      cyl(g, 'trunk', x, 0.23 * s, z, 0.035, 0.38 * s, mat('#7a4b2a', { roughness: 0.85 }), 10);
+      const crown = new THREE.Mesh(new THREE.SphereGeometry(0.18 * s, 14, 10), M.green);
+      crown.position.set(x, 0.52 * s, z);
+      crown.castShadow = true;
+      g.add(crown);
+    }
+    
+    function buildSamsungDiorama() {
+      const g = new THREE.Group();
+    
+      box(g, 'plinth', 0, -0.13, 0, gx(4.2), 0.26, gx(3.4), M.base);
+      const slabY = 0.05;
+      box(g, 'slab', 0, slabY, 0, gx(4.2), 0.06, gx(3.4), M.base);
+      addCyanLedRim(g, 0, slabY + 0.04, 0, gx(4.2), gx(3.4), 0);
+      addCyanLedRim(g, 0, slabY + 0.04, 0, gx(4.2) - 0.36, gx(3.4) - 0.36, 0.18);
+    
+      box(g, 'road patch', HQ_X - 0.2, 0.088, HQ_Z + 0.55, 1.2, 0.012, 0.5, M.road);
+      for (let i = 0; i < 3; i++) {
+        box(g, `dash ${i}`, HQ_X - 0.5 + i * 0.22, 0.092, HQ_Z + 0.35, 0.14, 0.005, 0.02, M.dashWhite);
       }
-
-      const conveyorProducts = [];
-      const productTypes = ['phone', 'dram', 'tv', 'ssd', 'phone', 'dram'];
-      productTypes.forEach((type, i) => {
-        const offset = i / productTypes.length;
-        const productGroup = new THREE.Group();
-        const pkg = new THREE.Mesh(
-          new THREE.BoxGeometry(0.16, 0.1, 0.16),
-          mat('#8a6440', { roughness: 0.8 })
-        );
-        productGroup.add(pkg);
-        if (type === 'phone') {
-          const mini = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.06, 0.005), M.phoneBody);
-          mini.position.set(0, 0.07, 0);
-          productGroup.add(mini);
-        } else if (type === 'dram') {
-          const mini = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.03, 0.005), M.dramPCB);
-          mini.position.set(0, 0.07, 0);
-          productGroup.add(mini);
-        } else if (type === 'tv') {
-          const mini = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.05, 0.005), M.tvFrame);
-          mini.position.set(0, 0.07, 0);
-          productGroup.add(mini);
-        } else if (type === 'ssd') {
-          const mini = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.012, 0.04), M.ssdBody);
-          mini.position.set(0, 0.07, 0);
-          productGroup.add(mini);
-        }
-        productGroup.position.set(-1.7 + offset * 3.5, conveyorY + 0.1, conveyorZ);
-        productGroup.castShadow = true;
-        g.add(productGroup);
-        conveyorProducts.push({ group: productGroup, offset });
+      for (let i = 0; i < 4; i++) {
+        box(g, `cross ${i}`, HQ_X + 0.15 + (i % 2) * 0.08, 0.092, HQ_Z + 0.72 + Math.floor(i / 2) * 0.1, 0.04, 0.005, 0.04, M.dashWhite);
+      }
+    
+      createSamsungHQ(g);
+    
+      const grassPatch = new THREE.Mesh(new THREE.PlaneGeometry(1.0, 0.55), M.green);
+      grassPatch.rotation.x = -Math.PI / 2;
+      grassPatch.position.set(HQ_X - 0.25, 0.087, HQ_Z - 0.15);
+      g.add(grassPatch);
+    
+      box(g, 'pylon', HQ_X - 0.88, 0.28, HQ_Z + 0.72, 0.07, 0.48, 0.06, M.samsungBlue);
+      const sideSignTex = makeSamsungLogoTexture('#ffffff', '#1e3a8a');
+      texturedPlane(g, sideSignTex, HQ_X - 0.88, 0.48, HQ_Z + 0.76, 0.26, 0.16, 0, 0.5);
+      texturedPlane(g, sideSignTex, HQ_X - 1.05, 0.72, HQ_Z + 0.35, 0.28, 0.62, Math.PI / 2, 0.45);
+      createSamsungTruck(g, HQ_X + 0.55, 0.06, HQ_Z + 0.45);
+    
+      g.add(new THREE.AmbientLight('#dceaff', 0.55));
+      const key = new THREE.DirectionalLight('#ffffff', 0.9);
+      key.position.set(3, 6, 4);
+      g.add(key);
+    
+      const fabPlaques = [
+        { title: 'DRAM', sub: 'Memory Solutions' },
+        { title: 'NAND', sub: 'Flash Storage Solutions' },
+        { title: 'FOUNDRY', sub: 'Advanced Process Solutions' },
+      ];
+      const statues = [createDRAMStatue(), createNANDStatue(), createWaferStatue()];
+      (['DRAM', 'NAND', 'FOUNDRY']).forEach((type, i) => {
+        createFab(g, FAB_X[i], FAB_Z, type, statues[i], fabPlaques[i]);
       });
-
-      // ============================================================
-      // ===== 사옥 정면 디스플레이 (HQ 이동 반영) =====
-      // ============================================================
-      const phoneDisp = createPhone(g, HQ_X - 0.2, 0.46, HQ_Z + 1.05, 1.1);
-      const tvDisp = createTV(g, HQ_X + 0.35, 0.45, HQ_Z + 1.05, 0.9);
-      const dramDisp = createDRAM(g, HQ_X - 0.8, 0.46, HQ_Z + 1.05, 1.0);
-      productLabel(g, 'Galaxy', HQ_X - 0.2, 0.68, HQ_Z + 1.05, 0.18, 0.06);
-      productLabel(g, 'QLED TV', HQ_X + 0.35, 0.68, HQ_Z + 1.05, 0.22, 0.06);
-      productLabel(g, 'DRAM', HQ_X - 0.8, 0.68, HQ_Z + 1.05, 0.18, 0.06);
-
-      // ============================================================
-      // ===== 변경 #8: 하만 카돈 (TV 디스플레이 우측 작은 부속) =====
-      // ============================================================
-      box(g, 'harman kardon box',
-        HQ_X + 0.85, 0.36, HQ_Z + 1.05,
-        0.32, 0.26, 0.22, mat('#0a0a0a', { roughness: 0.4, metalness: 0.5 }));
-      harmanLabel(g, HQ_X + 0.85, 0.4, HQ_Z + 1.165, 0.3, 0.08);
-      box(g, 'harman top trim',
-        HQ_X + 0.85, 0.5, HQ_Z + 1.05,
-        0.34, 0.012, 0.24, mat('#d4af6a', { roughness: 0.3, metalness: 0.7 }));
-
-      // 옥상 폰 2개 (HQ 이동 반영)
-      const roofPhone1 = createPhone(g, HQ_X - 0.7, 3.13, HQ_Z + 0.6, 0.7);
-      roofPhone1.group.rotation.x = -Math.PI / 8;
-      roofPhone1.group.rotation.z = -Math.PI / 12;
-      const roofPhone2 = createPhone(g, HQ_X + 0.7, 3.13, HQ_Z + 0.6, 0.7);
-      roofPhone2.group.rotation.x = -Math.PI / 8;
-      roofPhone2.group.rotation.z = Math.PI / 12;
-
-      const phones = [phoneDisp, roofPhone1, roofPhone2];
-      const tvs = [tvDisp];
-
-      // 차량
-      box(g, 'blue logistics truck cabin', .45, .24, 1.6, .32, .28, .32, M.blue);
-      box(g, 'blue logistics truck cargo', .82, .28, 1.6, .58, .34, .34, M.white);
-      box(g, 'white company car A', HQ_X - 0.35, .13, HQ_Z + 1.55, .35, .12, .22, M.white);
-
-      // 나무
-      tree(g, -2.0, -1.55, .48);
-      tree(g, 2.0, -1.55, .46);
-      tree(g, 2.0, 1.55, .42);
-      tree(g, -2.2, 0.5, .42);
-
-      // 글로우
-      const glow = new THREE.PointLight('#fff2c8', .5, 3);
-      glow.position.set(HQ_X, 1.5, HQ_Z);
-      g.add(glow);
-      const fabGlow = new THREE.PointLight('#4d8dff', .7, 3.5);
-      fabGlow.position.set(1.35, 1.2, -0.25);
-      g.add(fabGlow);
-      const displayGlow = new THREE.PointLight('#fff8e0', 0.6, 1.8);
-      displayGlow.position.set(HQ_X - 0.1, 0.7, HQ_Z + 1.15);
-      g.add(displayGlow);
-      const goldGlow = new THREE.PointLight('#ffd700', 0.5, 2.0);
-      goldGlow.position.set(HQ_X, 2.6, HQ_Z);
-      g.add(goldGlow);
-
-      g.userData = {
-        floorWindows, beam, beamBase, dishPivot, dishLed,
-        fabScanLines, steamBeads, dataPaths, fabSplashLights,
-        moneyPaths, goldGlow,
-        conveyorProducts, phones, tvs
-      };
+    
+      const conveyorCx = (FAB_X[0] + FAB_X[2]) / 2;
+      box(g, 'conveyor base', conveyorCx, CONVEYOR_Y, CONVEYOR_Z, CONVEYOR_LEN, 0.04, 0.32, M.conveyor);
+      box(g, 'conveyor belt', conveyorCx, CONVEYOR_Y + 0.035, CONVEYOR_Z, CONVEYOR_LEN, 0.02, 0.28, M.conveyorBelt);
+      const rollerL = cyl(g, 'roller L', conveyorCx - CONVEYOR_LEN / 2 + 0.05, CONVEYOR_Y + 0.02, CONVEYOR_Z, 0.05, 0.34, M.silver, 12);
+      rollerL.rotation.x = Math.PI / 2;
+      const rollerR = cyl(g, 'roller R', conveyorCx + CONVEYOR_LEN / 2 - 0.05, CONVEYOR_Y + 0.02, CONVEYOR_Z, 0.05, 0.34, M.silver, 12);
+      rollerR.rotation.x = Math.PI / 2;
+      for (let i = 0; i < 8; i++) {
+        const lx = conveyorCx - CONVEYOR_LEN / 2 + 0.2 + (i % 4) * (CONVEYOR_LEN / 4);
+        box(g, `leg f ${i}`, lx, CONVEYOR_Y - 0.04, CONVEYOR_Z + 0.12, 0.05, 0.1, 0.05, M.dashWhite);
+        box(g, `leg b ${i}`, lx, CONVEYOR_Y - 0.04, CONVEYOR_Z - 0.12, 0.05, 0.1, 0.05, M.dashWhite);
+      }
+    
+      for (let i = 1; i <= 4; i++) {
+        const sx = conveyorCx - CONVEYOR_LEN / 2 + (CONVEYOR_LEN / 5) * i;
+        createProcessingStation(g, sx, CONVEYOR_Y + 0.02, CONVEYOR_Z, i);
+      }
+    
+      const pkgTypes = ['dram', 'semi', 'ssd', 'wafer', 'dram', 'semi', 'ssd', 'semi', 'wafer', 'dram'];
+      const pkgMinX = conveyorCx + CONVEYOR_START;
+      const pkgMaxX = conveyorCx + CONVEYOR_END;
+      pkgTypes.forEach((type, i) => {
+        let pkg;
+        if (type === 'dram') pkg = createMiniDRAM(1);
+        else if (type === 'ssd') pkg = createMiniSSD();
+        else if (type === 'wafer') pkg = createMiniWafer();
+        else pkg = createSemiPackage();
+        const wrap = new THREE.Group();
+        wrap.add(pkg);
+        wrap.position.set(
+          pkgMinX + (i / pkgTypes.length) * (pkgMaxX - pkgMinX),
+          CONVEYOR_Y + 0.1,
+          CONVEYOR_Z,
+        );
+        g.add(wrap);
+      });
+    
+      const treeSpots = [
+        [HQ_X - 0.7, HQ_Z - 0.35],
+        [HQ_X - 0.5, HQ_Z + 0.65],
+        [HQ_X + 0.35, HQ_Z + 0.75],
+        [FAB_X[0] - 0.35, FAB_Z - 0.45],
+        [FAB_X[2] + 0.35, FAB_Z - 0.45],
+        [conveyorCx, CONVEYOR_Z + 0.55],
+      ];
+      treeSpots.forEach(([x, z]) => tree(g, x, z, 0.42));
+    
+      const hqLobby = new THREE.PointLight('#ffd9a0', 0.6, 2.5, 1.5);
+      hqLobby.position.set(HQ_X, 0.5, HQ_Z + 0.5);
+      g.add(hqLobby);
+    
       return g;
     }
 
-    function tree(g, x, z, s = .5) {
-      cyl(g, 'tree trunk', x, .23 * s / .5, z, .035, .38 * s / .5, mat('#7a4b2a', { roughness: .8 }), 10);
-      const crown = new THREE.Mesh(new THREE.SphereGeometry(.18 * s / .5, 18, 12), M.green);
-      crown.position.set(x, .52 * s / .5, z);
-      crown.castShadow = true;
-      crown.receiveShadow = true;
-      g.add(crown);
-    }
-
-    // ===== Lighting =====
-    scene.add(new THREE.HemisphereLight('#dceaff', '#1b2430', 1.0));
-    const key = new THREE.DirectionalLight('#ffffff', 2.0);
-    key.position.set(4.5, 7, 5.5);
-    key.castShadow = true;
-    key.shadow.mapSize.set(2048, 2048);
-    key.shadow.camera.left = -7;
-    key.shadow.camera.right = 7;
-    key.shadow.camera.top = 7;
-    key.shadow.camera.bottom = -7;
-    scene.add(key);
-    const rim = new THREE.DirectionalLight('#4d8dff', 1.0);
-    rim.position.set(-4, 4, -5);
-    scene.add(rim);
-
-    const samsung = createSamsungDiorama();
-    samsung.scale.setScalar(1.58);
+    const samsung = buildSamsungDiorama();
+    samsung.scale.setScalar(1.0);
     scene.add(samsung);
 
-    const clock = new THREE.Clock();
-    const SPEED = 0.4;
-
     function animate() {
-      const t = clock.getElapsedTime() * SPEED;
-      const tRaw = clock.getElapsedTime();
-      const u = samsung.userData;
-
-      // 창문 wave
-      u.floorWindows.forEach((fw) => {
-        const wave = 0.4 + 0.6 * Math.max(0, Math.sin(t * 1.2 - fw.floor * 0.4));
-        fw.mesh.material.emissiveIntensity = wave;
-      });
-
-      // 수증기
-      u.steamBeads.forEach(s => {
-        const phase = ((tRaw * s.speed) + s.offset) % 1;
-        s.mesh.position.set(
-          s.baseX + Math.sin(t * 2 + s.offset * 6) * 0.05,
-          s.baseY + phase * 0.8,
-          s.baseZ + Math.cos(t * 2 + s.offset * 6) * 0.05
-        );
-        s.mesh.material.opacity = 0.5 * (1 - phase);
-        s.mesh.scale.setScalar(1 + phase * 0.8);
-      });
-
-      // ===== 변경 #5: 데이터 비드 감속 (tempo·pulse 절반) =====
-      u.dataPaths.forEach((path, pIdx) => {
-        const tempo = 0.8 + 0.2 * Math.sin(t * 1);
-        path.beads.forEach((b, idx) => {
-          const progress = ((tRaw * path.speed * tempo) + b.offset) % 1;
-          const pos = path.curve.getPoint(progress);
-          b.mesh.position.copy(pos);
-          const pulse = 1.2 + 0.5 * Math.sin(t * 3 + idx);
-          b.mesh.material.emissiveIntensity = pulse;
-          b.light.intensity = 0.18 + 0.1 * Math.sin(t * 3.5 + idx);
-          if (progress > 0.92) {
-            u.fabSplashLights[pIdx].intensity = 1.5 * (progress - 0.92) / 0.08;
-          }
-        });
-        u.fabSplashLights[pIdx].intensity *= 0.94;
-      });
-
-      // ===== 변경 #6: 금색 코인 (팹 → HQ) =====
-      u.moneyPaths.forEach((path, pIdx) => {
-        path.coins.forEach((c, idx) => {
-          const progress = ((tRaw * path.speed) + c.offset) % 1;
-          const pos = path.curve.getPoint(progress);
-          c.mesh.position.copy(pos);
-          c.mesh.rotation.x = Math.PI / 2;
-          c.mesh.rotation.y = tRaw * 4 + idx;
-          c.mesh.material.emissiveIntensity = 1.4 + 0.4 * Math.sin(t * 2.5 + idx);
-          c.light.intensity = 0.12 + 0.08 * Math.sin(t * 2 + idx);
-        });
-      });
-      u.goldGlow.intensity = 0.4 + 0.25 * Math.sin(t * 1.5);
-
-      // 팹 스캔라인
-      u.fabScanLines.forEach(s => {
-        const phase = ((t * 0.5) + s.phase) % 1;
-        const yMin = 0.7, yMax = 1.2;
-        s.mesh.position.y = yMax - phase * (yMax - yMin);
-        s.mesh.material.opacity = 0.8 * (1 - Math.abs(phase - 0.5) * 1.5);
-      });
-
-      // 위성 디시
-      u.dishPivot.rotation.y = t * 0.6;
-      u.dishLed.material.color.setHSL(0, 1, 0.5 + 0.25 * Math.sin(tRaw * 4));
-
-      // Sky beam
-      u.beam.material.opacity = 0.25 + 0.2 * Math.sin(t * 1.5);
-      u.beam.scale.x = u.beam.scale.z = 1 + 0.15 * Math.sin(t * 2);
-      u.beamBase.material.emissiveIntensity = 2 + 1.5 * Math.sin(t * 3);
-
-      // 컨베이어 제품 이동
-      u.conveyorProducts.forEach(p => {
-        const progress = ((t * 0.12) + p.offset) % 1;
-        p.group.position.x = -1.75 + progress * 3.5;
-      });
-
-      // 스마트폰 화면 박동
-      u.phones.forEach((p, i) => {
-        p.screen.material.emissiveIntensity = 1.0 + 0.5 * Math.sin(t * 1.5 + i);
-      });
-
-      // TV 화면 박동
-      u.tvs.forEach((tv, i) => {
-        tv.screen.material.emissiveIntensity = 0.7 + 0.3 * Math.sin(t * 1.0 + i);
-      });
-
-      samsung.rotation.y = Math.sin(t * .25) * .012;
-
       controls.update();
       renderer.render(scene, camera);
       requestAnimationFrame(animate);

@@ -1,6 +1,7 @@
 import type { SectorDef, StockRow } from '../types';
 
 import * as THREE from 'three';
+import { MOUSE } from 'three';
 
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
@@ -326,6 +327,15 @@ export class DesignScene {
     this.controls.enableZoom = true;
 
     this.controls.enablePan = true;
+
+    this.controls.panSpeed = 1.15;
+
+    // Left drag pans (map-style); right drag rotates. Shift+left drag rotates (OrbitControls default swap).
+    this.controls.mouseButtons = {
+      LEFT: MOUSE.PAN,
+      MIDDLE: MOUSE.DOLLY,
+      RIGHT: MOUSE.ROTATE,
+    };
 
     this.controls.maxPolarAngle = Math.PI / 2 - 0.05;
 
