@@ -619,15 +619,15 @@ function createTeslaFactory(g: THREE.Group, cx: number, cy: number, cz: number) 
 
   const showcaseCx = 1.05;
   const showcaseCz = D / 2 + 0.1;
-  box(grp, 'showcase floor', showcaseCx, 0.07, showcaseCz, 1.1, 0.04, 0.65, M.platform);
-  box(grp, 'showcase led F', showcaseCx, 0.085, showcaseCz + 0.325, 1.1, 0.012, 0.005, M.teslaRedLED);
-  box(grp, 'showcase led B', showcaseCx, 0.085, showcaseCz - 0.325, 1.1, 0.012, 0.005, M.teslaRedLED);
-  box(grp, 'showcase led L', showcaseCx - 0.55, 0.085, showcaseCz, 0.005, 0.012, 0.65, M.teslaRedLED);
-  box(grp, 'showcase led R', showcaseCx + 0.55, 0.085, showcaseCz, 0.005, 0.012, 0.65, M.teslaRedLED);
-  createTeslaCar(grp, showcaseCx - 0.18, 0.105, showcaseCz + 0.05, '#d8d8dc', Math.PI / 5, 1.4);
-  const heroArm = createRobotArm(grp, showcaseCx + 0.25, 0.105, showcaseCz - 0.05, -Math.PI / 4, 1.9);
-  const showcaseLight = new THREE.PointLight('#ff5a73', 1.2, 1.5);
-  showcaseLight.position.set(showcaseCx, 0.6, showcaseCz);
+  box(grp, 'showcase floor', showcaseCx, 0.07, showcaseCz, 1.4, 0.04, 0.85, M.platform);
+  box(grp, 'showcase led F', showcaseCx, 0.085, showcaseCz + 0.425, 1.4, 0.012, 0.005, M.teslaRedLED);
+  box(grp, 'showcase led B', showcaseCx, 0.085, showcaseCz - 0.425, 1.4, 0.012, 0.005, M.teslaRedLED);
+  box(grp, 'showcase led L', showcaseCx - 0.7, 0.085, showcaseCz, 0.005, 0.012, 0.85, M.teslaRedLED);
+  box(grp, 'showcase led R', showcaseCx + 0.7, 0.085, showcaseCz, 0.005, 0.012, 0.85, M.teslaRedLED);
+  createTeslaCar(grp, showcaseCx - 0.3, 0.105, showcaseCz + 0.1, '#ededf2', Math.PI / 5, 1.9);
+  const heroArm = createRobotArm(grp, showcaseCx + 0.35, 0.105, showcaseCz - 0.15, -Math.PI / 4, 3.0);
+  const showcaseLight = new THREE.PointLight('#ff5a73', 2.2, 2.8);
+  showcaseLight.position.set(showcaseCx, 0.9, showcaseCz);
   grp.add(showcaseLight);
 
   const robotArms: RobotArmRuntime[] = [heroArm];
