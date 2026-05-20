@@ -206,12 +206,14 @@
       ctx.save();
       ctx.fillStyle = color;
       const s = size / 200;
+      // 본체: 두 원 + 아래 둥근 부분
       ctx.beginPath();
       ctx.arc(cx - 50*s, cy + 10*s, 95*s, 0, Math.PI*2);
       ctx.arc(cx + 50*s, cy + 10*s, 95*s, 0, Math.PI*2);
       ctx.arc(cx, cy + 60*s, 105*s, 0, Math.PI*2);
       ctx.arc(cx, cy - 30*s, 90*s, 0, Math.PI*2);
       ctx.fill();
+      // 잎
       ctx.beginPath();
       ctx.ellipse(cx + 28*s, cy - 110*s, 18*s, 42*s, Math.PI/5, 0, Math.PI*2);
       ctx.fill();
@@ -225,6 +227,7 @@
       ctx.fillStyle = bg;
       ctx.fillRect(0, 0, c.width, c.height);
       drawAppleLogo(ctx, c.width/2, c.height/2 + 20, 360, fg);
+      // 한 입 자국
       ctx.fillStyle = bg;
       ctx.beginPath();
       ctx.arc(c.width/2 + 130, c.height/2 + 25, 50, 0, Math.PI*2);
@@ -234,6 +237,7 @@
       return t;
     }
 
+    // ===== 옥상 광고판 텍스처 (#1~#6 캡션) =====
     function makeLabelPanelTexture(num, korTitle, korSubtitle) {
       const c = document.createElement('canvas');
       c.width = 768; c.height = 280;
@@ -978,10 +982,10 @@
       box(grp, 'eco screen base', 0, 0.13, 0, 1.36, 0.012, 0.82, mat('#0a0a0a', { roughness: .3, emissive: '#1a1a2a', emissiveIntensity: .25 }));
       const macbook = createMacBook(grp, -0.4, 0.135, 0.05, 1.0);
       const watchObj = createAppleWatch(grp, 0.0, 0.18, 0.1, 0.9);
-      createAirPodsCase(grp, 0.0, 0.18, -0.18, 1.2);
+      const airpods = createAirPodsCase(grp, 0.0, 0.18, -0.18, 1.2);
       const phoneObj = createIPhoneMini(grp, 0.25, 0.22, 0.05, 1.0);
       phoneObj.group.rotation.z = Math.PI / 10;
-      createICloud(grp, 0.5, 0.3, 0.0, 1.0);
+      const iCloud = createICloud(grp, 0.5, 0.3, 0.0, 1.0);
       const linkColor = mat('#4ab8e8', { emissive: '#4ab8e8', emissiveIntensity: 1.5 });
       [
         [-0.4, 0.16, 0.05, 0.0, 0.16, 0.1],
@@ -1026,21 +1030,23 @@
       g.add(laneRing);
 
       const accessRoads = [
-        [0, 0, -2.5, 0.35, 0.7],
-        [0, 0, 2.5, 0.35, 0.7],
-        [-2.7, 0, 0, 0.7, 0.35],
-        [2.7, 0, 0, 0.7, 0.35]
+        [0, 0, -2.5, 0.35, 0.7], // 북
+        [0, 0, 2.5, 0.35, 0.7],  // 남
+        [-2.7, 0, 0, 0.7, 0.35], // 서
+        [2.7, 0, 0, 0.7, 0.35]   // 동
       ];
       accessRoads.forEach(([x, _, z, w, d]) => {
         box(g, 'access road', x, 0.084, z, w, 0.012, d, M.road);
       });
 
       const park = createAppleParkRing(g, 0, 0.13, 0);
-      createDesignStudio(g, -2.45, 0.08, -1.7);
-      createRDCenter(g, 2.45, 0.08, -1.7);
-      createManufacturing(g, 0, 0.08, -2.45);
-      createAppleStore(g, -2.3, 0.08, 1.7);
-      createAppleServices(g, 0, 0.08, 2.35);
+
+      // ===== 위성 6동 배치 =====
+      const studio = createDesignStudio(g, -2.45, 0.08, -1.7);
+      const rd = createRDCenter(g, 2.45, 0.08, -1.7);
+      const mfg = createManufacturing(g, 0, 0.08, -2.45);
+      const store = createAppleStore(g, -2.3, 0.08, 1.7);
+      const svc = createAppleServices(g, 0, 0.08, 2.35);
       const eco = createEcosystem(g, 2.4, 0.08, 1.85);
 
       const cars = [];
@@ -1099,7 +1105,7 @@
       satellites.forEach((sat, idx) => {
         const start = new THREE.Vector3(sat.x, sat.y + 0.3, sat.z);
         const mid = new THREE.Vector3(sat.x / 2, 2.0, sat.z / 2);
-        const end = new THREE.Vector3(0, 1.4, 0);
+        const end = new THREE.Vector3(0, 1.4, 0); // 본사 중앙 위
         const curve = new THREE.CatmullRomCurve3([start, mid, end]);
         const coins = [];
         for (let i = 0; i < 3; i++) {
@@ -1130,6 +1136,7 @@
       return g;
     }
 
+    // ===== Lighting =====
     scene.add(new THREE.HemisphereLight('#e0eaff', '#1b2430', 1.0));
     const key = new THREE.DirectionalLight('#ffffff', 2.0);
     key.position.set(5.5, 8, 6.5);
@@ -1148,6 +1155,7 @@
     apple.scale.setScalar(1.0);
     scene.add(apple);
 
+    // ===== Animation =====
     const clock = new THREE.Clock();
     const SPEED = 0.4;
 
@@ -1176,7 +1184,7 @@
         u.satSplashLights[pIdx].intensity *= 0.94;
       });
 
-      u.moneyPaths.forEach((path) => {
+      u.moneyPaths.forEach((path, pIdx) => {
         path.coins.forEach((c, idx) => {
           const progress = ((tRaw * path.speed) + c.offset) % 1;
           const pos = path.curve.getPoint(progress);
@@ -1188,7 +1196,7 @@
       });
       u.goldGlow.intensity = 0.4 + 0.25 * Math.sin(t * 1.5);
 
-      u.cars.forEach((c) => {
+      u.cars.forEach((c, idx) => {
         const a = c.baseAngle + tRaw * 0.1;
         c.group.position.x = Math.cos(a) * c.radius;
         c.group.position.z = Math.sin(a) * c.radius;
