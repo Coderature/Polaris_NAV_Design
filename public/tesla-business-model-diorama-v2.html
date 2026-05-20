@@ -168,8 +168,8 @@
 
     const M = {
       teslaRed: mat(C.teslaRed, { roughness: .35, metalness: .35, emissive: '#5a0d10', emissiveIntensity: .2 }),
-      teslaRedHot: mat(C.teslaRed, { emissive: C.teslaRedBright, emissiveIntensity: 1.5, roughness: .25 }),
-      teslaRedLED: mat(C.ledRed, { emissive: C.ledRed, emissiveIntensity: 1.8, roughness: .2 }),
+      teslaRedHot: mat(C.teslaRed, { emissive: C.teslaRedBright, emissiveIntensity: 0.5, roughness: .35 }),
+      teslaRedLED: mat(C.ledRed, { emissive: C.ledRed, emissiveIntensity: 0.5, roughness: .3 }),
       black: mat(C.black, { roughness: .5, metalness: .2 }),
       darkGrey: mat(C.darkGrey, { roughness: .5, metalness: .2 }),
       metalDark: mat(C.metalDark, { roughness: .35, metalness: .65 }),
@@ -789,19 +789,9 @@
       // 베이스
       box(grp, 'fac base', 0, 0.04, 0, W + 0.1, 0.06, D + 0.1, M.platform);
 
-      // ============================================================
-      // 신규 #2: 빨간 LED 띠 (옥상 가장자리 4면)
-      // ============================================================
+      // v4: 빨간 LED — 정면 옥상 1줄만
       const ledH = 0.025;
       box(grp, 'led roof F', 0, H + 0.085, D/2 + 0.01, W + 0.04, ledH, 0.018, M.teslaRedLED);
-      box(grp, 'led roof B', 0, H + 0.085, -D/2 - 0.01, W + 0.04, ledH, 0.018, M.teslaRedLED);
-      box(grp, 'led roof L', -W/2 - 0.01, H + 0.085, 0, 0.018, ledH, D + 0.04, M.teslaRedLED);
-      box(grp, 'led roof R', W/2 + 0.01, H + 0.085, 0, 0.018, ledH, D + 0.04, M.teslaRedLED);
-      // 정면 중간 띠 (벽 중간 가로 발광선)
-      box(grp, 'led mid F', 0, H * 0.42, D/2 + 0.012, W, 0.012, 0.005, M.teslaRedLED);
-      // 측면 세로 LED (좌/우 정면 모서리)
-      box(grp, 'led side L', -W/2 - 0.005, H/2 + 0.05, D/2 + 0.008, 0.012, H * 0.7, 0.012, M.teslaRedLED);
-      box(grp, 'led side R', W/2 + 0.005, H/2 + 0.05, D/2 + 0.008, 0.012, H * 0.7, 0.012, M.teslaRedLED);
 
       // ============================================================
       // 신규 #1: 옥상 거대 TESLA 텍스트 (자체 발광, 정면 위)
@@ -809,8 +799,8 @@
       // 옥상 정면 위쪽 큰 발광 텍스트
       const bigTeslaTex = makeBigTeslaLogoTexture();
       const bigTeslaMat = new THREE.MeshStandardMaterial({
-        map: bigTeslaTex, side: THREE.DoubleSide, roughness: .25,
-        emissive: '#ffffff', emissiveMap: bigTeslaTex, emissiveIntensity: 1.6
+        map: bigTeslaTex, side: THREE.DoubleSide, roughness: .35,
+        emissive: '#ffffff', emissiveMap: bigTeslaTex, emissiveIntensity: 0.5
       });
       const bigTesla = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 0.42), bigTeslaMat);
       bigTesla.position.set(0, H * 0.78, D/2 + 0.015);
@@ -882,16 +872,21 @@
       const showcaseCx = 1.05;
       const showcaseCz = D/2 + 0.1;
       box(grp, 'showcase floor', showcaseCx, 0.07, showcaseCz, 1.4, 0.04, 0.85, M.platform);
+      box(grp, 'conveyor belt', showcaseCx - 0.3, 0.095, showcaseCz + 0.1, 0.6, 0.018, 0.32,
+        mat('#1a1a1d', { roughness: .5, metalness: .35 }));
+      for (let i = 0; i < 6; i++) {
+        box(grp, `conv roller ${i}`, showcaseCx - 0.55 + i * 0.1, 0.105, showcaseCz + 0.1, 0.008, 0.005, 0.3,
+          mat('#3a3a40'));
+      }
+      box(grp, 'conv guide L', showcaseCx - 0.3, 0.108, showcaseCz + 0.265, 0.6, 0.005, 0.005,
+        mat('#ffcf3a', { emissive: '#ffcf3a', emissiveIntensity: 0.3 }));
+      box(grp, 'conv guide R', showcaseCx - 0.3, 0.108, showcaseCz - 0.065, 0.6, 0.005, 0.005,
+        mat('#ffcf3a', { emissive: '#ffcf3a', emissiveIntensity: 0.3 }));
       box(grp, 'showcase led F', showcaseCx, 0.085, showcaseCz + 0.425, 1.4, 0.012, 0.005, M.teslaRedLED);
-      box(grp, 'showcase led B', showcaseCx, 0.085, showcaseCz - 0.425, 1.4, 0.012, 0.005, M.teslaRedLED);
-      box(grp, 'showcase led L', showcaseCx - 0.7, 0.085, showcaseCz, 0.005, 0.012, 0.85, M.teslaRedLED);
       box(grp, 'showcase led R', showcaseCx + 0.7, 0.085, showcaseCz, 0.005, 0.012, 0.85, M.teslaRedLED);
-
-      createTeslaCar(grp, showcaseCx - 0.3, 0.105, showcaseCz + 0.1, '#ededf2', Math.PI / 5, 1.9);
-
+      createTeslaCar(grp, showcaseCx - 0.3, 0.118, showcaseCz + 0.1, '#ededf2', Math.PI / 5, 1.9);
       const heroArm = createRobotArm(grp, showcaseCx + 0.35, 0.105, showcaseCz - 0.15, -Math.PI / 4, 3.0);
-
-      const showcaseLight = new THREE.PointLight('#ff5a73', 2.2, 2.8);
+      const showcaseLight = new THREE.PointLight('#fff2c8', 1.5, 2.8);
       showcaseLight.position.set(showcaseCx, 0.9, showcaseCz);
       grp.add(showcaseLight);
 
@@ -1106,85 +1101,28 @@
         movingCars.push({ group: car, axis: 'x', baseX: -2.0 + i * 2.0, z: 0.5 });
       }
 
-      // 데이터 흐름
-      const dataPaths = [];
-      const satellites = [
-        { name: 'aiSW', x: -2.7, y: 0.7, z: -0.4 },
-        { name: 'solar', x: 2.85, y: 0.7, z: -0.8 },
-        { name: 'supercharger', x: -1.5, y: 0.55, z: 1.75 },
-        { name: 'service', x: 1.6, y: 0.55, z: 1.75 }
-      ];
-      const satSplashLights = [];
-      satellites.forEach((sat, idx) => {
-        const start = new THREE.Vector3(0, 0.9, -1.0);
-        const mid = new THREE.Vector3((start.x + sat.x)/2, 1.4, (start.z + sat.z)/2);
-        const end = new THREE.Vector3(sat.x, sat.y, sat.z);
-        const curve = new THREE.CatmullRomCurve3([start, mid, end]);
-        const beads = [];
-        const beadMat = new THREE.MeshStandardMaterial({
-          color: C.hotData, emissive: C.hotData, emissiveIntensity: 2.0, roughness: .25
-        });
-        for (let i = 0; i < 5; i++) {
-          const b = new THREE.Mesh(new THREE.SphereGeometry(.055, 14, 10), beadMat);
-          const bLight = new THREE.PointLight(C.hotData, 0.18, 0.6);
-          b.add(bLight);
-          g.add(b);
-          beads.push({ mesh: b, light: bLight, offset: i / 5 });
-        }
-        const splash = new THREE.PointLight(C.hotData, 0, 1.4);
-        splash.position.set(sat.x, sat.y + 0.1, sat.z);
-        g.add(splash);
-        satSplashLights.push(splash);
-        dataPaths.push({ curve, beads, speed: 0.07 + idx * 0.008 });
-      });
-
-      // 매출 코인
-      const moneyPaths = [];
-      satellites.forEach((sat, idx) => {
-        const start = new THREE.Vector3(sat.x, sat.y + 0.3, sat.z);
-        const mid = new THREE.Vector3(sat.x / 2, 1.8, (sat.z - 1.6) / 2);
-        const end = new THREE.Vector3(0, 1.5, -1.6);
-        const curve = new THREE.CatmullRomCurve3([start, mid, end]);
-        const coins = [];
-        for (let i = 0; i < 3; i++) {
-          const coin = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.05, 0.05, 0.014, 16),
-            M.goldCoin.clone()
-          );
-          g.add(coin);
-          coins.push({ mesh: coin, offset: i / 3 });
-        }
-        moneyPaths.push({ curve, coins, speed: 0.05 + idx * 0.004 });
-      });
-
-      const goldGlow = new THREE.PointLight('#ffd700', 0.5, 2.5);
-      goldGlow.position.set(0, 1.5, -1.6);
-      g.add(goldGlow);
-
-      // 조명 (factoryGlow 0.7 → 0.4, redGlow 0.6 → 1.0)
-      const factoryGlow = new THREE.PointLight('#fff2c8', .4, 4);
-      factoryGlow.position.set(0, 0.7, -1.2);
+      // v4: dataPaths / moneyPaths / goldGlow 제거 (콩알 모션 없음)
+      const factoryGlow = new THREE.PointLight('#fff2c8', 0.7, 4);
+      factoryGlow.position.set(0, 0.7, -0.8);
       g.add(factoryGlow);
-      const redGlow = new THREE.PointLight('#ff5a73', 1.0, 3.0);
-      redGlow.position.set(1.0, 0.5, -1.3);
-      g.add(redGlow);
-      // 신규: 옥상 큰 TESLA 발광 라이트
-      const teslaTextGlow = new THREE.PointLight('#ffffff', 0.6, 2.5);
-      teslaTextGlow.position.set(0, 1.0, -0.8);
-      g.add(teslaTextGlow);
+      const interiorWarm = new THREE.PointLight('#ffaf3a', 0.5, 2.5);
+      interiorWarm.position.set(-0.5, 0.6, -1.4);
+      g.add(interiorWarm);
+      const heroAccent = new THREE.PointLight('#e82127', 0.4, 1.5);
+      heroAccent.position.set(1.0, 0.5, -1.4);
+      g.add(heroAccent);
 
       g.userData = {
         factoryArms: factory.robotArms,
         heroArm: factory.heroArm,
         appScreen: service.appDisplay.screen,
-        dataPaths, satSplashLights, moneyPaths, goldGlow,
         movingCars, starlink
       };
       return g;
     }
 
-    scene.add(new THREE.HemisphereLight('#dceaff', '#1a1f2a', 0.9));
-    const key = new THREE.DirectionalLight('#ffffff', 1.8);
+    scene.add(new THREE.HemisphereLight('#dceaff', '#1a1f2a', 1.4));
+    const key = new THREE.DirectionalLight('#ffffff', 2.2);
     key.position.set(6, 8, 7);
     key.castShadow = true;
     key.shadow.mapSize.set(2048, 2048);
@@ -1193,12 +1131,13 @@
     key.shadow.camera.top = 9;
     key.shadow.camera.bottom = -9;
     scene.add(key);
-    const rim = new THREE.DirectionalLight('#ff5a73', 0.7);
-    rim.position.set(-5, 3, -6);
-    scene.add(rim);
-    const fillBlue = new THREE.DirectionalLight('#4a8eda', 0.5);
+    const fillFront = new THREE.DirectionalLight('#fff2e0', 0.8);
+    fillFront.position.set(0, 4, 8);
+    scene.add(fillFront);
+    const fillBlue = new THREE.DirectionalLight('#9ac5ff', 0.6);
     fillBlue.position.set(-6, 4, 4);
     scene.add(fillBlue);
+    scene.add(new THREE.AmbientLight('#ffffff', 0.4));
 
     const tesla = createTeslaCampus();
     tesla.scale.setScalar(1.0);
@@ -1226,33 +1165,6 @@
         arm.seg2.rotation.z = -Math.PI / 5 + Math.cos(tRaw * 1.0 + i * 0.7) * 0.25;
         arm.led.material.color.setHSL(0.13, 1, 0.5 + 0.3 * Math.sin(tRaw * 5 + i));
       });
-
-      u.dataPaths.forEach((path, pIdx) => {
-        path.beads.forEach((b, idx) => {
-          const progress = ((tRaw * path.speed) + b.offset) % 1;
-          const pos = path.curve.getPoint(progress);
-          b.mesh.position.copy(pos);
-          const pulse = 1.2 + 0.5 * Math.sin(t * 3 + idx);
-          b.mesh.material.emissiveIntensity = pulse;
-          b.light.intensity = 0.16 + 0.1 * Math.sin(t * 3.5 + idx);
-          if (progress > 0.92) {
-            u.satSplashLights[pIdx].intensity = 1.4 * (progress - 0.92) / 0.08;
-          }
-        });
-        u.satSplashLights[pIdx].intensity *= 0.94;
-      });
-
-      u.moneyPaths.forEach((path) => {
-        path.coins.forEach((c, idx) => {
-          const progress = ((tRaw * path.speed) + c.offset) % 1;
-          const pos = path.curve.getPoint(progress);
-          c.mesh.position.copy(pos);
-          c.mesh.rotation.x = Math.PI / 2;
-          c.mesh.rotation.y = tRaw * 4 + idx;
-          c.mesh.material.emissiveIntensity = 1.4 + 0.4 * Math.sin(t * 2.5 + idx);
-        });
-      });
-      u.goldGlow.intensity = 0.4 + 0.25 * Math.sin(t * 1.5);
 
       u.movingCars.forEach((c, idx) => {
         const speed = 0.3 + idx * 0.05;

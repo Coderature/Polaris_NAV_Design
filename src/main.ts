@@ -391,11 +391,18 @@ function main() {
   enterTreemapVillage();
 
   function tick() {
-    design.tick();
+    try {
+      design.tick();
+    } catch (err) {
+      console.error('[main] render tick failed:', err);
+    }
     requestAnimationFrame(tick);
   }
   design.resize();
-  requestAnimationFrame(tick);
+  requestAnimationFrame(() => {
+    design.resize();
+    requestAnimationFrame(tick);
+  });
 
   console.log('Polaris designshowcase — ready');
 }

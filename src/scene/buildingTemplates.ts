@@ -27,7 +27,6 @@ function grp(...parts: THREE.Object3D[]): THREE.Group {
   return g;
 }
 
-/** XZ footprint multiplier for ground slabs (plinth / platform / roads). */
 const GROUND_FOOTPRINT_XZ = 1.25;
 const gx = (n: number) => n * GROUND_FOOTPRINT_XZ;
 
@@ -633,28 +632,8 @@ export { createTesla } from './teslaCampus';
 // ── Apple Campus: Value Chain Diorama (AAPL) ─────────────────────────────────
 export { createAppleCampus } from './appleCampus';
 
-// ── Amazon: fulfillment warehouse ─────────────────────────────────────────────
-export function createAmazonWarehouse(): THREE.Group {
-  const body   = mat(0xd8c8a0);
-  const roof   = mat(0x888070, 0.6);
-  const orange = mat(0xff9900, 0.45, 0.05);
-  const dark   = mat(0x3a3028, 0.75);
-  const parapet = mat(0x706850, 0.6);
-  return grp(
-    bx(gx(4.5), 0.15, gx(4.0), mat(0x686050), 0,     0,    0),   // slab
-    bx(4.2, 2.0,  3.8, body,          0,     0.15, 0),   // warehouse
-    bx(4.2, 0.2,  3.8, roof,          0,     2.15, 0),   // flat roof
-    bx(4.2, 0.14, 3.8, parapet,       0,     2.35, 0),   // parapet
-    bx(4.2, 0.38, 0.06, orange,       0,     1.3,  1.92), // orange stripe
-    bx(0.65, 0.75, 0.65, dark,       -1.5,   0.15, 2.05), // dock A
-    bx(0.65, 0.75, 0.65, dark,        0,     0.15, 2.05), // dock B
-    bx(0.65, 0.75, 0.65, dark,        1.5,   0.15, 2.05), // dock C
-    bx(1.2, 1.1,  0.85, mat(0xc8b890), 1.5,  0.15, -3.0), // office block
-    bx(1.2, 0.18, 0.85, dark,          1.5,  1.25, -3.0), // office roof
-    cy(0.16, 0.55, dark,               0.5,  2.35,  0.5, 6), // vent A
-    cy(0.16, 0.55, dark,              -0.5,  2.35, -0.5, 6), // vent B
-  );
-}
+// ── Amazon: Business Model Diorama (AMZN) ────────────────────────────────────
+export { createAmazonWarehouse } from './amazonCampus';
 
 // ── Google: 1셀 슬림 v2 · Maps Pin + Cloud Edition (GOOGL) ──
 export function createGoogleDC(): THREE.Group {

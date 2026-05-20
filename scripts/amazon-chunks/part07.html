@@ -1,0 +1,213 @@
+
+    function createAmazonCampus() {
+      const g = new THREE.Group();
+      box(g, 'plinth', 0, -0.13, 0, gx(7.4), .26, gx(6.0), M.base);
+      box(g, 'platform', 0, .02, 0, gx(6.9), .12, gx(5.6), M.platform);
+      box(g, 'road x', 0, 0.084, 0.4, gx(6.5), 0.012, gx(0.45), M.road);
+      box(g, 'road z', 0, 0.084, 0, gx(0.45), 0.012, gx(5.0), M.road);
+      for (let i = -4; i <= 4; i++) {
+        box(g, `lane mark x ${i}`, i * 0.5, 0.087, 0.4, 0.18, 0.005, 0.02, mat('#ffffff'));
+      }
+      for (let i = -3; i <= 3; i++) {
+        if (i === 0) continue;
+        box(g, `lane mark z ${i}`, 0, 0.087, i * 0.7, 0.02, 0.005, 0.18, mat('#ffffff'));
+      }
+      for (let i = 0; i < 6; i++) {
+        box(g, `crosswalk ${i}`, -0.25 + i * 0.1, 0.087, 0.4, 0.04, 0.005, 0.4, mat('#ffffff'));
+      }
+      createAmazonHQ(g, 0, 0.08, -1.6);
+      createAWSSatellite(g, -3.0, 0.08, -1.3);
+      createFulfillment(g, 2.9, 0.08, -1.3);
+      const marketplace = createMarketplace(g, 3.0, 0.08, 0.7);
+      createDigitalContent(g, -2.5, 0.08, 1.4);
+      createAdvertising(g, 0.0, 0.08, 1.5);
+      const devices = createDevicesServices(g, 2.5, 0.08, 2.2);
+      const cargoPlane = createCargoPlane(g, 3.8, 0.9, -2.3, -Math.PI / 4, 1.0);
+      const treeSpots = [
+        [-3.8, -2.6], [3.8, -2.6], [-3.8, 2.6], [3.8, 2.6],
+        [-3.8, 0], [3.8, 0], [-3.8, -1.2], [3.8, -1.2],
+        [-2.0, 2.8], [0, 2.8], [2.0, 2.8], [0, -2.85],
+        [-1.5, -0.4], [1.5, -0.4]
+      ];
+      treeSpots.forEach(([x, z]) => tree(g, x, z, 0.42));
+      const lampSpots = [
+        [-1.5, 1.0], [1.5, 1.0], [-1.5, -0.5], [1.5, -0.5],
+        [-3.3, 1.8], [3.3, 1.8]
+      ];
+      lampSpots.forEach(([lx, lz]) => {
+        cyl(g, `lamp post`, lx, 0.18, lz, 0.018, 0.32, M.metalDark, 8);
+        const lamp = new THREE.Mesh(
+          new THREE.SphereGeometry(0.035, 12, 10),
+          mat('#fff2c8', { emissive: '#ffaf3a', emissiveIntensity: 0.8 })
+        );
+        lamp.position.set(lx, 0.36, lz);
+        g.add(lamp);
+      });
+      const movingTrucks = [];
+      for (let i = 0; i < 3; i++) {
+        const truck = createPrimeTruck(g, -2.5 + i * 2.5, 0.06, 0.4, Math.PI / 2, 1.0);
+        movingTrucks.push({ group: truck, baseX: -2.5 + i * 2.5 });
+      }
+      const dataPaths = [];
+      const satellites = [
+        { name: 'aws', x: -3.0, y: 0.7, z: -1.3 },
+        { name: 'fulfillment', x: 2.9, y: 0.7, z: -1.3 },
+        { name: 'marketplace', x: 3.0, y: 0.7, z: 0.7 },
+        { name: 'digital', x: -2.5, y: 0.6, z: 1.4 },
+        { name: 'advertising', x: 0.0, y: 0.6, z: 1.5 },
+        { name: 'devices', x: 2.5, y: 0.6, z: 2.2 }
+      ];
+      const satSplashLights = [];
+      satellites.forEach((sat, idx) => {
+        const start = new THREE.Vector3(0, 1.5, -1.0);
+        const mid = new THREE.Vector3((start.x + sat.x)/2, 2.0, (start.z + sat.z)/2);
+        const end = new THREE.Vector3(sat.x, sat.y, sat.z);
+        const curve = new THREE.CatmullRomCurve3([start, mid, end]);
+        const beads = [];
+        for (let i = 0; i < 4; i++) {
+          const b = new THREE.Mesh(new THREE.SphereGeometry(.05, 14, 10), M.dataBead.clone());
+          const bLight = new THREE.PointLight(C.hotData, 0.15, 0.5);
+          b.add(bLight);
+          g.add(b);
+          beads.push({ mesh: b, light: bLight, offset: i / 4 });
+        }
+        const splash = new THREE.PointLight(C.hotData, 0, 1.4);
+        splash.position.set(sat.x, sat.y + 0.1, sat.z);
+        g.add(splash);
+        satSplashLights.push(splash);
+        dataPaths.push({ curve, beads, speed: 0.06 + idx * 0.008 });
+      });
+      const moneyPaths = [];
+      satellites.forEach((sat, idx) => {
+        const start = new THREE.Vector3(sat.x, sat.y + 0.3, sat.z);
+        const mid = new THREE.Vector3(sat.x / 2, 2.5, (sat.z - 1.6) / 2);
+        const end = new THREE.Vector3(0, 2.4, -1.6);
+        const curve = new THREE.CatmullRomCurve3([start, mid, end]);
+        const coins = [];
+        for (let i = 0; i < 3; i++) {
+          const coin = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.05, 0.05, 0.014, 16),
+            M.goldCoin.clone()
+          );
+          g.add(coin);
+          coins.push({ mesh: coin, offset: i / 3 });
+        }
+        moneyPaths.push({ curve, coins, speed: 0.045 + idx * 0.004 });
+      });
+      const goldGlow = new THREE.PointLight('#ffd700', 0.5, 3.0);
+      goldGlow.position.set(0, 2.4, -1.6);
+      g.add(goldGlow);
+      const hqGlow = new THREE.PointLight('#ffaf3a', 0.8, 4);
+      hqGlow.position.set(0, 1.0, -1.0);
+      g.add(hqGlow);
+      const orangeGlow = new THREE.PointLight('#ff9900', 0.5, 3.0);
+      orangeGlow.position.set(0, 1.8, 0.5);
+      g.add(orangeGlow);
+      const cloudGlow = new THREE.PointLight('#ffffff', 0.4, 2.5);
+      cloudGlow.position.set(-3.0, 1.0, -1.3);
+      g.add(cloudGlow);
+      g.userData = {
+        marketplaceArm: marketplace.robotArm,
+        echoDevice: devices.echo,
+        cargoPlane, movingTrucks,
+        dataPaths, satSplashLights, moneyPaths, goldGlow
+      };
+      return g;
+    }
+
+    // ===== Lighting =====
+    scene.add(new THREE.HemisphereLight('#dceaff', '#1a1f2a', 0.95));
+    const key = new THREE.DirectionalLight('#ffffff', 1.8);
+    key.position.set(6, 8, 7);
+    key.castShadow = true;
+    key.shadow.mapSize.set(2048, 2048);
+    key.shadow.camera.left = -10;
+    key.shadow.camera.right = 10;
+    key.shadow.camera.top = 10;
+    key.shadow.camera.bottom = -10;
+    scene.add(key);
+    const rim = new THREE.DirectionalLight('#ff9900', 0.7);
+    rim.position.set(-5, 3, -6);
+    scene.add(rim);
+    const fillBlue = new THREE.DirectionalLight('#4a8eda', 0.5);
+    fillBlue.position.set(-6, 4, 4);
+    scene.add(fillBlue);
+
+    const amazon = createAmazonCampus();
+    amazon.scale.setScalar(0.95);
+    scene.add(amazon);
+
+    const clock = new THREE.Clock();
+    const SPEED = 0.4;
+
+    function animate() {
+      const t = clock.getElapsedTime() * SPEED;
+      const tRaw = clock.getElapsedTime();
+      const u = amazon.userData;
+
+      if (u.marketplaceArm) {
+        u.marketplaceArm.shoulder.rotation.y = Math.sin(tRaw * 0.7) * 0.4;
+        u.marketplaceArm.seg1.rotation.z = -Math.PI / 4 + Math.sin(tRaw * 1.0) * 0.25;
+        u.marketplaceArm.seg2.rotation.z = -Math.PI / 5 + Math.cos(tRaw * 0.9) * 0.3;
+        u.marketplaceArm.led.material.color.setHSL(0.55, 1, 0.5 + 0.3 * Math.sin(tRaw * 4));
+      }
+
+      if (u.echoDevice) {
+        u.echoDevice.ledRing.material.emissiveIntensity = 0.8 + 0.5 * Math.sin(tRaw * 2);
+      }
+
+      if (u.cargoPlane) {
+        u.cargoPlane.position.x = 3.8 + Math.sin(tRaw * 0.2) * 0.3;
+        u.cargoPlane.position.z = -2.3 + Math.cos(tRaw * 0.2) * 0.15;
+        u.cargoPlane.position.y = 0.9 + Math.sin(tRaw * 0.4) * 0.05;
+      }
+
+      u.movingTrucks.forEach((tr, idx) => {
+        const speed = 0.25 + idx * 0.05;
+        const pos = ((tRaw * speed) + idx * 0.33) % 1;
+        tr.group.position.x = -3.8 + pos * 7.6;
+      });
+
+      u.dataPaths.forEach((path, pIdx) => {
+        path.beads.forEach((b, idx) => {
+          const progress = ((tRaw * path.speed) + b.offset) % 1;
+          const pos = path.curve.getPoint(progress);
+          b.mesh.position.copy(pos);
+          const pulse = 1.4 + 0.5 * Math.sin(t * 3 + idx);
+          b.mesh.material.emissiveIntensity = pulse;
+          b.light.intensity = 0.14 + 0.08 * Math.sin(t * 3.5 + idx);
+          if (progress > 0.92) {
+            u.satSplashLights[pIdx].intensity = 1.4 * (progress - 0.92) / 0.08;
+          }
+        });
+        u.satSplashLights[pIdx].intensity *= 0.94;
+      });
+
+      u.moneyPaths.forEach((path) => {
+        path.coins.forEach((c, idx) => {
+          const progress = ((tRaw * path.speed) + c.offset) % 1;
+          const pos = path.curve.getPoint(progress);
+          c.mesh.position.copy(pos);
+          c.mesh.rotation.x = Math.PI / 2;
+          c.mesh.rotation.y = tRaw * 4 + idx;
+          c.mesh.material.emissiveIntensity = 1.4 + 0.4 * Math.sin(t * 2.5 + idx);
+        });
+      });
+      u.goldGlow.intensity = 0.4 + 0.25 * Math.sin(t * 1.5);
+
+      amazon.rotation.y = Math.sin(t * 0.15) * 0.008;
+
+      controls.update();
+      renderer.render(scene, camera);
+      requestAnimationFrame(animate);
+    }
+    animate();
+
+    addEventListener('resize', () => {
+      camera.aspect = innerWidth / innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(innerWidth, innerHeight);
+    });
+  </script>
+</body>
+</html>

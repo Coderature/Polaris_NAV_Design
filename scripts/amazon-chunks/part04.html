@@ -1,0 +1,203 @@
+
+    function createPackageBox(g, x, y, z, scale = 1, rotY = 0) {
+      const grp = new THREE.Group();
+      grp.position.set(x, y, z); grp.rotation.y = rotY; grp.scale.setScalar(scale);
+      g.add(grp);
+      box(grp, 'pkg body', 0, 0.06, 0, 0.16, 0.12, 0.12, M.brownBox);
+      box(grp, 'pkg tape', 0, 0.06, 0.061, 0.18, 0.025, 0.005, mat('#7a5634'));
+      box(grp, 'pkg smile', 0, 0.085, 0.063, 0.06, 0.012, 0.005, M.amazonOrange);
+      box(grp, 'pkg smile dot', 0.022, 0.078, 0.063, 0.008, 0.008, 0.005, M.amazonOrange);
+      return grp;
+    }
+
+    function createPrimeTruck(g, x, y, z, rotY = 0, scale = 1) {
+      const grp = new THREE.Group();
+      grp.position.set(x, y, z); grp.rotation.y = rotY; grp.scale.setScalar(scale);
+      g.add(grp);
+      box(grp, 'truck cabin', -0.14, 0.06, 0, 0.12, 0.1, 0.14, mat('#1a3a6a', { metalness: .35 }));
+      box(grp, 'truck windshield', -0.18, 0.085, 0, 0.04, 0.05, 0.13, M.glassBlue);
+      box(grp, 'truck container', 0.05, 0.075, 0, 0.32, 0.14, 0.16, M.primeDeep);
+      const primeLogoTex = (() => {
+        const cc = document.createElement('canvas');
+        cc.width = 384; cc.height = 192;
+        const cctx = cc.getContext('2d');
+        cctx.fillStyle = '#0a6dba';
+        cctx.fillRect(0, 0, cc.width, cc.height);
+        cctx.fillStyle = '#ffffff';
+        cctx.font = 'bold 80px Arial';
+        cctx.textAlign = 'center'; cctx.textBaseline = 'middle';
+        cctx.fillText('prime', cc.width/2, cc.height/2 - 10);
+        drawAmazonSmile(cctx, cc.width/2, cc.height/2 + 50, 200, '#ff9900');
+        const t = new THREE.CanvasTexture(cc);
+        t.colorSpace = THREE.SRGBColorSpace;
+        return t;
+      })();
+      const sideMat = new THREE.MeshStandardMaterial({
+        map: primeLogoTex, emissive: '#ffffff', emissiveMap: primeLogoTex, emissiveIntensity: 0.25, roughness: .4
+      });
+      const sideR = new THREE.Mesh(new THREE.PlaneGeometry(0.3, 0.13), sideMat);
+      sideR.position.set(0.05, 0.075, 0.081);
+      grp.add(sideR);
+      const sideL = sideR.clone();
+      sideL.position.set(0.05, 0.075, -0.081);
+      sideL.rotation.y = Math.PI;
+      grp.add(sideL);
+      box(grp, 'truck rear', 0.21, 0.075, 0, 0.005, 0.13, 0.155, M.metalDark);
+      [-0.14, 0.0, 0.14].forEach(wx => {
+        [-0.07, 0.07].forEach(wz => {
+          const w = cyl(grp, 'wheel', wx, 0.024, wz, 0.025, 0.018, M.metalDark, 14);
+          w.rotation.x = Math.PI / 2;
+        });
+      });
+      box(grp, 'hl L', -0.198, 0.05, 0.045, 0.005, 0.012, 0.018, mat('#ffeecc', { emissive: '#ffeecc', emissiveIntensity: 0.8 }));
+      box(grp, 'hl R', -0.198, 0.05, -0.045, 0.005, 0.012, 0.018, mat('#ffeecc', { emissive: '#ffeecc', emissiveIntensity: 0.8 }));
+      return grp;
+    }
+
+    function createCargoPlane(g, x, y, z, rotY = 0, scale = 1) {
+      const grp = new THREE.Group();
+      grp.position.set(x, y, z); grp.rotation.y = rotY; grp.scale.setScalar(scale);
+      g.add(grp);
+      const body = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.08, 0.08, 0.7, 14),
+        mat('#1a3a6a', { metalness: .35, roughness: .4 })
+      );
+      body.rotation.z = Math.PI / 2;
+      grp.add(body);
+      const nose = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.14, 14), mat('#1a3a6a'));
+      nose.rotation.z = -Math.PI / 2;
+      nose.position.set(0.42, 0, 0);
+      grp.add(nose);
+      const tail = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.14, 14), mat('#1a3a6a'));
+      tail.rotation.z = Math.PI / 2;
+      tail.position.set(-0.42, 0, 0);
+      grp.add(tail);
+      box(grp, 'plane vert', -0.36, 0.13, 0, 0.05, 0.18, 0.02, mat('#1a3a6a'));
+      box(grp, 'plane horiz L', -0.38, 0.04, 0.14, 0.1, 0.012, 0.16, mat('#1a3a6a'));
+      box(grp, 'plane horiz R', -0.38, 0.04, -0.14, 0.1, 0.012, 0.16, mat('#1a3a6a'));
+      box(grp, 'wing L', 0, -0.02, 0.42, 0.3, 0.015, 0.5, mat('#1a3a6a'));
+      box(grp, 'wing R', 0, -0.02, -0.42, 0.3, 0.015, 0.5, mat('#1a3a6a'));
+      [0.12, -0.12].forEach(ex => {
+        [0.35, 0.55].forEach(ez => {
+          const eng = cyl(grp, 'engine', ex, -0.05, ez, 0.025, 0.08, M.metalDark, 14);
+          eng.rotation.z = Math.PI / 2;
+        });
+        [-0.35, -0.55].forEach(ez => {
+          const eng = cyl(grp, 'engine', ex, -0.05, ez, 0.025, 0.08, M.metalDark, 14);
+          eng.rotation.z = Math.PI / 2;
+        });
+      });
+      box(grp, 'plane cockpit', 0.32, 0.05, 0, 0.08, 0.04, 0.13, M.glassBlue);
+      const planeLogoTex = makeFacadeTextTexture('amazon', '#1a3a6a', '#ffffff');
+      const logoR = new THREE.Mesh(new THREE.PlaneGeometry(0.25, 0.04), new THREE.MeshStandardMaterial({
+        map: planeLogoTex, roughness: .4, emissive: '#ffffff', emissiveMap: planeLogoTex, emissiveIntensity: 0.3
+      }));
+      logoR.position.set(0.05, 0.02, 0.082);
+      grp.add(logoR);
+      const logoL = logoR.clone();
+      logoL.position.z = -0.082;
+      logoL.rotation.y = Math.PI;
+      grp.add(logoL);
+      return grp;
+    }
+
+    function createYellowRobotArm(g, x, y, z, baseRot = 0, scale = 1) {
+      const grp = new THREE.Group();
+      grp.position.set(x, y, z); grp.rotation.y = baseRot; grp.scale.setScalar(scale);
+      g.add(grp);
+      cyl(grp, 'arm base', 0, 0.04, 0, 0.06, 0.08, M.metalDark, 16);
+      cyl(grp, 'arm collar', 0, 0.09, 0, 0.045, 0.02, M.yellowRobot, 14);
+      const shoulder = new THREE.Group();
+      shoulder.position.set(0, 0.1, 0);
+      grp.add(shoulder);
+      const seg1 = new THREE.Group();
+      seg1.rotation.z = -Math.PI / 4;
+      shoulder.add(seg1);
+      box(seg1, 'arm seg1', 0, 0.13, 0, 0.05, 0.28, 0.05, M.yellowRobot);
+      cyl(seg1, 'elbow', 0, 0.27, 0, 0.035, 0.05, M.metalDark, 12);
+      const seg2 = new THREE.Group();
+      seg2.position.set(0, 0.27, 0);
+      seg2.rotation.z = -Math.PI / 5;
+      seg1.add(seg2);
+      box(seg2, 'arm seg2', 0, 0.09, 0, 0.04, 0.2, 0.04, mat(C.yellowRobotDark, { metalness: .35 }));
+      box(seg2, 'arm wrist', 0, 0.2, 0, 0.05, 0.04, 0.05, M.metalDark);
+      box(seg2, 'arm tool', 0, 0.235, 0, 0.025, 0.04, 0.025, M.silver);
+      const led = new THREE.Mesh(
+        new THREE.SphereGeometry(0.008, 8, 8),
+        new THREE.MeshBasicMaterial({ color: '#00a8e1' })
+      );
+      led.position.set(0, 0.265, 0);
+      seg2.add(led);
+      return { group: grp, shoulder, seg1, seg2, led };
+    }
+
+    function createEchoSpeaker(g, x, y, z, scale = 1) {
+      const grp = new THREE.Group();
+      grp.position.set(x, y, z); grp.scale.setScalar(scale);
+      g.add(grp);
+      cyl(grp, 'echo body', 0, 0.1, 0, 0.05, 0.2, mat('#1a1a1d', { roughness: .65 }), 24);
+      const ledRing = new THREE.Mesh(
+        new THREE.TorusGeometry(0.05, 0.005, 6, 24),
+        M.alexaBlue
+      );
+      ledRing.rotation.x = Math.PI / 2;
+      ledRing.position.set(0, 0.205, 0);
+      grp.add(ledRing);
+      cyl(grp, 'echo top', 0, 0.215, 0, 0.045, 0.018, mat('#0a0a0a'), 18);
+      return { group: grp, ledRing };
+    }
+
+    function createServerRack(g, x, y, z, scale = 1) {
+      const grp = new THREE.Group();
+      grp.position.set(x, y, z); grp.scale.setScalar(scale);
+      g.add(grp);
+      box(grp, 'rack body', 0, 0.18, 0, 0.16, 0.36, 0.12, mat('#1a1a1d', { roughness: .5, metalness: .35 }));
+      box(grp, 'rack side L', -0.083, 0.18, 0, 0.005, 0.36, 0.12, M.metalDark);
+      box(grp, 'rack side R', 0.083, 0.18, 0, 0.005, 0.36, 0.12, M.metalDark);
+      for (let i = 0; i < 6; i++) {
+        const ly = 0.04 + i * 0.058;
+        box(grp, `rack mod ${i}`, 0, ly, 0.062, 0.14, 0.045, 0.005, mat('#0a0a0a'));
+        const blink = (i % 2 === 0) ? '#00ff88' : '#00a8e1';
+        box(grp, `rack led L ${i}`, -0.055, ly, 0.065, 0.005, 0.008, 0.005,
+          mat(blink, { emissive: blink, emissiveIntensity: 1.5 }));
+        box(grp, `rack led R ${i}`, -0.040, ly, 0.065, 0.005, 0.008, 0.005,
+          mat('#ffcf3a', { emissive: '#ffcf3a', emissiveIntensity: 1.0 }));
+      }
+      return grp;
+    }
+
+    function createAWSCloud(g, x, y, z, scale = 1) {
+      const grp = new THREE.Group();
+      grp.position.set(x, y, z); grp.scale.setScalar(scale);
+      g.add(grp);
+      const main = new THREE.Mesh(new THREE.SphereGeometry(0.32, 24, 18), M.cloudWhite);
+      main.position.set(0, 0, 0);
+      grp.add(main);
+      const bumps = [
+        [-0.28, 0.0, 0.0, 0.18],
+        [0.28, 0.05, 0.0, 0.2],
+        [-0.14, -0.18, 0.0, 0.15],
+        [0.16, -0.16, 0.0, 0.16],
+        [0.0, 0.18, 0.0, 0.18],
+        [-0.22, 0.16, 0.0, 0.15],
+        [0.22, 0.18, 0.0, 0.15],
+      ];
+      bumps.forEach(([bx, by, bz, br]) => {
+        const s = new THREE.Mesh(new THREE.SphereGeometry(br, 18, 12), M.cloudWhite);
+        s.position.set(bx, by, bz);
+        grp.add(s);
+      });
+      const awsTex = makeAWSCloudTexture();
+      texturedPlane(grp, awsTex, 0, 0, 0.35, 0.45, 0.3, 0, 0.3);
+      return grp;
+    }
+
+    function createAWSIcon(g, x, y, z, label, color) {
+      const grp = new THREE.Group();
+      grp.position.set(x, y, z);
+      g.add(grp);
+      box(grp, `awsIcon ${label}`, 0, 0.05, 0, 0.1, 0.1, 0.02, mat(color, { emissive: color, emissiveIntensity: 0.4 }));
+      const tex = makeFacadeTextTexture(label, color, '#ffffff');
+      texturedPlane(grp, tex, 0, 0.05, 0.012, 0.09, 0.04, 0, 0.6);
+      return grp;
+    }

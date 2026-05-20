@@ -80,14 +80,14 @@
     controls.minDistance = 3.5;
     controls.maxDistance = 12;
 
-    scene.add(new THREE.AmbientLight('#dceaff', 0.35));
-    const key = new THREE.DirectionalLight('#ffffff', 0.7);
+    scene.add(new THREE.AmbientLight('#dceaff', 0.5));
+    const key = new THREE.DirectionalLight('#ffffff', 0.9);
     key.position.set(2, 6, 3);
     key.castShadow = true;
     scene.add(key);
-    const rim = new THREE.DirectionalLight('#76b900', 0.25);
-    rim.position.set(-3, 2, -2);
-    scene.add(rim);
+    const fill = new THREE.DirectionalLight('#d0d8e0', 0.35);
+    fill.position.set(-2, 4, 2);
+    scene.add(fill);
 
     const diorama = createNvidia();
     scene.add(diorama);

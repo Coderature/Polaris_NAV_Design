@@ -1,0 +1,145 @@
+
+    function createAmazonHQ(g, cx, cy, cz) {
+      const grp = new THREE.Group();
+      grp.position.set(cx, cy, cz);
+      g.add(grp);
+      const W = 2.4, H = 1.4, D = 1.8;
+      box(grp, 'hq body', 0, H/2, 0, W, H, D, M.amazonBlack);
+      box(grp, 'hq roof', 0, H + 0.03, 0, W + 0.05, 0.06, D + 0.05, M.amazonNavy);
+      box(grp, 'hq base', 0, 0.04, 0, W + 0.1, 0.06, D + 0.1, M.platform);
+      for (let i = 0; i < 4; i++) {
+        for (let j = 0; j < 3; j++) {
+          const sx = -0.9 + i * 0.6;
+          const sz = -0.6 + j * 0.45;
+          box(grp, `hq solar ${i}_${j}`, sx, H + 0.075, sz, 0.55, 0.012, 0.4, mat('#1a3052', { metalness: .55, emissive: '#0a3a8a', emissiveIntensity: 0.15 }));
+        }
+      }
+      box(grp, 'hq edge F', 0, H + 0.07, D/2 + 0.01, W + 0.04, 0.012, 0.012, M.amazonOrangeHot);
+      box(grp, 'hq edge B', 0, H + 0.07, -D/2 - 0.01, W + 0.04, 0.012, 0.012, M.amazonOrangeHot);
+      box(grp, 'hq hvac 1', W/2 - 0.3, H + 0.13, -D/2 + 0.3, 0.25, 0.18, 0.18, M.metalDark);
+      box(grp, 'hq hvac 2', -W/2 + 0.3, H + 0.11, -D/2 + 0.3, 0.2, 0.14, 0.16, M.metalDark);
+      const amazonLogoTex = makeAmazonLogoTexture('#131921', '#ffffff', '#ff9900');
+      texturedPlane(grp, amazonLogoTex, 0, H * 0.62, D/2 + 0.012, 1.6, 0.6, 0, 1.2);
+      for (let row = 0; row < 4; row++) {
+        for (let col = 0; col < 10; col++) {
+          const wx = -W/2 + 0.15 + col * 0.24;
+          const wy = 0.18 + row * 0.22;
+          if (row === 1 || row === 2) {
+            box(grp, `hq win F ${row}_${col}`, wx, wy, D/2 + 0.008, 0.18, 0.14, 0.008,
+              (row === 1 || row === 2) ? M.glassWarm : M.glass);
+          }
+        }
+      }
+      box(grp, 'hq entrance', 0, 0.18, D/2 + 0.008, 0.7, 0.32, 0.012, mat('#0a0a0a', { roughness: .3 }));
+      box(grp, 'hq door L', -0.15, 0.16, D/2 + 0.015, 0.12, 0.26, 0.005, M.glassWarm);
+      box(grp, 'hq door R', 0.15, 0.16, D/2 + 0.015, 0.12, 0.26, 0.005, M.glassWarm);
+      box(grp, 'hq canopy', 0, 0.4, D/2 + 0.1, 0.95, 0.04, 0.2, M.amazonNavy);
+      const dotcomBannerTex = makeAmazonDotComBannerTexture();
+      box(grp, 'dotcom banner bg', 0, H + 0.85, 0, 2.2, 0.5, 0.05, mat('#0a0a0a', { roughness: .4 }));
+      texturedPlane(grp, dotcomBannerTex, 0, H + 0.85, 0.03, 2.15, 0.48, 0, 0.5);
+      cyl(grp, 'banner post L', -0.7, H + 0.45, 0, 0.016, 0.4, M.silver, 8);
+      cyl(grp, 'banner post R', 0.7, H + 0.45, 0, 0.016, 0.4, M.silver, 8);
+      for (let row = 0; row < 4; row++) {
+        for (let col = 0; col < 6; col++) {
+          const wz = -D/2 + 0.18 + col * 0.28;
+          const wy = 0.18 + row * 0.22;
+          if ((row * 7 + col) % 5 !== 0) {
+            box(grp, `hq win L ${row}_${col}`, -W/2 - 0.005, wy, wz, 0.005, 0.13, 0.18, M.glassWarm);
+            box(grp, `hq win R ${row}_${col}`, W/2 + 0.005, wy, wz, 0.005, 0.13, 0.18,
+              ((row * 5 + col) % 4 !== 0) ? M.glassWarm : M.glass);
+          }
+        }
+      }
+      box(grp, 'hq plaza', 0, 0.07, D/2 + 0.55, 1.8, 0.012, 0.5, M.platform);
+      return grp;
+    }
+
+    function createAWSSatellite(g, cx, cy, cz) {
+      const grp = new THREE.Group();
+      grp.position.set(cx, cy, cz);
+      g.add(grp);
+      const W = 1.6, H = 0.55, D = 1.0;
+      box(grp, 'aws body', 0, H/2, 0, W, H, D, M.amazonDark);
+      box(grp, 'aws roof', 0, H + 0.02, 0, W + 0.04, 0.04, D + 0.04, M.amazonNavy);
+      box(grp, 'aws base', 0, 0.04, 0, W + 0.08, 0.06, D + 0.08, M.platform);
+      for (let i = 0; i < 5; i++) {
+        const wx = -W/2 + 0.2 + i * 0.3;
+        box(grp, `aws win ${i}`, wx, H * 0.4, D/2 + 0.005, 0.22, 0.18, 0.008, M.glass);
+        box(grp, `aws win T ${i}`, wx, H * 0.65, D/2 + 0.005, 0.22, 0.12, 0.008, M.glassBlue);
+      }
+      createAWSCloud(grp, 0, H + 0.4, 0.1, 0.85);
+      for (let i = 0; i < 4; i++) {
+        const sx = -W/2 + 0.25 + i * 0.35;
+        createServerRack(grp, sx, 0, D/2 + 0.25, 0.75);
+      }
+      box(grp, 'aws server pad', 0, 0.05, D/2 + 0.25, W * 0.85, 0.012, 0.3, mat('#1a1a1d'));
+      const services = [
+        { label: 'EC2', color: '#ff9900', x: -W/2 + 0.18 },
+        { label: 'S3', color: '#4caf50', x: -W/2 + 0.45 },
+        { label: 'RDS', color: '#3a78ff', x: -W/2 + 0.72 },
+        { label: 'Lambda', color: '#ff9900', x: -W/2 + 0.99 },
+        { label: 'DynamoDB', color: '#1a4d80', x: -W/2 + 1.26 },
+        { label: 'Aurora', color: '#3a78ff', x: -W/2 + 1.45 }
+      ];
+      services.forEach(s => {
+        createAWSIcon(grp, s.x, 0.085, D/2 + 0.55, s.label, s.color);
+      });
+      rooftopPanel(grp, '1', 'AWS 클라우드', '확장 가능한 클라우드 인프라\n수백만 고객 지원', 0, H + 1.0, -0.5, 1.0, 0.36, '#ff9900');
+      return grp;
+    }
+
+    function createFulfillment(g, cx, cy, cz) {
+      const grp = new THREE.Group();
+      grp.position.set(cx, cy, cz);
+      g.add(grp);
+      const W = 2.0, H = 0.6, D = 1.2;
+      box(grp, 'ful body', 0, H/2, 0, W, H, D, M.amazonDark);
+      box(grp, 'ful roof', 0, H + 0.02, 0, W + 0.04, 0.04, D + 0.04, M.amazonNavy);
+      box(grp, 'ful base', 0, 0.04, 0, W + 0.08, 0.06, D + 0.08, M.platform);
+      for (let i = 0; i < 5; i++) {
+        for (let j = 0; j < 3; j++) {
+          box(grp, `ful solar ${i}_${j}`, -W/2 + 0.25 + i * 0.4, H + 0.045, -D/2 + 0.2 + j * 0.4, 0.36, 0.008, 0.36, mat('#1a3052', { metalness: .55 }));
+        }
+      }
+      const fulLabelTex = makeFulfillmentLabelTexture();
+      texturedPlane(grp, fulLabelTex, 0, H * 0.7, D/2 + 0.012, 1.6, 0.18, 0, 1.0);
+      for (let i = 0; i < 5; i++) {
+        const dx = -W/2 + 0.25 + i * 0.4;
+        box(grp, `ful dock ${i}`, dx, 0.16, D/2 + 0.008, 0.32, 0.3, 0.012, mat('#0a0a0a', { roughness: .4 }));
+        box(grp, `ful dock light ${i}`, dx, 0.34, D/2 + 0.014, 0.06, 0.012, 0.005, M.amazonOrangeHot);
+      }
+      createPrimeTruck(grp, -0.6, 0.06, D/2 + 0.3, Math.PI / 2, 1.0);
+      createPrimeTruck(grp, 0.0, 0.06, D/2 + 0.3, Math.PI / 2, 1.0);
+      createPrimeTruck(grp, 0.6, 0.06, D/2 + 0.3, Math.PI / 2, 1.0);
+      box(grp, 'ful stripe', 0, 0.05, D/2 + 0.015, W * 0.95, 0.014, 0.005, M.amazonOrangeHot);
+      rooftopPanel(grp, '2', '물류 · 풀필먼트', 'Prime 빠른 배송\n글로벌 풀필먼트 센터', 0, H + 0.85, 0, 1.05, 0.36, '#00a8e1');
+      return grp;
+    }
+
+    function createMarketplace(g, cx, cy, cz) {
+      const grp = new THREE.Group();
+      grp.position.set(cx, cy, cz);
+      g.add(grp);
+      const W = 1.8, H = 0.55, D = 1.0;
+      box(grp, 'mp body', 0, H/2, 0, W, H, D, M.amazonDark);
+      box(grp, 'mp roof', 0, H + 0.02, 0, W + 0.04, 0.04, D + 0.04, M.amazonNavy);
+      box(grp, 'mp base', 0, 0.04, 0, W + 0.08, 0.06, D + 0.08, M.platform);
+      const bestTex = makeBestSellerTexture();
+      box(grp, 'mp screen frame', 0, H * 0.55, D/2 + 0.005, W - 0.2, H * 0.7, 0.018, M.metalDark);
+      texturedPlane(grp, bestTex, 0, H * 0.55, D/2 + 0.015, W - 0.25, H * 0.65, 0, 0.6);
+      createPackageBox(grp, -W/2 + 0.2, 0, D/2 + 0.25, 1.2, 0);
+      createPackageBox(grp, -W/2 + 0.35, 0.12, D/2 + 0.25, 1.0, Math.PI / 6);
+      createPackageBox(grp, -W/2 + 0.55, 0, D/2 + 0.3, 1.3, -Math.PI / 8);
+      createPackageBox(grp, -W/2 + 0.75, 0.12, D/2 + 0.25, 1.0, Math.PI / 5);
+      createPackageBox(grp, -W/2 + 0.15, 0, D/2 + 0.45, 1.1, Math.PI / 4);
+      const robotArm = createYellowRobotArm(grp, W/2 - 0.3, 0, D/2 + 0.35, -Math.PI / 5, 1.0);
+      box(grp, 'mp conveyor', W/2 - 0.5, 0.075, D/2 + 0.55, 0.5, 0.025, 0.18, mat('#2a2a30'));
+      createPackageBox(grp, W/2 - 0.55, 0.09, D/2 + 0.55, 0.7, 0);
+      createPackageBox(grp, W/2 - 0.4, 0.09, D/2 + 0.55, 0.7, Math.PI / 8);
+      box(grp, 'mp worker', W/2 - 0.15, 0.07, D/2 + 0.5, 0.04, 0.08, 0.025, mat('#ffaf3a', { emissive: '#ffaf3a', emissiveIntensity: 0.4 }));
+      const head = new THREE.Mesh(new THREE.SphereGeometry(0.018, 8, 6), mat('#ffd5b0'));
+      head.position.set(W/2 - 0.15, 0.13, D/2 + 0.5);
+      grp.add(head);
+      rooftopPanel(grp, '3', '마켓플레이스', '수백만 셀러\n수억 개 상품', 0, H + 0.85, 0, 1.0, 0.36, '#f5c518');
+      return { group: grp, robotArm };
+    }

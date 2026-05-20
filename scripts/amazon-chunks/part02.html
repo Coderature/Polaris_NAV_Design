@@ -1,0 +1,183 @@
+
+    // ===== Palette (Amazon tone) =====
+    const C = {
+      amazonOrange: '#ff9900', amazonOrangeBright: '#ffb53e',
+      amazonDark: '#232f3e', amazonBlack: '#131921', amazonNavy: '#1a2433',
+      primeBlue: '#00a8e1', primeDeep: '#0a6dba',
+      alexaBlue: '#1ba1e2', alexaCyan: '#4ad9ff',
+      cloudWhite: '#f3f3f3', cloudGrey: '#dfdfdf',
+      brownBox: '#a67c52', brownBoxDark: '#7a5634',
+      awsOrange: '#ff9900', awsDark: '#252f3e',
+      yellowRobot: '#f5c518', yellowRobotDark: '#c4980e',
+      pinkBest: '#d6336c',
+      metalDark: '#3a3a40', metal: '#7a7a80', silver: '#c8c8cc',
+      glass: '#4a8eda', glassWarm: '#ffb53e', glassBlue: '#3a78c8',
+      road: '#1c1e22', base: '#08090d', platform: '#15171c',
+      grass: '#2d8c4a', bark: '#7a4b2a',
+      screen: '#0a1d3a', screenBright: '#1a4d80',
+      hotData: '#ff7a92', goldGlow: '#ffd700'
+    };
+
+    const mat = (color, o = {}) => new THREE.MeshStandardMaterial({
+      color,
+      roughness: o.roughness ?? 0.6,
+      metalness: o.metalness ?? 0.08,
+      transparent: o.transparent ?? false,
+      opacity: o.opacity ?? 1,
+      emissive: o.emissive ?? '#000000',
+      emissiveIntensity: o.emissiveIntensity ?? 0,
+      side: o.side ?? THREE.FrontSide
+    });
+
+    const M = {
+      amazonOrange: mat(C.amazonOrange, { emissive: C.amazonOrange, emissiveIntensity: 0.5, roughness: .3 }),
+      amazonOrangeHot: mat(C.amazonOrange, { emissive: C.amazonOrangeBright, emissiveIntensity: 1.4, roughness: .25 }),
+      amazonDark: mat(C.amazonDark, { roughness: .55 }),
+      amazonBlack: mat(C.amazonBlack, { roughness: .5 }),
+      amazonNavy: mat(C.amazonNavy, { roughness: .5, metalness: .2 }),
+      primeBlue: mat(C.primeBlue, { roughness: .35, emissive: C.primeBlue, emissiveIntensity: 0.15 }),
+      primeDeep: mat(C.primeDeep, { roughness: .35 }),
+      alexaBlue: mat(C.alexaBlue, { emissive: C.alexaBlue, emissiveIntensity: 1.0, roughness: .25 }),
+      cloudWhite: mat(C.cloudWhite, { roughness: .35, emissive: '#ffffff', emissiveIntensity: 0.1 }),
+      brownBox: mat(C.brownBox, { roughness: .75 }),
+      brownBoxDark: mat(C.brownBoxDark, { roughness: .7 }),
+      yellowRobot: mat(C.yellowRobot, { roughness: .3, metalness: .55, emissive: '#3a2a04', emissiveIntensity: 0.2 }),
+      pinkAccent: mat(C.pinkBest, { emissive: C.pinkBest, emissiveIntensity: 0.5 }),
+      metalDark: mat(C.metalDark, { roughness: .35, metalness: .65 }),
+      metal: mat(C.metal, { roughness: .35, metalness: .55 }),
+      silver: mat(C.silver, { roughness: .32, metalness: .55 }),
+      white: mat('#f4f4f4', { roughness: .4 }),
+      whiteHot: mat('#ffffff', { emissive: '#ffffff', emissiveIntensity: 1.2, roughness: .25 }),
+      glass: mat(C.glass, { roughness: .15, metalness: .15, transparent: true, opacity: 0.55, emissive: '#1e4fa3', emissiveIntensity: 0.15 }),
+      glassWarm: mat(C.glassWarm, { emissive: '#ffaf3a', emissiveIntensity: 0.8, roughness: .25 }),
+      glassBlue: mat(C.glassBlue, { roughness: .15, metalness: .15, transparent: true, opacity: .65 }),
+      road: mat(C.road, { roughness: .85 }),
+      base: mat(C.base, { roughness: .55 }),
+      platform: mat(C.platform, { roughness: .65 }),
+      grass: mat(C.grass, { roughness: .85 }),
+      bark: mat(C.bark, { roughness: .85 }),
+      screen: mat(C.screen, { emissive: C.screen, emissiveIntensity: 0.4, roughness: .15 }),
+      screenBright: mat(C.screenBright, { emissive: C.screenBright, emissiveIntensity: 1.0, roughness: .15 }),
+      dataBead: new THREE.MeshStandardMaterial({
+        color: C.hotData, emissive: C.hotData, emissiveIntensity: 2.0, roughness: .25
+      }),
+      goldCoin: new THREE.MeshStandardMaterial({
+        color: '#ffd700', emissive: '#ffaa00', emissiveIntensity: 1.6,
+        roughness: .25, metalness: .85
+      })
+    };
+
+    // ===== Helpers =====
+    function box(g, name, x, y, z, sx, sy, sz, material) {
+      const mesh = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), material);
+      mesh.name = name;
+      mesh.position.set(x, y, z);
+      mesh.castShadow = true; mesh.receiveShadow = true;
+      g.add(mesh);
+      return mesh;
+    }
+    function cyl(g, name, x, y, z, r, h, material, radial = 24) {
+      const mesh = new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, radial), material);
+      mesh.name = name;
+      mesh.position.set(x, y, z);
+      mesh.castShadow = true; mesh.receiveShadow = true;
+      g.add(mesh);
+      return mesh;
+    }
+    function roundRect(ctx, x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+    }
+
+    function drawAmazonSmile(ctx, cx, cy, w, color) {
+      const r = w / 2;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = w * 0.13;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.arc(cx, cy - r * 0.05, r, 0.05 * Math.PI, 0.95 * Math.PI, false);
+      ctx.stroke();
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      const ax = cx + r * 0.97;
+      const ay = cy + r * 0.16;
+      ctx.moveTo(ax + r * 0.06, ay - r * 0.05);
+      ctx.lineTo(ax + r * 0.22, ay - r * 0.18);
+      ctx.lineTo(ax - r * 0.05, ay - r * 0.12);
+      ctx.closePath();
+      ctx.fill();
+    }
+
+    function makeAmazonLogoTexture(bg = '#131921', fg = '#ffffff', orange = '#ff9900') {
+      const c = document.createElement('canvas');
+      c.width = 1024; c.height = 384;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, c.width, c.height);
+      ctx.fillStyle = fg;
+      ctx.font = 'bold 220px Arial, sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('amazon', c.width/2, c.height/2 - 30);
+      drawAmazonSmile(ctx, c.width/2, c.height/2 + 80, 480, orange);
+      const t = new THREE.CanvasTexture(c);
+      t.colorSpace = THREE.SRGBColorSpace;
+      return t;
+    }
+
+    function makeAmazonDotComBannerTexture() {
+      const c = document.createElement('canvas');
+      c.width = 1536; c.height = 384;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#0a0e16';
+      roundRect(ctx, 0, 0, c.width, c.height, 30);
+      ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 130px Arial';
+      ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+      ctx.fillText('amazon', 120, 140);
+      ctx.fillStyle = '#bbb';
+      ctx.font = '110px Arial';
+      ctx.fillText('.com', 720, 140);
+      drawAmazonSmile(ctx, 380, 200, 540, '#ff9900');
+      ctx.fillStyle = '#dfdfdf';
+      ctx.font = '52px Arial';
+      ctx.fillText('Customer Obsession · Long-term Thinking', 120, 310);
+      const t = new THREE.CanvasTexture(c);
+      t.colorSpace = THREE.SRGBColorSpace;
+      return t;
+    }
+
+    function makeAWSCloudTexture() {
+      const c = document.createElement('canvas');
+      c.width = 768; c.height = 512;
+      const ctx = c.getContext('2d');
+      ctx.clearRect(0, 0, c.width, c.height);
+      ctx.fillStyle = '#252f3e';
+      ctx.font = 'bold 200px Arial';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('aws', c.width/2, c.height/2 - 20);
+      drawAmazonSmile(ctx, c.width/2, c.height/2 + 100, 380, '#ff9900');
+      const t = new THREE.CanvasTexture(c);
+      t.colorSpace = THREE.SRGBColorSpace;
+      return t;
+    }
+
+    function makeFulfillmentLabelTexture() {
+      const c = document.createElement('canvas');
+      c.width = 1024; c.height = 192;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#0a0e16';
+      ctx.fillRect(0, 0, c.width, c.height);
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'italic 120px Arial';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText('fulfillment', c.width/2, c.height/2);
+      const t = new THREE.CanvasTexture(c);
+      t.colorSpace = THREE.SRGBColorSpace;
+      return t;
+    }

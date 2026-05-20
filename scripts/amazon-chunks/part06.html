@@ -1,0 +1,72 @@
+
+    function createDigitalContent(g, cx, cy, cz) {
+      const grp = new THREE.Group();
+      grp.position.set(cx, cy, cz);
+      g.add(grp);
+      const W = 2.0, H = 0.5, D = 1.0;
+      box(grp, 'dc body', 0, H/2, 0, W, H, D, M.amazonDark);
+      box(grp, 'dc roof', 0, H + 0.02, 0, W + 0.04, 0.04, D + 0.04, M.amazonNavy);
+      box(grp, 'dc base', 0, 0.04, 0, W + 0.08, 0.06, D + 0.08, M.platform);
+      const pvTex = makePrimeVideoTexture();
+      box(grp, 'dc pv frame', -0.65, H * 0.55, D/2 + 0.005, 0.65, 0.36, 0.018, M.metalDark);
+      texturedPlane(grp, pvTex, -0.65, H * 0.55, D/2 + 0.015, 0.6, 0.34, 0, 0.55);
+      const klTex = makeKindleTexture();
+      box(grp, 'dc kl frame', 0.0, H * 0.55, D/2 + 0.005, 0.3, 0.42, 0.018, M.metalDark);
+      texturedPlane(grp, klTex, 0.0, H * 0.55, D/2 + 0.015, 0.28, 0.4, 0, 0.55);
+      const amTex = makeAmazonMusicTexture();
+      box(grp, 'dc am frame', 0.5, H * 0.55, D/2 + 0.005, 0.3, 0.42, 0.018, M.metalDark);
+      texturedPlane(grp, amTex, 0.5, H * 0.55, D/2 + 0.015, 0.28, 0.4, 0, 0.55);
+      rooftopPanel(grp, '4', '디지털 콘텐츠', 'Prime Video · Music\nKindle · Audible', 0, H + 0.85, 0, 1.05, 0.36, '#d6336c');
+      return grp;
+    }
+
+    function createAdvertising(g, cx, cy, cz) {
+      const grp = new THREE.Group();
+      grp.position.set(cx, cy, cz);
+      g.add(grp);
+      const W = 1.6, H = 0.5, D = 0.9;
+      box(grp, 'ad body', 0, H/2, 0, W, H, D, M.amazonDark);
+      box(grp, 'ad roof', 0, H + 0.02, 0, W + 0.04, 0.04, D + 0.04, M.amazonNavy);
+      box(grp, 'ad base', 0, 0.04, 0, W + 0.08, 0.06, D + 0.08, M.platform);
+      const adsTex = makeAmazonAdsTexture();
+      box(grp, 'ad frame', 0, H * 0.55, D/2 + 0.005, W - 0.2, H * 0.75, 0.018, M.metalDark);
+      texturedPlane(grp, adsTex, 0, H * 0.55, D/2 + 0.015, W - 0.25, H * 0.7, 0, 0.6);
+      box(grp, 'ad desk', -0.4, 0.085, D/2 + 0.35, 0.4, 0.025, 0.16, mat('#7a5a3a'));
+      box(grp, 'ad chair 1', -0.5, 0.075, D/2 + 0.5, 0.05, 0.05, 0.05, mat('#1a1a1d'));
+      box(grp, 'ad chair 2', -0.3, 0.075, D/2 + 0.5, 0.05, 0.05, 0.05, mat('#1a1a1d'));
+      box(grp, 'ad person 1', -0.5, 0.115, D/2 + 0.5, 0.04, 0.07, 0.025, mat('#3a78ff'));
+      box(grp, 'ad person 2', -0.3, 0.115, D/2 + 0.5, 0.04, 0.07, 0.025, mat('#34c759'));
+      box(grp, 'ad mini board', 0.4, 0.18, D/2 + 0.35, 0.32, 0.18, 0.018, M.amazonBlack);
+      const miniAdsTex = makeFacadeTextTexture('amazon ads', '#0a0a0a', '#ff9900');
+      texturedPlane(grp, miniAdsTex, 0.4, 0.18, D/2 + 0.345, 0.28, 0.05, 0, 0.5);
+      cyl(grp, 'ad mini post', 0.4, 0.05, D/2 + 0.35, 0.014, 0.1, M.metal, 8);
+      rooftopPanel(grp, '5', '광고', '관련성 높은 광고\n측정 가능한 결과', 0, H + 0.85, 0, 1.0, 0.36, '#4caf50');
+      return grp;
+    }
+
+    function createDevicesServices(g, cx, cy, cz) {
+      const grp = new THREE.Group();
+      grp.position.set(cx, cy, cz);
+      g.add(grp);
+      const W = 1.8, H = 0.45, D = 0.9;
+      box(grp, 'ds body', 0, H/2, 0, W, H, D, M.amazonDark);
+      box(grp, 'ds roof', 0, H + 0.02, 0, W + 0.04, 0.04, D + 0.04, M.amazonNavy);
+      box(grp, 'ds base', 0, 0.04, 0, W + 0.08, 0.06, D + 0.08, M.platform);
+      box(grp, 'ds alexa stripe', 0, H + 0.025, D/2, W * 0.5, 0.015, 0.05, mat('#1ba1e2'));
+      const alexaLabelTex = makeFacadeTextTexture('alexa', '#1ba1e2', '#ffffff');
+      texturedPlane(grp, alexaLabelTex, 0, H + 0.045, D/2 + 0.005, 0.5, 0.07, 0, 0.6);
+      const echo = createEchoSpeaker(grp, -W/2 + 0.25, H + 0.05, 0, 1.2);
+      box(grp, 'ds firetv stick', 0.0, H + 0.045, 0, 0.06, 0.015, 0.16, mat('#1a1a1d', { roughness: .4 }));
+      const fireTex = makeFireTVTexture();
+      texturedPlane(grp, fireTex, 0.0, H + 0.05, 0.001, 0.05, 0.14, 0, 0.6);
+      box(grp, 'ds show body', W/2 - 0.3, H + 0.1, 0, 0.32, 0.2, 0.08, mat('#1a1a1d'));
+      const showTex = makeEchoShowTexture();
+      texturedPlane(grp, showTex, W/2 - 0.3, H + 0.12, 0.041, 0.28, 0.16, 0, 0.7);
+      box(grp, 'ds front glass', 0, H * 0.5, D/2 + 0.005, W - 0.3, H - 0.1, 0.018, M.glass);
+      for (let i = 0; i < 5; i++) {
+        const dx = -W/2 + 0.25 + i * 0.32;
+        box(grp, `ds mini dev ${i}`, dx, 0.13, D/2 + 0.005, 0.08, 0.06, 0.04, mat('#0a0a0a'));
+      }
+      rooftopPanel(grp, '6', '디바이스 · 서비스', 'Alexa · Echo · Fire TV\n혁신적 디바이스 경험', 0, H + 1.0, -0.4, 1.05, 0.36, '#1ba1e2');
+      return { group: grp, echo };
+    }

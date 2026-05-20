@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 
-/** XZ footprint multiplier (matches village ground scale). */
 const GROUND_XZ = 1.25;
 const gx = (n: number) => n * GROUND_XZ;
 

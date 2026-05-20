@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Amazon Business Model Diorama · AMZN</title>
+  <style>
+    html, body {
+      width: 100%; height: 100%; margin: 0; overflow: hidden;
+      background: radial-gradient(circle at 50% 20%, #1a1f2b 0%, #0a0c12 60%, #04050a 100%);
+      font-family: "Malgun Gothic", "Apple SD Gothic Neo", Arial, sans-serif;
+    }
+    #hud {
+      position: fixed; left: 20px; top: 18px; z-index: 10;
+      color: #f3f7ff;
+      background: rgba(8, 8, 12, 0.85);
+      border: 1px solid rgba(255, 153, 0, 0.5);
+      border-radius: 16px; padding: 13px 16px;
+      line-height: 1.5;
+      box-shadow: 0 18px 40px rgba(0,0,0,.4);
+      pointer-events: none;
+    }
+    #hud b { color: #ff9900; font-size: 18px; letter-spacing: 0.5px; }
+    #hud span { color: #c0cdd8; font-size: 13px; }
+    #valuechain {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 10;
+      background: rgba(10, 10, 12, 0.96);
+      padding: 12px 24px;
+      border-top: 1px solid rgba(255, 153, 0, 0.4);
+      box-shadow: 0 -10px 30px rgba(0,0,0,.4);
+      pointer-events: none;
+    }
+    #valuechain .top { display: flex; align-items: center; gap: 18px; margin-bottom: 8px; }
+    #valuechain .brand {
+      display: flex; flex-direction: column;
+      padding-right: 18px; border-right: 1px solid #2a2a30;
+      min-width: 170px;
+    }
+    #valuechain .brand b {
+      font-size: 22px; color: #ffffff; letter-spacing: 0.5px; font-weight: 700;
+    }
+    #valuechain .brand .smile { color: #ff9900; font-size: 20px; line-height: 0; }
+    #valuechain .brand .mission { font-size: 11px; color: #ccc; margin-top: 5px; line-height: 1.3; font-style: italic; }
+    #valuechain .steps { display: flex; gap: 6px; flex: 1; flex-wrap: wrap; }
+    #valuechain .step {
+      flex: 1; min-width: 105px;
+      padding: 7px 9px;
+      border-radius: 8px;
+      border: 1px solid #2a2a30;
+      background: rgba(20, 20, 24, 0.7);
+    }
+    #valuechain .step .n {
+      display: inline-block; width: 17px; height: 17px;
+      border-radius: 50%; text-align: center; line-height: 17px;
+      color: #fff; font-size: 10px; font-weight: 700;
+      margin-right: 5px;
+    }
+    #valuechain .step.s1 .n { background: #ff9900; }
+    #valuechain .step.s2 .n { background: #00a8e1; }
+    #valuechain .step.s3 .n { background: #f5c518; color: #000; }
+    #valuechain .step.s4 .n { background: #d6336c; }
+    #valuechain .step.s5 .n { background: #4caf50; }
+    #valuechain .step.s6 .n { background: #1ba1e2; }
+    #valuechain .step.s7 .n { background: #ff9900; }
+    #valuechain .step .t { display: inline; font-size: 11px; font-weight: 700; color: #fff; }
+    #valuechain .step .d { font-size: 9px; color: #999; margin-top: 3px; line-height: 1.3; }
+    #valuechain .slogan {
+      text-align: center;
+      font-size: 11px; color: #ff9900;
+      padding-top: 5px;
+      border-top: 1px solid #2a2a30;
+      letter-spacing: 0.5px;
+    }
+    #valuechain .slogan span { color: #888; margin: 0 10px; }
+    #tip {
+      position: fixed; right: 20px; top: 18px; z-index: 10;
+      color: #f3f7ff;
+      background: rgba(20, 20, 24, 0.92);
+      border-radius: 999px; padding: 9px 14px;
+      font-size: 13px;
+      box-shadow: 0 14px 30px rgba(0,0,0,.3);
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="hud">
+    <b>amazon.com · AMZN</b><br />
+    <span>Customer Obsession · Long-term Thinking</span><br />
+    <span style="color:#ff9900">📦 Everything For The Customer</span>
+  </div>
+  <div id="tip">드래그 회전 · 휠 확대 · 우클릭 이동</div>
+
+  <div id="valuechain">
+    <div class="top">
+      <div class="brand">
+        <b>amazon<span class="smile">⌣</span></b>
+        <div class="mission">Customer Obsession<br/>Long-term Thinking</div>
+      </div>
+      <div class="steps">
+        <div class="step s1"><span class="n">1</span><span class="t">AWS 클라우드</span><div class="d">EC2·S3·Lambda</div></div>
+        <div class="step s2"><span class="n">2</span><span class="t">물류·풀필먼트</span><div class="d">Prime 배송망</div></div>
+        <div class="step s3"><span class="n">3</span><span class="t">마켓플레이스</span><div class="d">셀러·상품</div></div>
+        <div class="step s4"><span class="n">4</span><span class="t">디지털 콘텐츠</span><div class="d">Prime Video·Kindle</div></div>
+        <div class="step s5"><span class="n">5</span><span class="t">광고</span><div class="d">Amazon Ads</div></div>
+        <div class="step s6"><span class="n">6</span><span class="t">디바이스</span><div class="d">Alexa·Echo·Fire</div></div>
+        <div class="step s7"><span class="n">7</span><span class="t">고객 가치</span><div class="d">Everything for the Customer</div></div>
+      </div>
+    </div>
+    <div class="slogan">☁️ 클라우드 <span>→</span> 📦 물류 <span>→</span> 🛒 마켓 <span>→</span> 🎬 콘텐츠 <span>→</span> 📣 광고 <span>→</span> 🔊 디바이스 <span>→</span> 👤 고객</div>
+  </div>
+
+  <script type="module">
+    import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
+    import { OrbitControls } from 'https://unpkg.com/three@0.160.0/examples/jsm/controls/OrbitControls.js';
+
+    const GROUND_XZ = 1.25;
+    const gx = (n) => n * GROUND_XZ;
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color('#0a0c12');
+    scene.fog = new THREE.Fog('#0a0c12', 16, 32);
+
+    const camera = new THREE.PerspectiveCamera(36, innerWidth / innerHeight, 0.1, 100);
+    camera.position.set(8.5, 7, 9);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    renderer.setSize(innerWidth, innerHeight);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    document.body.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.target.set(0, 0.8, 0.2);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.06;
+    controls.minDistance = 5;
+    controls.maxDistance = 20;
+    controls.maxPolarAngle = Math.PI * 0.49;

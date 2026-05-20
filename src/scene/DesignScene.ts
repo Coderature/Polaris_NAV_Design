@@ -39,22 +39,21 @@ import {
 
 } from './buildingTemplates';
 
-
-
-const GRID_COLS = 4;
-
-const GRID_ROWS = 2;
-
-const GRID_SPACING = 10.0;
-
-/** Village miniature scale (buildings + per-stock ground plinths). */
-const VILLAGE_MODEL_SCALE = 1.58;
-
-/** Green village floor plane area (XZ only). */
-const VILLAGE_GROUND_AREA_SCALE = 1.32;
-
-/** Per-cell sector tile inset from grid edge (0–0.5), prevents heatmap overlap. */
-const SECTOR_CELL_INSET = 0.01;
+import {
+  VILLAGE_BORDER_HEIGHT,
+  VILLAGE_BORDER_WIDTH,
+  VILLAGE_CAMERA_DEFAULT,
+  VILLAGE_FOG_FAR,
+  VILLAGE_FOG_NEAR,
+  VILLAGE_GRID_COLS,
+  VILLAGE_GRID_ROWS,
+  VILLAGE_GRID_SPACING,
+  VILLAGE_MODEL_SCALE_XZ,
+  VILLAGE_ORBIT_MAX_DISTANCE,
+  VILLAGE_ORBIT_MIN_DISTANCE,
+  villageCellSize,
+  villageFloorSize,
+} from './villageScale';
 
 
 
@@ -100,13 +99,13 @@ const BUILDER_BY_TICKER: Record<string, () => THREE.Group> = {
 
 function gridPosition(index: number): { x: number; z: number; col: number; row: number } {
 
-  const col = index % GRID_COLS;
+  const col = index % VILLAGE_GRID_COLS;
 
-  const row = Math.floor(index / GRID_COLS);
+  const row = Math.floor(index / VILLAGE_GRID_COLS);
 
-  const x = (col - (GRID_COLS - 1) / 2) * GRID_SPACING;
+  const x = (col - (VILLAGE_GRID_COLS - 1) / 2) * VILLAGE_GRID_SPACING;
 
-  const z = (row - (GRID_ROWS - 1) / 2) * GRID_SPACING;
+  const z = (row - (VILLAGE_GRID_ROWS - 1) / 2) * VILLAGE_GRID_SPACING;
 
   return { x, z, col, row };
 
@@ -172,7 +171,7 @@ function addSectorRegion(
 
       transparent: true,
 
-      opacity: 0.08,
+      opacity: 0.12,
 
       depthWrite: false,
 
@@ -184,49 +183,53 @@ function addSectorRegion(
 
   plane.rotation.x = -Math.PI / 2;
 
-  plane.position.set(cx, 0.01, cz);
+  plane.position.set(cx, 0.012, cz);
 
   scene.add(track(plane));
-
-
 
   const hw = w / 2;
 
   const hd = d / 2;
 
-  const y = 0.02;
+  const y = 0.024;
 
-  const borderPoints = [
+  const t = VILLAGE_BORDER_WIDTH;
 
-    new THREE.Vector3(cx - hw, y, cz - hd),
+  const borderMat = new THREE.MeshBasicMaterial({
 
-    new THREE.Vector3(cx + hw, y, cz - hd),
+    color: hex,
 
-    new THREE.Vector3(cx + hw, y, cz + hd),
+    transparent: true,
 
-    new THREE.Vector3(cx - hw, y, cz + hd),
+    opacity: 0.95,
 
-    new THREE.Vector3(cx - hw, y, cz - hd),
+    depthWrite: false,
 
-  ];
+  });
 
-  const borderGeo = new THREE.BufferGeometry().setFromPoints(borderPoints);
+  const addEdge = (sx: number, sz: number, px: number, pz: number) => {
 
-  const border = new THREE.Line(
+    const edge = new THREE.Mesh(new THREE.BoxGeometry(sx, 0.028, sz), borderMat);
 
-    borderGeo,
+    edge.position.set(px, y, pz);
 
-    new THREE.LineBasicMaterial({ color: hex, transparent: true, opacity: 0.9 }),
+    scene.add(track(edge));
 
-  );
+  };
 
-  scene.add(track(border));
+  addEdge(w + t * 2, t, cx, cz - hd - t / 2);
+
+  addEdge(w + t * 2, t, cx, cz + hd + t / 2);
+
+  addEdge(t, d + t * 2, cx - hw - t / 2, cz);
+
+  addEdge(t, d + t * 2, cx + hw + t / 2, cz);
 
 }
 
 
 
-const DEFAULT_CAMERA_POS = [22, 19, 22] as const;
+const DEFAULT_CAMERA_POS = VILLAGE_CAMERA_DEFAULT;
 
 const DEFAULT_TARGET = [0, 0, 0] as const;
 
@@ -306,7 +309,8 @@ export class DesignScene {
 
 
 
-    this.scene.background = new THREE.Color(0x000000);
+    this.scene.background = new THREE.Color(0x0a0e14);
+    this.scene.fog = new THREE.Fog(0x0a0e14, VILLAGE_FOG_NEAR, VILLAGE_FOG_FAR);
 
 
 
@@ -339,17 +343,17 @@ export class DesignScene {
 
     this.controls.maxPolarAngle = Math.PI / 2 - 0.05;
 
-    this.controls.minDistance = 30;
+    this.controls.minDistance = VILLAGE_ORBIT_MIN_DISTANCE;
 
-    this.controls.maxDistance = 200;
+    this.controls.maxDistance = VILLAGE_ORBIT_MAX_DISTANCE;
 
     this.controls.target.set(DEFAULT_TARGET[0], DEFAULT_TARGET[1], DEFAULT_TARGET[2]);
 
 
 
-    const amb = new THREE.AmbientLight(0xffffff, 0.42);
+    const amb = new THREE.AmbientLight(0xffffff, 0.4);
 
-    const dir = new THREE.DirectionalLight(0xe8eeff, 1.08);
+    const dir = new THREE.DirectionalLight(0xffffff, 2.0);
 
     dir.position.set(12, 22, 14);
 
@@ -361,7 +365,7 @@ export class DesignScene {
 
     dir.shadow.camera.far = 150;
 
-    const sr = GRID_SPACING * 4;
+    const sr = VILLAGE_GRID_SPACING * 3.2;
 
     dir.shadow.camera.left = -sr;
 
@@ -371,15 +375,13 @@ export class DesignScene {
 
     dir.shadow.camera.bottom = -sr;
 
-    const hemi = new THREE.HemisphereLight(0xaaccff, 0x202028, 0.35);
+    const hemi = new THREE.HemisphereLight(0xdceaff, 0x1a1f2a, 1.2);
 
     this.scene.add(amb, dir, hemi);
 
 
 
-    const floorW = (GRID_SPACING * GRID_COLS + 10) * VILLAGE_GROUND_AREA_SCALE;
-
-    const floorD = (GRID_SPACING * GRID_ROWS + 10) * VILLAGE_GROUND_AREA_SCALE;
+    const { w: floorW, d: floorD } = villageFloorSize();
 
     const floor = new THREE.Mesh(
 
@@ -391,7 +393,7 @@ export class DesignScene {
 
         transparent: true,
 
-        opacity: 0.16,
+        opacity: 0.32,
 
         depthWrite: false,
 
@@ -409,7 +411,7 @@ export class DesignScene {
 
 
 
-    const sectorCellSize = GRID_SPACING * (1 - SECTOR_CELL_INSET * 2);
+    const sectorCellSize = villageCellSize();
 
     ordered.forEach((st, i) => {
 
@@ -549,18 +551,23 @@ export class DesignScene {
 
     group.userData.stock = st;
 
-    group.scale.set(VILLAGE_MODEL_SCALE, 1, VILLAGE_MODEL_SCALE);
+    group.scale.set(VILLAGE_MODEL_SCALE_XZ, 1, VILLAGE_MODEL_SCALE_XZ);
 
-    group.userData.footprintRestXZ = VILLAGE_MODEL_SCALE;
+    group.userData.footprintRestXZ = VILLAGE_MODEL_SCALE_XZ;
 
 
 
     const build = BUILDER_BY_TICKER[st.t];
 
     if (build) {
-
-      group.add(build());
-
+      try {
+        group.add(build());
+      } catch (err) {
+        console.error(`[DesignScene] building ${st.t} failed:`, err);
+        const mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), PLACEHOLDER_MAT);
+        mesh.position.y = 0.5;
+        group.add(mesh);
+      }
     } else {
 
       const mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), PLACEHOLDER_MAT);
@@ -589,10 +596,10 @@ export class DesignScene {
 
     const h = this.canvas.clientHeight;
 
+    if (w < 2 || h < 2) return;
+
     if (this.canvas.width !== w * this.renderer.getPixelRatio() || this.canvas.height !== h * this.renderer.getPixelRatio()) {
-
       this.renderer.setSize(w, h, false);
-
     }
 
     this.camera.aspect = w / h;
@@ -612,11 +619,13 @@ export class DesignScene {
     const now = performance.now() * 0.001;
 
     this.stockGroup.traverse((o) => {
-
       const fn = o.userData.tick as ((t: number) => void) | undefined;
-
-      if (typeof fn === 'function') fn(now);
-
+      if (typeof fn !== 'function') return;
+      try {
+        fn(now);
+      } catch (err) {
+        console.error(`[DesignScene] tick failed on ${o.name || o.type}:`, err);
+      }
     });
 
     this.renderer.render(this.scene, this.camera);

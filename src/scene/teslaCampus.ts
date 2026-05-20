@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 
-/** XZ footprint multiplier (matches village ground scale). */
 const GROUND_XZ = 1.25;
 const gx = (n: number) => n * GROUND_XZ;
 
@@ -42,8 +41,8 @@ const mat = (color: string, o: MatOpts = {}) => new THREE.MeshStandardMaterial({
 
 const M = {
   teslaRed: mat(C.teslaRed, { roughness: .35, metalness: .35, emissive: '#5a0d10', emissiveIntensity: .2 }),
-  teslaRedHot: mat(C.teslaRed, { emissive: C.teslaRedBright, emissiveIntensity: 1.5, roughness: .25 }),
-  teslaRedLED: mat(C.ledRed, { emissive: C.ledRed, emissiveIntensity: 1.8, roughness: .2 }),
+  teslaRedHot: mat(C.teslaRed, { emissive: C.teslaRedBright, emissiveIntensity: 0.5, roughness: .35 }),
+  teslaRedLED: mat(C.ledRed, { emissive: C.ledRed, emissiveIntensity: 0.5, roughness: .3 }),
   black: mat(C.black, { roughness: .55, metalness: .15 }),
   darkGrey: mat(C.darkGrey, { roughness: .5, metalness: .2 }),
   metalDark: mat(C.metalDark, { roughness: .35, metalness: .65 }),
@@ -532,21 +531,15 @@ function createTeslaFactory(g: THREE.Group, cx: number, cy: number, cz: number) 
 
   const ledH = 0.025;
   box(grp, 'led roof F', 0, H + 0.085, D / 2 + 0.01, W + 0.04, ledH, 0.018, M.teslaRedLED);
-  box(grp, 'led roof B', 0, H + 0.085, -D / 2 - 0.01, W + 0.04, ledH, 0.018, M.teslaRedLED);
-  box(grp, 'led roof L', -W / 2 - 0.01, H + 0.085, 0, 0.018, ledH, D + 0.04, M.teslaRedLED);
-  box(grp, 'led roof R', W / 2 + 0.01, H + 0.085, 0, 0.018, ledH, D + 0.04, M.teslaRedLED);
-  box(grp, 'led mid F', 0, H * 0.42, D / 2 + 0.012, W, 0.012, 0.005, M.teslaRedLED);
-  box(grp, 'led side L', -W / 2 - 0.005, H / 2 + 0.05, D / 2 + 0.008, 0.012, H * 0.7, 0.012, M.teslaRedLED);
-  box(grp, 'led side R', W / 2 + 0.005, H / 2 + 0.05, D / 2 + 0.008, 0.012, H * 0.7, 0.012, M.teslaRedLED);
 
   const bigTeslaTex = makeBigTeslaLogoTexture();
   const bigTeslaMat = new THREE.MeshStandardMaterial({
     map: bigTeslaTex,
     side: THREE.DoubleSide,
-    roughness: 0.25,
+    roughness: 0.35,
     emissive: '#ffffff',
     emissiveMap: bigTeslaTex,
-    emissiveIntensity: 1.6,
+    emissiveIntensity: 0.5,
   });
   const bigTesla = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 0.42), bigTeslaMat);
   bigTesla.position.set(0, H * 0.78, D / 2 + 0.015);
@@ -620,13 +613,57 @@ function createTeslaFactory(g: THREE.Group, cx: number, cy: number, cz: number) 
   const showcaseCx = 1.05;
   const showcaseCz = D / 2 + 0.1;
   box(grp, 'showcase floor', showcaseCx, 0.07, showcaseCz, 1.4, 0.04, 0.85, M.platform);
+  box(
+    grp,
+    'conveyor belt',
+    showcaseCx - 0.3,
+    0.095,
+    showcaseCz + 0.1,
+    0.6,
+    0.018,
+    0.32,
+    mat('#1a1a1d', { roughness: 0.5, metalness: 0.35 }),
+  );
+  for (let i = 0; i < 6; i++) {
+    box(
+      grp,
+      `conv roller ${i}`,
+      showcaseCx - 0.55 + i * 0.1,
+      0.105,
+      showcaseCz + 0.1,
+      0.008,
+      0.005,
+      0.3,
+      mat('#3a3a40'),
+    );
+  }
+  box(
+    grp,
+    'conv guide L',
+    showcaseCx - 0.3,
+    0.108,
+    showcaseCz + 0.265,
+    0.6,
+    0.005,
+    0.005,
+    mat('#ffcf3a', { emissive: '#ffcf3a', emissiveIntensity: 0.3 }),
+  );
+  box(
+    grp,
+    'conv guide R',
+    showcaseCx - 0.3,
+    0.108,
+    showcaseCz - 0.065,
+    0.6,
+    0.005,
+    0.005,
+    mat('#ffcf3a', { emissive: '#ffcf3a', emissiveIntensity: 0.3 }),
+  );
   box(grp, 'showcase led F', showcaseCx, 0.085, showcaseCz + 0.425, 1.4, 0.012, 0.005, M.teslaRedLED);
-  box(grp, 'showcase led B', showcaseCx, 0.085, showcaseCz - 0.425, 1.4, 0.012, 0.005, M.teslaRedLED);
-  box(grp, 'showcase led L', showcaseCx - 0.7, 0.085, showcaseCz, 0.005, 0.012, 0.85, M.teslaRedLED);
   box(grp, 'showcase led R', showcaseCx + 0.7, 0.085, showcaseCz, 0.005, 0.012, 0.85, M.teslaRedLED);
-  createTeslaCar(grp, showcaseCx - 0.3, 0.105, showcaseCz + 0.1, '#ededf2', Math.PI / 5, 1.9);
+  const showcaseCar = createTeslaCar(grp, showcaseCx - 0.3, 0.118, showcaseCz + 0.1, '#ededf2', Math.PI / 5, 1.9);
   const heroArm = createRobotArm(grp, showcaseCx + 0.35, 0.105, showcaseCz - 0.15, -Math.PI / 4, 3.0);
-  const showcaseLight = new THREE.PointLight('#ff5a73', 2.2, 2.8);
+  const showcaseLight = new THREE.PointLight('#fff2c8', 1.5, 2.8);
   showcaseLight.position.set(showcaseCx, 0.9, showcaseCz);
   grp.add(showcaseLight);
 
@@ -634,11 +671,15 @@ function createTeslaFactory(g: THREE.Group, cx: number, cy: number, cz: number) 
   const innerLineX = -0.4;
   const innerLineZ = -0.4;
   for (let i = 0; i < 2; i++) {
-    robotArms.push(createRobotArm(grp, innerLineX - 0.4 + i * 0.6, 0.1, innerLineZ + 0.2, 0, 0.85));
-    robotArms.push(createRobotArm(grp, innerLineX - 0.4 + i * 0.6, 0.1, innerLineZ - 0.2, Math.PI, 0.85));
+    robotArms.push(
+      createRobotArm(grp, innerLineX - 0.4 + i * 0.6, 0.1, innerLineZ + 0.2, 0, 0.85),
+    );
+    robotArms.push(
+      createRobotArm(grp, innerLineX - 0.4 + i * 0.6, 0.1, innerLineZ - 0.2, Math.PI, 0.85),
+    );
   }
-  createTeslaCar(grp, innerLineX, 0.105, innerLineZ, '#1c1c1e', Math.PI / 2, 0.85);
-  createTeslaCar(grp, innerLineX + 0.4, 0.105, innerLineZ, '#aeb4bd', Math.PI / 2, 0.85);
+  createTeslaCar(grp, innerLineX, 0.105, innerLineZ + 0.0, '#1c1c1e', Math.PI / 2, 0.85);
+  createTeslaCar(grp, innerLineX + 0.4, 0.105, innerLineZ + 0.0, '#aeb4bd', Math.PI / 2, 0.85);
 
   const aiPanelCx = W / 2 - 0.3;
   const aiPanelCz = D / 2 + 0.3;
@@ -651,7 +692,7 @@ function createTeslaFactory(g: THREE.Group, cx: number, cy: number, cz: number) 
 
   rooftopPanel(grp, '2', '차량 설계·생산', '전기차 설계·제조·생산', 0, H + 0.55, -0.2, 1.0, 0.36);
 
-  return { group: grp, robotArms, heroArm };
+  return { group: grp, robotArms, heroArm, showcaseCar };
 }
 function createAISoftware(g, cx, cy, cz) {
   const grp = new THREE.Group();
@@ -811,81 +852,25 @@ function buildTeslaCampusDiorama() {
   tree(g, -0.7, 1.6, 0.3);
   tree(g, 0.7, 1.6, 0.3);
 
-  const movingCars: { group: THREE.Group; axis: string; baseX: number; z: number }[] = [];
-  for (let i = 0; i < 3; i++) {
-    const car = createTeslaCar(g, -2.0 + i * 2.0, 0.105, 0.5, ['#f4f4f4', '#1c1c1e', '#aeb4bd'][i], Math.PI/2, 1.0);
-    movingCars.push({ group: car, axis: 'x', baseX: -2.0 + i * 2.0, z: 0.5 });
-  }
-
-  const dataPaths = [];
-  const satellites = [
-    { name: 'aiSW', x: -2.7, y: 0.7, z: -0.4 },
-    { name: 'solar', x: 2.85, y: 0.7, z: -0.8 },
-    { name: 'supercharger', x: -1.5, y: 0.55, z: 1.75 },
-    { name: 'service', x: 1.6, y: 0.55, z: 1.75 }
-  ];
-  const satSplashLights = [];
-  satellites.forEach((sat, idx) => {
-    const start = new THREE.Vector3(0, 0.9, -1.0);
-    const mid = new THREE.Vector3((start.x + sat.x)/2, 1.4, (start.z + sat.z)/2);
-    const end = new THREE.Vector3(sat.x, sat.y, sat.z);
-    const curve = new THREE.CatmullRomCurve3([start, mid, end]);
-    const beads = [];
-    const beadMat = new THREE.MeshStandardMaterial({
-      color: C.hotData, emissive: C.hotData, emissiveIntensity: 2.0, roughness: .25
-    });
-    for (let i = 0; i < 5; i++) {
-      const b = new THREE.Mesh(new THREE.SphereGeometry(.055, 14, 10), beadMat);
-      const bLight = new THREE.PointLight(C.hotData, 0.18, 0.6);
-      b.add(bLight);
-      g.add(b);
-      beads.push({ mesh: b, light: bLight, offset: i / 5 });
-    }
-    const splash = new THREE.PointLight(C.hotData, 0, 1.4);
-    splash.position.set(sat.x, sat.y + 0.1, sat.z);
-    g.add(splash);
-    satSplashLights.push(splash);
-    dataPaths.push({ curve, beads, speed: 0.07 + idx * 0.008 });
-  });
-
-  const moneyPaths = [];
-  satellites.forEach((sat, idx) => {
-    const start = new THREE.Vector3(sat.x, sat.y + 0.3, sat.z);
-    const mid = new THREE.Vector3(sat.x / 2, 1.8, (sat.z - 1.6) / 2);
-    const end = new THREE.Vector3(0, 1.5, -1.6);
-    const curve = new THREE.CatmullRomCurve3([start, mid, end]);
-    const coins = [];
-    for (let i = 0; i < 3; i++) {
-      const coin = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.05, 0.05, 0.014, 16),
-        M.goldCoin.clone()
-      );
-      g.add(coin);
-      coins.push({ mesh: coin, offset: i / 3 });
-    }
-    moneyPaths.push({ curve, coins, speed: 0.05 + idx * 0.004 });
-  });
-
-  const goldGlow = new THREE.PointLight('#ffd700', 0.5, 2.5);
-  goldGlow.position.set(0, 1.5, -1.6);
-  g.add(goldGlow);
-
-  const factoryGlow = new THREE.PointLight('#fff2c8', 0.4, 4);
-  factoryGlow.position.set(0, 0.7, -1.2);
+  // === Tesla v4 campus lights (standalone v2 parity; village scene adds hemi/key) ===
+  const factoryGlow = new THREE.PointLight('#fff2c8', 0.7, 4);
+  factoryGlow.position.set(0, 0.7, -0.8);
   g.add(factoryGlow);
-  const redGlow = new THREE.PointLight('#ff5a73', 1.0, 3.0);
-  redGlow.position.set(1.0, 0.5, -1.3);
-  g.add(redGlow);
-  const teslaTextGlow = new THREE.PointLight('#ffffff', 0.6, 2.5);
-  teslaTextGlow.position.set(0, 1.0, -0.8);
-  g.add(teslaTextGlow);
+
+  const interiorWarm = new THREE.PointLight('#ffaf3a', 0.5, 2.5);
+  interiorWarm.position.set(-0.5, 0.6, -1.4);
+  g.add(interiorWarm);
+
+  const heroAccent = new THREE.PointLight('#e82127', 0.4, 1.5);
+  heroAccent.position.set(1.0, 0.5, -1.4);
+  g.add(heroAccent);
 
   g.userData = {
     factoryArms: factory.robotArms,
     heroArm: factory.heroArm,
+    showcaseCar: factory.showcaseCar,
     appScreen: service.appDisplay.screen,
-    dataPaths, satSplashLights, moneyPaths, goldGlow,
-    movingCars, starlink
+    starlink,
   };
   return g;
 }
@@ -914,37 +899,12 @@ export function createTesla(): THREE.Group {
       );
     });
 
-    u.dataPaths.forEach((path, pIdx) => {
-      path.beads.forEach((b, idx) => {
-        const progress = ((tRaw * path.speed) + b.offset) % 1;
-        b.mesh.position.copy(path.curve.getPoint(progress));
-        const pulse = 1.2 + 0.5 * Math.sin(t * 3 + idx);
-        (b.mesh.material as THREE.MeshStandardMaterial).emissiveIntensity = pulse;
-        b.light.intensity = 0.16 + 0.1 * Math.sin(t * 3.5 + idx);
-        if (progress > 0.92) {
-          u.satSplashLights[pIdx].intensity = 1.4 * (progress - 0.92) / 0.08;
-        }
-      });
-      u.satSplashLights[pIdx].intensity *= 0.94;
-    });
-
-    u.moneyPaths.forEach((path) => {
-      path.coins.forEach((c, idx) => {
-        const progress = ((tRaw * path.speed) + c.offset) % 1;
-        c.mesh.position.copy(path.curve.getPoint(progress));
-        c.mesh.rotation.x = Math.PI / 2;
-        c.mesh.rotation.y = tRaw * 4 + idx;
-        (c.mesh.material as THREE.MeshStandardMaterial).emissiveIntensity =
-          1.4 + 0.4 * Math.sin(t * 2.5 + idx);
-      });
-    });
-    u.goldGlow.intensity = 0.4 + 0.25 * Math.sin(t * 1.5);
-
-    u.movingCars.forEach((c, idx) => {
-      const speed = 0.3 + idx * 0.05;
-      const pos = ((tRaw * speed) + idx * 0.33) % 1;
-      c.group.position.x = -3.5 + pos * 7.0;
-    });
+    if (u.showcaseCar) {
+      const cycleSpeed = 0.08;
+      const progress = (tRaw * cycleSpeed) % 1;
+      u.showcaseCar.position.x = 0.45 + progress * 0.6;
+      u.showcaseCar.position.y = 0.118 + Math.sin(tRaw * 4) * 0.002;
+    }
 
     u.starlink.rotation.y = tRaw * 0.3;
 
@@ -967,19 +927,7 @@ type TeslaRobotArm = {
 interface TeslaCampusRuntime {
   factoryArms: TeslaRobotArm[];
   heroArm: TeslaRobotArm;
+  showcaseCar: THREE.Group;
   appScreen: THREE.Mesh;
-  dataPaths: {
-    curve: THREE.CatmullRomCurve3;
-    beads: { mesh: THREE.Mesh; light: THREE.PointLight; offset: number }[];
-    speed: number;
-  }[];
-  satSplashLights: THREE.PointLight[];
-  moneyPaths: {
-    curve: THREE.CatmullRomCurve3;
-    coins: { mesh: THREE.Mesh; offset: number }[];
-    speed: number;
-  }[];
-  goldGlow: THREE.PointLight;
-  movingCars: { group: THREE.Group; axis: string; baseX: number; z: number }[];
   starlink: THREE.Group;
 }
