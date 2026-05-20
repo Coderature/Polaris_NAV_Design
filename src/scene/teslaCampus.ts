@@ -585,6 +585,14 @@ function createTeslaFactory(g: THREE.Group, cx: number, cy: number, cz: number) 
     0.7,
   );
 
+  box(grp, 'banner bg', 0.3, 0.13, D / 2 + 0.13, 2.2, 0.22, 0.04, M.black);
+  const bannerTex = makeGigafactoryBannerTexture();
+  texturedPlane(grp, bannerTex, 0.3, 0.13, D / 2 + 0.151, 2.15, 0.2, 0, 0.55);
+  box(grp, 'banner led top', 0.3, 0.245, D / 2 + 0.152, 2.18, 0.006, 0.005, M.teslaRedLED);
+  for (let i = 0; i < 5; i++) {
+    cyl(grp, `banner post ${i}`, -0.8 + i * 0.55, 0.06, D / 2 + 0.14, 0.018, 0.12, M.metal, 8);
+  }
+
   const showW = 0.85;
   const showCx = redPatchX + redPatchSize / 2 + 0.15 + showW / 2;
   box(grp, 'show glass', showCx, 0.42, D / 2 + 0.005, showW, 0.65, 0.02, M.glass);
@@ -608,14 +616,6 @@ function createTeslaFactory(g: THREE.Group, cx: number, cy: number, cz: number) 
   createTeslaCar(grp, showCx - 0.2, 0.06, 0.5, '#e82127', Math.PI / 5, 0.85);
   createTeslaCar(grp, showCx + 0.15, 0.06, 0.45, '#f4f4f4', -Math.PI / 7, 0.85);
   box(grp, 'show ceiling light', showCx, H - 0.05, 0.5, showW * 0.8, 0.04, 0.5, M.warmWindow.clone());
-
-  box(grp, 'banner bg', 0.3, 0.13, D / 2 + 0.13, 2.2, 0.22, 0.04, M.black);
-  const bannerTex = makeGigafactoryBannerTexture();
-  texturedPlane(grp, bannerTex, 0.3, 0.13, D / 2 + 0.151, 2.15, 0.2, 0, 0.55);
-  box(grp, 'banner led top', 0.3, 0.245, D / 2 + 0.152, 2.18, 0.006, 0.005, M.teslaRedLED);
-  for (let i = 0; i < 5; i++) {
-    cyl(grp, `banner post ${i}`, -0.8 + i * 0.55, 0.06, D / 2 + 0.14, 0.018, 0.12, M.metal, 8);
-  }
 
   const showcaseCx = 1.05;
   const showcaseCz = D / 2 + 0.1;
@@ -663,6 +663,7 @@ function createAISoftware(g, cx, cy, cz) {
   box(grp, 'ai base', 0, 0.04, 0, W + 0.08, 0.06, D + 0.08, M.platform);
   const fsdTex = makeFSDDisplayTexture();
   texturedPlane(grp, fsdTex, 0, H/2 + 0.05, D/2 + 0.005, W - 0.15, H - 0.15, 0, 0.55);
+  box(grp, 'ai frame', 0, H/2 + 0.05, D/2 + 0.002, W - 0.12, H - 0.12, 0.012, M.metalDark);
   const facadeTex = makeFacadeTextTexture('AI & SOFTWARE', '#0a0a0a', '#4a8eda');
   texturedPlane(grp, facadeTex, 0, 0.07, D/2 + 0.008, W - 0.2, 0.06, 0, 0.5);
   rooftopPanel(grp, '3', '소프트웨어 · AI', 'AI · FSD · 자율주행\nDojo 슈퍼컴퓨팅', 0, H + 0.5, 0, 0.95, 0.34, '#4a8eda');
@@ -683,13 +684,17 @@ function createSolarStorage(g, cx, cy, cz) {
       const sz = -D/2 + 0.2 + j * 0.27;
       const panel = box(grp, `ss solar ${i}_${j}`, sx, H + 0.045, sz, 0.24, 0.012, 0.24, M.solar);
       panel.rotation.x = -Math.PI / 28;
+      box(grp, `ss solar grid ${i}_${j}`, sx, H + 0.05, sz, 0.24, 0.001, 0.005, M.solarGrid);
     }
   }
+  box(grp, 'ss front glass', 0, 0.2, D/2 + 0.005, W - 0.2, 0.32, 0.018, M.glass);
+  box(grp, 'ss front frame', 0, 0.2, D/2 + 0.008, W - 0.18, 0.34, 0.018, M.metalDark);
   const facadeTex = makeFacadeTextTexture('SOLAR & STORAGE', '#0a0a0a', '#ffcf3a');
   texturedPlane(grp, facadeTex, 0, 0.07, D/2 + 0.011, W - 0.25, 0.06, 0, 0.5);
   for (let i = 0; i < 3; i++) {
     createMegapack(grp, W/2 + 0.18, 0, -D/2 + 0.25 + i * 0.45, 1.0);
   }
+  box(grp, 'mp base', W/2 + 0.18, 0.025, 0, 0.34, 0.03, 1.2, M.platform);
   rooftopPanel(grp, '4', '태양광·저장 에너지', '태양광 발전 · 에너지 저장 · 메가팩', 0, H + 0.6, 0, 1.05, 0.34, '#ffcf3a');
   return grp;
 }
@@ -704,7 +709,15 @@ function createSuperchargerArea(g, cx, cy, cz) {
     createSupercharger(grp, -0.65 + i * 0.26, 0, -0.32, 0, 0.85);
   }
   box(grp, 'sca canopy', 0, 0.55, -0.15, 1.7, 0.04, 0.45, M.darkGrey);
-  const sccColors = ['#1c1c1e', '#f4f4f4', '#e31937', '#aeb4bd'];
+  for (let i = 0; i < 6; i++) {
+    const sx = -0.7 + i * 0.28;
+    box(grp, `sca canopy solar ${i}`, sx, 0.575, -0.15, 0.25, 0.005, 0.4, M.solar);
+  }
+  for (let i = 0; i < 4; i++) {
+    const sx = -0.78 + i * 0.52;
+    cyl(grp, `sca pillar ${i}`, sx, 0.28, -0.05, 0.022, 0.5, M.metalDark, 12);
+  }
+  const sccColors = ['#1c1c1e', '#f4f4f4', '#e82127', '#aeb4bd'];
   for (let i = 0; i < 4; i++) {
     createTeslaCar(grp, -0.55 + i * 0.36, 0.07, 0.15, sccColors[i], 0, 0.95);
   }
@@ -722,6 +735,10 @@ function createServiceCenter(g, cx, cy, cz) {
   box(grp, 'svc roof', -0.3, H + 0.02, 0, W * 0.6 + 0.04, 0.035, D + 0.04, M.metalDark);
   box(grp, 'svc base', 0, 0.04, 0, W + 0.08, 0.06, D + 0.08, M.platform);
   box(grp, 'svc front glass', -0.3, H/2 + 0.02, D/2 + 0.005, W * 0.55, H - 0.1, 0.018, M.glass);
+  box(grp, 'svc interior light', -0.3, H/2 + 0.05, 0.1, W * 0.5, 0.15, 0.4, M.warmWindow.clone());
+  for (let i = 0; i < 4; i++) {
+    box(grp, `svc person ${i}`, -0.5 + i * 0.13, 0.12, 0.15, 0.04, 0.1, 0.04, M.white);
+  }
   const appDisplay = createTeslaAppDisplay(grp, W/2 - 0.15, 0.04, 0.0, 0.95);
   const facadeTex = makeFacadeTextTexture('SERVICE', '#0a0a0a', '#ffffff');
   texturedPlane(grp, facadeTex, -0.3, 0.085, D/2 + 0.008, W * 0.5, 0.05, 0, 0.4);
@@ -734,8 +751,34 @@ function buildTeslaCampusDiorama() {
   box(g, 'platform', 0, .02, 0, gx(5.9), .12, gx(5.1), M.platform);
   box(g, 'main road x', 0, 0.084, 0.5, gx(5.6), 0.012, gx(0.5), M.road);
   box(g, 'main road z', 0, 0.084, 0, gx(0.5), 0.012, gx(4.8), M.road);
+  for (let i = -3; i <= 3; i++) {
+    box(g, `lane mark x ${i}`, i * 0.5, 0.087, 0.5, 0.18, 0.005, 0.02, M.white);
+  }
+  for (let i = -2; i <= 2; i++) {
+    if (i === 0) continue;
+    box(g, `lane mark z ${i}`, 0, 0.087, i * 0.7, 0.02, 0.005, 0.18, M.white);
+  }
 
   const factory = createTeslaFactory(g, 0, 0.08, -1.6);
+
+  createAISoftware(g, -2.7, 0.08, -0.4);
+  createSolarStorage(g, 2.85, 0.08, -0.8);
+  createSuperchargerArea(g, -1.5, 0.08, 1.75);
+  const service = createServiceCenter(g, 1.6, 0.08, 1.75);
+
+  createSatelliteDish(g, 3.3, 0.08, -2.0, 1.0);
+  const starlink = createStarlinkSatellite(g, 3.5, 1.5, -1.4, 1.2);
+  for (let i = 0; i < 5; i++) {
+    const t = i / 4;
+    const sat = new THREE.Mesh(
+      new THREE.SphereGeometry(0.015, 8, 6),
+      new THREE.MeshBasicMaterial({ color: '#4ab8e8', transparent: true, opacity: 0.7 }),
+    );
+    sat.position.set(3.3 + t * 0.2, 0.5 + t * 1.0, -2.0 + t * 0.6);
+    g.add(sat);
+  }
+  const starlinkTex = makeFacadeTextTexture('STARLINK', '#0a0a0a', '#4ab8e8');
+  texturedPlane(g, starlinkTex, 3.3, 0.7, -1.85, 0.45, 0.07, -Math.PI / 6, 0.45);
 
   const parkColors = ['#1c1c1e', '#aeb4bd', '#e82127', '#f4f4f4', '#1c1c1e'];
   parkColors.forEach((color, i) => {
@@ -757,21 +800,16 @@ function buildTeslaCampusDiorama() {
   }
   box(g, 'parking pad', 0.05, 0.088, -0.55, 1.85, 0.012, 0.22, mat('#252830', { roughness: 0.8 }));
 
-  createAISoftware(g, -2.7, 0.08, -0.4);
-  createSolarStorage(g, 2.85, 0.08, -0.8);
-  createSuperchargerArea(g, -1.5, 0.08, 1.75);
-  const service = createServiceCenter(g, 1.6, 0.08, 1.75);
-
-  createSatelliteDish(g, 3.3, 0.08, -2.0, 1.0);
-  const starlink = createStarlinkSatellite(g, 3.5, 1.5, -1.4, 1.2);
-  const starlinkTex = makeFacadeTextTexture('STARLINK', '#0a0a0a', '#4ab8e8');
-  texturedPlane(g, starlinkTex, 3.3, 0.7, -1.85, 0.45, 0.07, -Math.PI / 6, 0.45);
-
   const treeSpots = [
     [-3.4, -2.6], [3.6, -2.6], [-3.6, 2.6], [3.6, 2.6],
-    [-3.5, 0.5], [3.5, 0.5], [0, -2.85]
+    [-3.5, 0.5], [3.5, 0.5], [-3.4, -1.4], [3.4, -1.4],
+    [-2.0, 2.6], [0, 2.7], [2.0, 2.7], [0, -2.85],
   ];
   treeSpots.forEach(([x, z]) => tree(g, x, z, 0.4));
+  tree(g, -2.0, 0.5, 0.32);
+  tree(g, 2.1, 0.5, 0.32);
+  tree(g, -0.7, 1.6, 0.3);
+  tree(g, 0.7, 1.6, 0.3);
 
   const movingCars: { group: THREE.Group; axis: string; baseX: number; z: number }[] = [];
   for (let i = 0; i < 3; i++) {

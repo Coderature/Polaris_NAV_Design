@@ -877,28 +877,22 @@
       box(grp, 'show ceiling light', showCx, H - 0.05, 0.5, showW * 0.8, 0.04, 0.5, M.warmWindow.clone());
 
       // ============================================================
-      // 신규 #5: 영웅 로봇팔 + showcase 차량 (정면 중앙~우측)
+      // 신규 #5 v3: 영웅 로봇팔 + showcase (대폭 확대)
       // ============================================================
-      // Showcase 플랫폼 위치
       const showcaseCx = 1.05;
       const showcaseCz = D/2 + 0.1;
-      // 플랫폼 베이스
-      box(grp, 'showcase floor', showcaseCx, 0.07, showcaseCz, 1.1, 0.04, 0.65, M.platform);
-      // Showcase 외곽 빨간 LED 띠
-      box(grp, 'showcase led F', showcaseCx, 0.085, showcaseCz + 0.325, 1.1, 0.012, 0.005, M.teslaRedLED);
-      box(grp, 'showcase led B', showcaseCx, 0.085, showcaseCz - 0.325, 1.1, 0.012, 0.005, M.teslaRedLED);
-      box(grp, 'showcase led L', showcaseCx - 0.55, 0.085, showcaseCz, 0.005, 0.012, 0.65, M.teslaRedLED);
-      box(grp, 'showcase led R', showcaseCx + 0.55, 0.085, showcaseCz, 0.005, 0.012, 0.65, M.teslaRedLED);
+      box(grp, 'showcase floor', showcaseCx, 0.07, showcaseCz, 1.4, 0.04, 0.85, M.platform);
+      box(grp, 'showcase led F', showcaseCx, 0.085, showcaseCz + 0.425, 1.4, 0.012, 0.005, M.teslaRedLED);
+      box(grp, 'showcase led B', showcaseCx, 0.085, showcaseCz - 0.425, 1.4, 0.012, 0.005, M.teslaRedLED);
+      box(grp, 'showcase led L', showcaseCx - 0.7, 0.085, showcaseCz, 0.005, 0.012, 0.85, M.teslaRedLED);
+      box(grp, 'showcase led R', showcaseCx + 0.7, 0.085, showcaseCz, 0.005, 0.012, 0.85, M.teslaRedLED);
 
-      // showcase 차량 (Model S/Y 톤, 실버)
-      createTeslaCar(grp, showcaseCx - 0.18, 0.105, showcaseCz + 0.05, '#d8d8dc', Math.PI / 5, 1.4);
+      createTeslaCar(grp, showcaseCx - 0.3, 0.105, showcaseCz + 0.1, '#ededf2', Math.PI / 5, 1.9);
 
-      // 영웅 로봇팔 (큰 빨간 팔, scale 2.0)
-      const heroArm = createRobotArm(grp, showcaseCx + 0.25, 0.105, showcaseCz - 0.05, -Math.PI / 4, 1.9);
+      const heroArm = createRobotArm(grp, showcaseCx + 0.35, 0.105, showcaseCz - 0.15, -Math.PI / 4, 3.0);
 
-      // Showcase 위 강조 라이트
-      const showcaseLight = new THREE.PointLight('#ff5a73', 1.2, 1.5);
-      showcaseLight.position.set(showcaseCx, 0.6, showcaseCz);
+      const showcaseLight = new THREE.PointLight('#ff5a73', 2.2, 2.8);
+      showcaseLight.position.set(showcaseCx, 0.9, showcaseCz);
       grp.add(showcaseLight);
 
       // ============================================================
