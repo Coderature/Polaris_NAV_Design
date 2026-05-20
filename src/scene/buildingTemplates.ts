@@ -34,8 +34,8 @@ const gx = (n: number) => n * GROUND_FOOTPRINT_XZ;
 // ── Boeing: Assembly Diorama (BA) ──
 export { createBoeing } from './boeingAssembly';
 
-// ── NVIDIA: Value Chain Diorama (NVDA) ──
-export { createNvidiaFab } from './nvidiaCampus';
+// ── NVIDIA: Three-Pillar Diorama (NVDA) ──
+export { createNvidiaFab } from './nvidia';
 
 // ── Exxon Mobil: oil refinery ─────────────────────────────────────────────────
 export function createExxonMobil(): THREE.Group {
